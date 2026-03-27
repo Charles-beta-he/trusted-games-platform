@@ -1,0 +1,14 @@
+{
+  "name": "@tg/core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./crypto": "./src/crypto.js",
+    "./ai": "./src/ai.js",
+    "./constants": "./src/constants.js",
+    "./plugins": "./src/plugins.js"
+  },
+  "main": "./index.js"
+}

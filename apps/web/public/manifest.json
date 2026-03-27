@@ -1,0 +1,20 @@
+{
+  "name": "Trusted Games Platform",
+  "short_name": "TrustedGames",
+  "description": "Serverless board game platform — cryptographic move verification, local-first",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050a14",
+  "theme_color": "#00d4ff",
+  "orientation": "any",
+  "lang": "zh-CN",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
