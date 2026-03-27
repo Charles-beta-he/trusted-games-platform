@@ -20,6 +20,7 @@ import GameSelector from './components/GameSelector.jsx'
 import P2PModal from './components/P2PModal.jsx'
 import GameLobby from './components/GameLobby.jsx'
 import ModeSelect from './components/ModeSelect.jsx'
+import PlatformView from './components/PlatformView.jsx'
 import Collapsible from './components/ui/Collapsible.jsx'
 
 export default function App() {
@@ -33,9 +34,6 @@ export default function App() {
   const [showDisconnectBanner, setShowDisconnectBanner] = useState(false)
   const [autoJoinOffer, setAutoJoinOffer] = useState(null)
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false)
-  // True when the user entered game view specifically to set up a P2P game;
-  // used to redirect back to mode selection if they close the modal without connecting.
-  const [p2pIntended, setP2pIntended] = useState(false)
 
   // Auto-open P2P modal when URL contains a share link — bypass lobby & mode selection
   useEffect(() => {
@@ -46,7 +44,6 @@ export default function App() {
       setCurrentView('game')
       setShowP2PModal(true)
       setAutoJoinOffer(offerCode)
-      setP2pIntended(true)
     }
   }, [])
 
@@ -189,7 +186,15 @@ export default function App() {
           setCurrentView('mode')
         }}
         onQuickJoin={handleQuickJoin}
+        onOpenPlatform={() => setCurrentView('platform')}
       />
+    )
+  }
+
+  // ─── Platform view ────────────────────────────────────────────────────────
+  if (currentView === 'platform') {
+    return (
+      <PlatformView onBack={() => setCurrentView('lobby')} />
     )
   }
 
@@ -206,7 +211,6 @@ export default function App() {
           }
           setCurrentView('game')
           if (mode === 'host' || mode === 'join') {
-            setP2pIntended(true)
             setTimeout(() => setShowP2PModal(true), 100)
           }
         }}
@@ -401,11 +405,7 @@ export default function App() {
           onClose={() => {
             setShowP2PModal(false)
             setAutoJoinOffer(null)
-            const wasIntended = p2pIntended
-            setP2pIntended(false)
-            // If the user came here specifically for P2P but left without connecting,
-            // send them back to mode selection instead of silently entering solo mode.
-            if (wasIntended && !webrtc.isConnected) {
+            if (!webrtc.isConnected) {
               webrtc.disconnect()
               setCurrentView('mode')
             }

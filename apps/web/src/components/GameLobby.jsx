@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { GAME_CATALOG } from '../plugins/index.js'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
-export default function GameLobby({ onSelectGame, onQuickJoin }) {
+export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform }) {
   const { theme, setTheme, themes } = useTheme()
   const [joinInput, setJoinInput] = useState('')
 
@@ -196,6 +196,50 @@ export default function GameLobby({ onSelectGame, onQuickJoin }) {
               </div>
             )
           })}
+        </div>
+
+        {/* Platform entry */}
+        <div style={{ marginTop: 24, width: '100%', maxWidth: '900px' }}>
+          <button
+            onClick={onOpenPlatform}
+            style={{
+              width: '100%',
+              padding: '16px 24px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-primary)',
+              color: 'var(--text-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--accent-primary)'
+              e.currentTarget.style.boxShadow = '0 0 16px color-mix(in srgb, var(--accent-primary) 20%, transparent)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border-color)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              <span style={{ fontSize: 28 }}>🌐</span>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary)' }}>
+                  ONLINE PLATFORM
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  在线对弈平台 · 匹配对手 · 排行榜
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+              进入 →
+            </div>
+          </button>
         </div>
 
         {/* Quick join room */}
