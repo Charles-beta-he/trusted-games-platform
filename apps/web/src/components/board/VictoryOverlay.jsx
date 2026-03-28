@@ -41,9 +41,9 @@ export default function VictoryOverlay({ show, winner, isDraw, lastHash, onNewGa
             onClick={onReplay}
             className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors"
             style={{
-              background: 'none',
-              border: '1px solid var(--ink, #1a1008)',
-              color: 'var(--ink, #1a1008)',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--accent-primary)',
+              color: 'var(--accent-primary)',
             }}
           >
             回放

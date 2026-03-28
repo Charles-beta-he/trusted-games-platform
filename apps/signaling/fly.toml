@@ -1,0 +1,26 @@
+# fly.io deployment for Trusted Games Signaling Server
+# Deploy: fly launch --name tg-signaling && fly deploy
+
+app = "tg-signaling"
+primary_region = "sin"   # Singapore — closest to CN players
+
+[build]
+
+[http_service]
+  internal_port = 4001
+  force_https   = false
+  auto_stop_machines  = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # WebSocket upgrade must be allowed
+  [[http_service.checks]]
+    interval = "30s"
+    timeout  = "5s"
+    grace_period = "10s"
+    method   = "GET"
+    path     = "/health"
+
+[[vm]]
+  size   = "shared-cpu-1x"
+  memory = "256mb"

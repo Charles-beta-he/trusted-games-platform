@@ -4,9 +4,22 @@
   "version": "0.0.1",
   "description": "Serverless trusted board game platform",
   "scripts": {
-    "dev": "pnpm --filter @tg/web dev",
-    "build": "pnpm --filter @tg/web build",
-    "preview": "pnpm --filter @tg/web preview"
+    "dev":        "pnpm --filter @tg/web dev",
+    "build":      "pnpm --filter @tg/web build",
+    "preview":    "pnpm --filter @tg/web preview",
+    "lint":       "pnpm --filter @tg/web lint",
+
+    "sig":        "pnpm --filter @tg/signaling-cf start",
+    "sig:dev":    "pnpm --filter @tg/signaling-cf dev",
+    "sig:install":"pnpm --filter @tg/signaling-cf install",
+
+    "dev:all":    "pnpm --filter @tg/web --filter @tg/signaling --parallel dev",
+
+    "setup":      "pnpm install",
+
+    "deploy:web": "pnpm build && npx wrangler pages deploy apps/web/dist --project-name trusted-games-platform",
+    "deploy:sig": "pnpm --filter @tg/signaling-cf deploy",
+    "deploy":     "pnpm deploy:web"
   },
   "devDependencies": {}
 }

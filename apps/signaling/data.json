@@ -1,0 +1,20 @@
+{
+  "users": {
+    "ddd66959-1529-4520-9a67-88d0c84b49a6": {
+      "token": "9e8b0cfe-a6f5-4a45-83bb-6a58294067e3",
+      "nickname": "昵称",
+      "elo": 1200,
+      "wins": 0,
+      "losses": 0,
+      "draws": 0
+    },
+    "b1d94427-9dd9-43a0-8a99-66b28630c2c1": {
+      "token": "b55cabfe-55fe-476c-95bd-72d6e50ff81c",
+      "nickname": "TestPlayer",
+      "elo": 1200,
+      "wins": 0,
+      "losses": 0,
+      "draws": 0
+    }
+  }
+}

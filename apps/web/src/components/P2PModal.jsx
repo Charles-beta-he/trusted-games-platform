@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
 import { buildShareUrl } from '../lib/shareUrl.js'
+import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 
 function Label({ children }) {
   return (
@@ -125,16 +126,24 @@ function guestStepIndex(step, answerReady) {
   return 0
 }
 
-export default function P2PModal({ webrtc, onClose, autoJoinOffer }) {
+export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
   const [answerInput, setAnswerInput] = useState('')
   const [offerInput, setOfferInput] = useState('')
   const [countdown, setCountdown] = useState(null)
   const [showRawSDP, setShowRawSDP] = useState(false)
+  const [lanUrl, setLanUrl] = useState(null)
+  const [sigMode, setSigMode] = useState(false)   // true = Room Code mode
+  const [roomCodeInput, setRoomCodeInput] = useState('')
 
   const { role, step, offerCode, answerCode, error, isEncrypted, setRole, createRoom, acceptAnswer, joinRoom, disconnect, isConnected } = webrtc
 
+  // Either connection active
+  const anyConnected  = isConnected || (sig?.isConnected ?? false)
+  const anyEncrypted  = isEncrypted || (sig?.isEncrypted ?? false)
+  const disconnectAll = () => { disconnect(); sig?.disconnect() }
+
   const handleBack = () => {
-    disconnect()
+    disconnectAll()
   }
 
   // Guest: after joinRoom completes, answerCode holds the answer code
@@ -171,8 +180,19 @@ export default function P2PModal({ webrtc, onClose, autoJoinOffer }) {
   // Build share URL when host has an offer code
   const shareUrl = offerCode ? buildShareUrl(offerCode) : null
 
+  // Detect LAN IP and build LAN URL when host offer is ready
+  useEffect(() => {
+    if (!shareUrl) { setLanUrl(null); return }
+    getLocalIP().then(() => {
+      // buildLanUrl uses the cached IP + the same hash fragment as shareUrl
+      const hash = shareUrl.split('#')[1]
+      const url = hash ? buildLanUrl(hash) : null
+      setLanUrl(url)
+    })
+  }, [shareUrl])
+
   // ── Connected screen ──────────────────────────────────────────────────────
-  if (isConnected) {
+  if (anyConnected) {
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
         <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 8, padding: 40, maxWidth: 384, width: '100%', textAlign: 'center', fontFamily: 'var(--font-primary)', color: 'var(--text-primary)' }}>
@@ -180,14 +200,17 @@ export default function P2PModal({ webrtc, onClose, autoJoinOffer }) {
           <div className="font-mono tracking-widest" style={{ color: 'var(--accent-success, #2d6a4f)', fontWeight: 'bold', fontSize: 18 }}>
             CONNECTION ESTABLISHED
           </div>
-          {isEncrypted && (
+          <div className="font-mono mt-1" style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+            {sig?.isConnected ? 'ROOM CODE · SIGNALING' : 'SERVERLESS · MANUAL SDP'}
+          </div>
+          {anyEncrypted && (
             <div className="font-mono mt-2" style={{ color: 'var(--text-muted, #999)', fontSize: 12 }}>
               🔐 E2E ENCRYPTED · ECDH P-256 + AES-GCM-256
             </div>
           )}
           <div className="flex gap-3 mt-6">
             <button
-              onClick={() => { disconnect(); onClose() }}
+              onClick={() => { disconnectAll(); onClose() }}
               className="flex-1 px-4 py-2.5 border border-seal-red/60 text-seal-red font-mono text-[11px] tracking-wide hover:bg-seal-red hover:text-paper transition-colors"
             >
               断开连接
@@ -267,8 +290,131 @@ export default function P2PModal({ webrtc, onClose, autoJoinOffer }) {
         {/* Role selection */}
         {!role && (
           <>
-            <p className="font-mono text-[11px] text-ink-faint mb-4 leading-relaxed">
-              无需服务器，通过手动交换 SDP 码建立 P2P 连接。
+            {/* ── Room Code quick connect (signaling server) ─────────── */}
+            {sig.isAvailable && (
+              <div style={{
+                border: '1px solid var(--accent-primary, #f0a500)',
+                borderRadius: 6,
+                padding: '14px 16px',
+                marginBottom: 16,
+                background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 5%, var(--bg-surface))',
+              }}>
+                <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary, #f0a500)', marginBottom: 10 }}>
+                  ⚡ 快速连接 · ROOM CODE
+                </div>
+                {!sigMode ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => { setSigMode(true); sig.createRoom() }}
+                      style={{
+                        padding: '10px 8px',
+                        background: 'var(--bg-primary)',
+                        border: '1px solid var(--accent-primary, #f0a500)',
+                        borderRadius: 4,
+                        color: 'var(--text-primary)',
+                        fontFamily: 'var(--font-primary)',
+                        fontSize: 12,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <div style={{ fontWeight: 'bold' }}>创建房间</div>
+                      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>生成 6 位房间码</div>
+                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <input
+                        value={roomCodeInput}
+                        onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase().slice(0, 6))}
+                        placeholder="输入房间码"
+                        maxLength={6}
+                        style={{
+                          padding: '8px',
+                          background: 'var(--bg-primary)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 4,
+                          color: 'var(--text-primary)',
+                          fontFamily: 'monospace',
+                          fontSize: 16,
+                          letterSpacing: '0.3em',
+                          textAlign: 'center',
+                          textTransform: 'uppercase',
+                        }}
+                      />
+                      <button
+                        onClick={() => { setSigMode(true); sig.joinRoom(roomCodeInput) }}
+                        disabled={roomCodeInput.length < 6}
+                        style={{
+                          padding: '6px',
+                          background: roomCodeInput.length >= 6 ? 'var(--accent-primary, #f0a500)' : 'var(--bg-surface)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 4,
+                          color: roomCodeInput.length >= 6 ? '#000' : 'var(--text-muted)',
+                          fontFamily: 'var(--font-primary)',
+                          fontSize: 11,
+                          cursor: roomCodeInput.length >= 6 ? 'pointer' : 'not-allowed',
+                          letterSpacing: '0.1em',
+                        }}
+                      >
+                        加入 →
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Signaling mode active — show room code or status */
+                  <div>
+                    {sig.step === 'creating' && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)' }}>正在生成房间码...</div>
+                    )}
+                    {sig.step === 'waiting' && sig.roomCode && (
+                      <div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
+                          将房间码发给对方
+                        </div>
+                        <div style={{
+                          fontFamily: 'monospace',
+                          fontSize: 32,
+                          fontWeight: 'bold',
+                          letterSpacing: '0.4em',
+                          color: 'var(--accent-primary, #f0a500)',
+                          textAlign: 'center',
+                          padding: '12px 0',
+                        }}>
+                          {sig.roomCode}
+                        </div>
+                        <CopyButton text={sig.roomCode} label="复制房间码" />
+                        <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+                          等待对方输入房间码加入...
+                        </div>
+                      </div>
+                    )}
+                    {sig.step === 'joining' && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+                        正在连接...
+                      </div>
+                    )}
+                    {sig.step === 'connected' && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent-success, #2d6a4f)', textAlign: 'center' }}>
+                        ✓ 已连接
+                      </div>
+                    )}
+                    {sig.error && (
+                      <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--accent-danger, #8b3a3a)' }}>
+                        ⚠ {sig.error}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => { sig.disconnect(); setSigMode(false); setRoomCodeInput('') }}
+                      style={{ marginTop: 8, fontSize: 10, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      ← 取消
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Manual SDP P2P (classic, no server) ───────────────── */}
+            <p className="font-mono text-[11px] text-ink-faint mb-3 leading-relaxed">
+              或手动交换 SDP 码建立 P2P 连接（无需服务器）
             </p>
             <div className="grid grid-cols-2 gap-3">
               <button
@@ -332,22 +478,62 @@ export default function P2PModal({ webrtc, onClose, autoJoinOffer }) {
                   </div>
                 )}
 
-                {/* QR Code section */}
+                {/* LAN section — same WiFi / hotspot quick join */}
+                {lanUrl && (
+                  <div style={{
+                    border: '1px solid var(--accent-primary, #f0a500)',
+                    borderRadius: 6,
+                    padding: '12px 16px',
+                    background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 6%, var(--bg-surface))',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                      <span style={{ fontSize: 14 }}>📡</span>
+                      <div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary, #f0a500)' }}>
+                          同一 WiFi / 热点快捷加入
+                        </div>
+                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>
+                          LAN · SAME NETWORK INSTANT JOIN
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'start' }}>
+                      <div>
+                        <QRCanvas value={lanUrl} size={140} />
+                        <div style={{ marginTop: 6, fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', textAlign: 'center' }}>
+                          同一 WiFi 设备扫码即可加入
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                        <div style={{
+                          fontFamily: 'monospace',
+                          fontSize: 10,
+                          wordBreak: 'break-all',
+                          color: 'var(--text-secondary)',
+                          background: 'var(--bg-primary)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: 3,
+                          padding: '4px 6px',
+                        }}>
+                          {lanUrl.split('#')[0]}
+                        </div>
+                        <CopyButton text={lanUrl} label="复制局域网链接" />
+                        <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                          仅限本地网络有效<br />可分享给同一热点的设备
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* QR Code section — internet share */}
                 {shareUrl && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Label>扫描二维码加入 · SCAN TO JOIN</Label>
-                    <QRCanvas value={shareUrl} size={200} />
+                    <Label>互联网分享 · INTERNET SHARE</Label>
+                    <QRCanvas value={shareUrl} size={180} />
                     <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
-                      建议在同一网络下、近距离扫描
+                      任意网络均可使用（需对方能访问相同域名）
                     </div>
-                    {(() => {
-                      const shortCode = shareUrl.split('#join=')[1]?.slice(0, 12) || ''
-                      return shortCode ? (
-                        <div style={{ marginTop: 4, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-secondary)', textAlign: 'center' }}>
-                          房间码: <span style={{ fontWeight: 'bold', letterSpacing: 1 }}>{shortCode}…</span>
-                        </div>
-                      ) : null
-                    })()}
                   </div>
                 )}
 

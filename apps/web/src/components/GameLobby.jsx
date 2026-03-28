@@ -1,10 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { GAME_CATALOG } from '../plugins/index.js'
 import { useTheme } from '../contexts/ThemeContext.jsx'
+import { getLocalIP } from '../lib/lanIp.js'
 
 export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform }) {
   const { theme, setTheme, themes } = useTheme()
   const [joinInput, setJoinInput] = useState('')
+  const [localIP, setLocalIP] = useState(null)
+  const [ipCopied, setIpCopied] = useState(false)
+
+  const currentThemeIndex = themes.findIndex(t => t.id === theme)
+  const prevTheme = () => {
+    const idx = (currentThemeIndex - 1 + themes.length) % themes.length
+    setTheme(themes[idx].id)
+  }
+  const nextTheme = () => {
+    const idx = (currentThemeIndex + 1) % themes.length
+    setTheme(themes[idx].id)
+  }
+
+  useEffect(() => {
+    getLocalIP().then(ip => setLocalIP(ip))
+  }, [])
+
+  const lanOrigin = localIP
+    ? `http://${localIP}${window.location.port ? ':' + window.location.port : ''}`
+    : null
+
+  const copyLanUrl = () => {
+    if (!lanOrigin) return
+    navigator.clipboard.writeText(lanOrigin).catch(() => {})
+    setIpCopied(true)
+    setTimeout(() => setIpCopied(false), 2000)
+  }
 
   return (
     <div
@@ -55,29 +83,41 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
         </div>
 
         {/* Theme switcher */}
-        <div className="flex items-center gap-1">
-          {themes.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTheme(t.id)}
-              title={`${t.label} — ${t.desc}`}
-              className="font-mono text-[9px] tracking-widest px-2 py-1.5 transition-all"
-              style={{
-                border: theme === t.id
-                  ? '1px solid var(--accent-primary)'
-                  : '1px solid var(--border-color)',
-                color: theme === t.id
-                  ? 'var(--accent-primary)'
-                  : 'var(--text-muted)',
-                background: theme === t.id
-                  ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)'
-                  : 'transparent',
-                cursor: 'pointer',
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+          <span
+            onClick={prevTheme}
+            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+          >‹</span>
+          <div className="scroll-x-hidden" style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
+            {themes.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTheme(t.id)}
+                title={`${t.label} — ${t.desc}`}
+                className="font-mono text-[11px] tracking-widest transition-all"
+                style={{
+                  padding: '7px 10px',
+                  flexShrink: 0,
+                  border: theme === t.id
+                    ? '1px solid var(--accent-primary)'
+                    : '1px solid var(--border-color)',
+                  color: theme === t.id
+                    ? 'var(--accent-primary)'
+                    : 'var(--text-muted)',
+                  background: theme === t.id
+                    ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)'
+                    : 'transparent',
+                  cursor: 'pointer',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <span
+            onClick={nextTheme}
+            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+          >›</span>
         </div>
       </header>
 
@@ -108,7 +148,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
         {/* Game card grid */}
         <div
           className="grid gap-4 w-full"
-          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}
+          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
         >
           {GAME_CATALOG.map((game) => {
             const isInstalled = game.status === 'installed'
@@ -225,9 +265,9 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <span style={{ fontSize: 28 }}>🌐</span>
-              <div style={{ textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+              <span style={{ fontSize: 28, flexShrink: 0 }}>🌐</span>
+              <div style={{ textAlign: 'left', minWidth: 0, flexShrink: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary)' }}>
                   ONLINE PLATFORM
                 </div>
@@ -242,9 +282,74 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
           </button>
         </div>
 
+        {/* LAN IP banner */}
+        {lanOrigin && (
+          <div style={{
+            marginTop: 24,
+            maxWidth: 480,
+            width: '100%',
+            padding: '14px 20px',
+            border: '1px solid var(--accent-primary)',
+            borderRadius: 8,
+            background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}>
+            <div>
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: 10,
+                letterSpacing: '0.2em',
+                color: 'var(--accent-primary)',
+                marginBottom: 4,
+              }}>
+                📡 局域网地址 · LAN ADDRESS
+              </div>
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: 15,
+                fontWeight: 'bold',
+                color: 'var(--text-primary)',
+                letterSpacing: '0.05em',
+              }}>
+                {lanOrigin}
+              </div>
+              <div style={{
+                fontFamily: 'monospace',
+                fontSize: 9,
+                color: 'var(--text-muted)',
+                marginTop: 3,
+                letterSpacing: '0.1em',
+              }}>
+                同一 WiFi / 热点设备打开此地址即可加入
+              </div>
+            </div>
+            <button
+              onClick={copyLanUrl}
+              style={{
+                flexShrink: 0,
+                padding: '10px 16px',
+                background: ipCopied ? 'var(--accent-success, #2d6a4f)' : 'var(--bg-primary)',
+                border: `1px solid ${ipCopied ? 'var(--accent-success, #2d6a4f)' : 'var(--accent-primary)'}`,
+                borderRadius: 4,
+                color: ipCopied ? '#fff' : 'var(--accent-primary)',
+                fontFamily: 'monospace',
+                fontSize: 11,
+                cursor: 'pointer',
+                letterSpacing: '0.1em',
+                transition: 'all 0.2s',
+              }}
+            >
+              {ipCopied ? '✓ 已复制' : '复制'}
+            </button>
+          </div>
+        )}
+
         {/* Quick join room */}
         <div style={{
-          marginTop: 32,
+          marginTop: 16,
           padding: '20px 24px',
           border: '1px dashed var(--border-color)',
           borderRadius: 8,
@@ -262,7 +367,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
           }}>
             QUICK JOIN — 已有邀请码？
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             <input
               type="text"
               placeholder="粘贴邀请链接或房间码..."
@@ -274,7 +379,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
                 }
               }}
               style={{
-                flex: 1,
+                flex: '1 1 200px',
                 padding: '8px 12px',
                 background: 'var(--bg-primary)',
                 border: '1px solid var(--border-color)',
@@ -290,7 +395,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
                 if (joinInput.trim() && onQuickJoin) onQuickJoin(joinInput.trim())
               }}
               style={{
-                padding: '8px 16px',
+                padding: '10px 16px',
                 background: 'var(--accent-primary)',
                 color: '#000',
                 border: 'none',
@@ -313,14 +418,18 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
         className="relative z-10 flex justify-center items-center gap-6 px-8 py-4"
         style={{ borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}
       >
-        {['无服务端', '加密互证', '本地存储'].map((item) => (
+        {[
+          { label: '无服务端', hidden: false },
+          { label: '加密互证', hidden: false },
+          { label: '本地存储', hidden: true },
+        ].map(({ label, hidden }) => (
           <div
-            key={item}
-            className="font-mono text-[10px] tracking-[0.2em] flex items-center gap-1.5"
+            key={label}
+            className={`font-mono text-[10px] tracking-[0.2em] flex items-center gap-1.5${hidden ? ' hidden sm:flex' : ''}`}
             style={{ color: 'var(--text-muted)' }}
           >
             <span style={{ color: 'var(--accent-success)' }}>◆</span>
-            {item}
+            {label}
           </div>
         ))}
       </footer>

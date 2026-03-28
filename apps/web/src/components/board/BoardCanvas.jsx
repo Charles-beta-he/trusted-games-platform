@@ -55,6 +55,18 @@ export default function BoardCanvas({
     if (cell) placeStone(cell.r, cell.c)
   }, [gameOver, isThinking, aiMode, currentPlayer, localPlayer, placeStone])
 
+  // Touch: reuse click logic with synthetic clientX/Y from touch point
+  const handleTouchEnd = useCallback((e) => {
+    e.preventDefault()
+    if (gameOver || isThinking) return
+    if (aiMode && currentPlayer === 2) return
+    if (localPlayer != null && currentPlayer !== localPlayer) return
+    const touch = e.changedTouches[0]
+    if (!touch) return
+    const cell = getCellFromEvent({ clientX: touch.clientX, clientY: touch.clientY }, canvasRef.current)
+    if (cell) placeStone(cell.r, cell.c)
+  }, [gameOver, isThinking, aiMode, currentPlayer, localPlayer, placeStone])
+
   const hoverCoord = hoverCell
     ? COLS[hoverCell.c] + (BOARD_SIZE - hoverCell.r) + (board[hoverCell.r]?.[hoverCell.c] ? ' · 已落子' : ' · 空')
     : '悬停查看坐标'
@@ -90,10 +102,18 @@ export default function BoardCanvas({
       >
         <canvas
           ref={canvasRef}
-          style={{ width: CANVAS_PX + 'px', height: CANVAS_PX + 'px', display: 'block', cursor: 'crosshair', borderRadius: '1px' }}
+          style={{
+            width: `min(calc(100vw - max(24px, env(safe-area-inset-left)) - max(24px, env(safe-area-inset-right))), ${CANVAS_PX}px)`,
+            height: `min(calc(100vw - max(24px, env(safe-area-inset-left)) - max(24px, env(safe-area-inset-right))), ${CANVAS_PX}px)`,
+            display: 'block',
+            cursor: 'crosshair',
+            borderRadius: '1px',
+            touchAction: 'manipulation',
+          }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
+          onTouchEnd={handleTouchEnd}
         />
         <VictoryOverlay
           show={victoryVisible}

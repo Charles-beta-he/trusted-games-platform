@@ -1,0 +1,54 @@
+name: Issue Monitor
+
+on:
+  issues:
+    types: [opened, reopened]
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Auto-label new issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            if (context.eventName === 'issues' && context.payload.action === 'opened') {
+              const issue = context.payload.issue;
+              const title = issue.title.toLowerCase();
+              const body = (issue.body || '').toLowerCase();
+
+              const labels = [];
+              if (title.includes('[bug]') || body.includes('bug') || body.includes('错误') || body.includes('问题')) {
+                labels.push('bug');
+              }
+              if (title.includes('[feat]') || body.includes('feature') || body.includes('功能') || body.includes('建议')) {
+                labels.push('enhancement');
+              }
+              if (body.includes('mobile') || body.includes('手机') || body.includes('移动')) {
+                labels.push('mobile');
+              }
+              if (body.includes('p2p') || body.includes('联机') || body.includes('online')) {
+                labels.push('multiplayer');
+              }
+
+              if (labels.length > 0) {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  labels: labels
+                });
+              }
+
+              // Auto-reply to thank the reporter
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `感谢反馈！🎮\n\nThank you for your feedback! We'll review this issue soon.\n\n你可以在 [trusted-games-platform.pages.dev](https://trusted-games-platform.pages.dev) 继续游戏。`
+              });
+            }

@@ -1,12 +1,13 @@
 {
-  "name": "Trusted Games Platform",
-  "short_name": "TrustedGames",
-  "description": "Serverless board game platform — cryptographic move verification, local-first",
+  "name": "可信棋局 · Trusted Games",
+  "short_name": "可信棋局",
+  "description": "五子棋 · 围棋 · 象棋 — 多渠道可信对弈平台，支持 AI 对战与 P2P 联机",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#050a14",
-  "theme_color": "#00d4ff",
-  "orientation": "any",
+  "theme_color": "#050a14",
   "lang": "zh-CN",
   "categories": ["games", "entertainment"],
   "icons": [
@@ -15,6 +16,13 @@
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "五子棋",
+      "url": "/?game=gomoku",
+      "description": "开始五子棋对弈"
     }
   ]
 }

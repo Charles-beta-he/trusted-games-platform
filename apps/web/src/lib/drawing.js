@@ -296,10 +296,12 @@ export function drawBoard(ctx, dpr, { board, hoverCell, lastMove, winningLine, c
 
 export function getCellFromEvent(e, canvas) {
   const rect = canvas.getBoundingClientRect()
+  // Scale factor: CSS display size vs logical CANVAS_PX size (handles mobile scaling)
+  const scale = rect.width / CANVAS_PX
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
-  const c = Math.round((x - PADDING) / CELL_SIZE)
-  const r = Math.round((y - PADDING) / CELL_SIZE)
+  const c = Math.round((x / scale - PADDING) / CELL_SIZE)
+  const r = Math.round((y / scale - PADDING) / CELL_SIZE)
   if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE) return { r, c }
   return null
 }

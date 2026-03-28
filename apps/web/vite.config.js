@@ -8,11 +8,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
-      manifest: false,
+      // manifest.json is already in /public — let VitePWA handle SW only
+      registerType: 'prompt',
       injectRegister: 'auto',
+      manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,ico}'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/api\//],
         runtimeCaching: [

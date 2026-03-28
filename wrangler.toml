@@ -1,0 +1,5 @@
+name = "trusted-games-platform"
+pages_build_output_dir = "apps/web/dist"
+
+[env.production.vars]
+# Set via: wrangler pages secret put VITE_SIGNALING_URL

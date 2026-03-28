@@ -20,7 +20,7 @@ export default function BoardArea({
       : `GAME IN PROGRESS · MOVE ${moveNum + 1}`
 
   return (
-    <main className="flex items-center justify-center p-8">
+    <main className="flex items-center justify-center p-2 md:p-8">
       <div className="flex flex-col items-center gap-4">
         <div className="text-center min-h-[52px] flex flex-col items-center justify-center">
           <div className="font-calligraphy text-[22px] text-ink tracking-[4px] transition-all">

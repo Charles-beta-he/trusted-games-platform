@@ -3,6 +3,8 @@ import { extractOfferFromUrl, clearShareHash } from './lib/shareUrl.js'
 import { useGameEngine } from './hooks/useGameEngine.js'
 import { useAI } from './hooks/useAI.js'
 import { useWebRTC } from './hooks/useWebRTC.js'
+import { useSignaling } from './hooks/useSignaling.js'
+import { usePlatformConn } from './hooks/usePlatformConn.js'
 import { useTimer } from './hooks/useTimer.js'
 import { useIndexedDB } from './hooks/useIndexedDB.js'
 import { useReplay } from './hooks/useReplay.js'
@@ -14,35 +16,31 @@ import PlayerCard from './components/player/PlayerCard.jsx'
 import TrustBadge from './components/trust/TrustBadge.jsx'
 import MoveHistory from './components/trust/MoveHistory.jsx'
 import ControlButtons from './components/controls/ControlButtons.jsx'
-import DifficultySelector from './components/controls/DifficultySelector.jsx'
-import NetworkModeSelector from './components/controls/NetworkModeSelector.jsx'
-import GameSelector from './components/GameSelector.jsx'
-import P2PModal from './components/P2PModal.jsx'
 import GameLobby from './components/GameLobby.jsx'
 import ModeSelect from './components/ModeSelect.jsx'
 import PlatformView from './components/PlatformView.jsx'
-import Collapsible from './components/ui/Collapsible.jsx'
 
 export default function App() {
   // ─── View routing ─────────────────────────────────────────────────────────
   const [currentView, setCurrentView] = useState('lobby')  // 'lobby' | 'mode' | 'game'
   const [selectedGame, setSelectedGame] = useState(null)
 
+  const [matchConn, setMatchConn] = useState(null)
+
   const [aiMode, setAiMode] = useState(false)
   const [difficulty, setDifficulty] = useState('medium')
-  const [showP2PModal, setShowP2PModal] = useState(false)
   const [showDisconnectBanner, setShowDisconnectBanner] = useState(false)
   const [autoJoinOffer, setAutoJoinOffer] = useState(null)
+  const [autoJoinRoomCode, setAutoJoinRoomCode] = useState(null)
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false)
 
-  // Auto-open P2P modal when URL contains a share link — bypass lobby & mode selection
+  // URL share link → go to config (join phase) instead of jumping to game
   useEffect(() => {
     const offerCode = extractOfferFromUrl()
     if (offerCode) {
       clearShareHash()
       setSelectedGame('gomoku')
-      setCurrentView('game')
-      setShowP2PModal(true)
+      setCurrentView('mode')
       setAutoJoinOffer(offerCode)
     }
   }, [])
@@ -77,45 +75,81 @@ export default function App() {
   const resetTimersRef   = useRef(resetTimers);        resetTimersRef.current   = resetTimers
   const startTimerRef    = useRef(startTimer);         startTimerRef.current    = startTimer
 
-  // ─── WebRTC P2P ───────────────────────────────────────────────────────────
-  const webrtc = useWebRTC({
+  // Shared P2P callbacks — used by both manual WebRTC and signaling modes
+  const p2pCallbacks = {
     onMove: useCallback((r, c, hash) => {
-      // Remote move: start timer if first stone, then place with expected hash for verification
       startTimerRef.current()
       placeStoneRef.current(r, c, hash)
     }, []),
     onResign:   useCallback(() => resignGameRef.current(), []),
     onNewGame:  useCallback((gameId) => {
-      // Guest receives host's new gameId — sync game state instead of generating own ID
       initWithRoomRef.current(gameId)
       resetTimersRef.current()
     }, []),
     onRoomInit: useCallback((gameId) => {
-      // Guest receives room init — adopt host's gameId so hash chains align
       initWithRoomRef.current(gameId)
     }, []),
+  }
+
+  // ─── WebRTC P2P (manual SDP) ───────────────────────────────────────────────
+  const webrtc = useWebRTC(p2pCallbacks)
+
+  // ─── Signaling P2P (Room Code via ws server) ───────────────────────────────
+  const sig = useSignaling(p2pCallbacks)
+
+  // ─── Platform connection (online matchmaking + identity) ───────────────────
+  const handleMatchReady = useCallback(({ conn, matchInfo, roomCode, youAre }) => {
+    // If a full DataChannel conn was built by usePlatformConn (matched game):
+    if (conn) {
+      setMatchConn(conn)
+      setAiMode(false)
+      setSelectedGame('gomoku')
+      setCurrentView('game')
+      return
+    }
+    // Fallback: use sig hook for room-code based join (public rooms / guest path)
+    setAiMode(false)
+    setSelectedGame('gomoku')
+    setCurrentView('game')
+    const code = roomCode ?? matchInfo?.roomCode
+    if (code && youAre === 'guest') {
+      sig.joinRoom(code)
+    }
+  }, [sig]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const platform = usePlatformConn({
+    onMatchReady: handleMatchReady,
+    onMove:     p2pCallbacks.onMove,
+    onResign:   p2pCallbacks.onResign,
+    onNewGame:  p2pCallbacks.onNewGame,
+    onRoomInit: p2pCallbacks.onRoomInit,
   })
 
-  // When this client is the host and the channel just opened, send ROOM_INIT
-  // so the guest adopts the same gameId (and derives the same genesisHash).
+  // Active connection — matchConn (platform) > signaling > webrtc
+  const connIsConnected = (matchConn?.isConnected) || webrtc.isConnected || sig.isConnected
+  const conn = matchConn?.isConnected ? matchConn : sig.isConnected ? sig : webrtc
+  const connRef = useRef(conn)
+  connRef.current = conn
+
+  // When host's channel opens, send ROOM_INIT so guest adopts the same gameId
   const prevConnected = useRef(false)
   useEffect(() => {
-    if (webrtc.isConnected && !prevConnected.current && webrtc.role === 'host') {
-      webrtc.sendRoomInit(game.gameId)
+    if (connIsConnected && !prevConnected.current && connRef.current.role === 'host') {
+      connRef.current.sendRoomInit(game.gameId)
     }
     // Detect disconnect mid-game
-    if (prevConnected.current && !webrtc.isConnected && game.moveHistory.length > 0) {
+    if (prevConnected.current && !connIsConnected && game.moveHistory.length > 0) {
       setShowDisconnectBanner(true)
       setTimeout(() => setShowDisconnectBanner(false), 5000)
     }
-    prevConnected.current = webrtc.isConnected
-  }, [webrtc.isConnected]) // eslint-disable-line react-hooks/exhaustive-deps
+    prevConnected.current = connIsConnected
+  }, [connIsConnected]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const effectiveAiMode = aiMode && !webrtc.isConnected
+  const effectiveAiMode = aiMode && !connIsConnected
 
   // ─── P2P turn enforcement ─────────────────────────────────────────────────
   // Host plays as player 1 (black), guest as player 2 (white).
-  const localPlayer = webrtc.isConnected ? (webrtc.role === 'host' ? 1 : 2) : null
+  const localPlayer = connIsConnected ? (conn.role === 'host' ? 1 : 2) : null
 
   // ─── AI ───────────────────────────────────────────────────────────────────
   const { isThinking } = useAI({
@@ -131,18 +165,20 @@ export default function App() {
   const handlePlaceStone = useCallback(async (r, c) => {
     if (game.moveHistory.length === 0) startTimer()
     const result = await game.placeStone(r, c)
-    if (result && (result.ok || result.won) && webrtc.isConnected) {
-      webrtc.sendMove(r, c, result.hash)
+    const c_ = connRef.current
+    if (result && (result.ok || result.won) && c_.isConnected) {
+      c_.sendMove(r, c, result.hash)
     }
     return result
-  }, [game.moveHistory.length, game.placeStone, startTimer, webrtc.isConnected, webrtc.sendMove])
+  }, [game.moveHistory.length, game.placeStone, startTimer])
 
   const handleNewGame = useCallback(() => {
-    const newId = game.newGame()    // returns the freshly-generated ID
+    const newId = game.newGame()
     resetTimers()
     setShowVictoryOverlay(false)
-    if (webrtc.isConnected) webrtc.sendNewGame(newId)
-  }, [game.newGame, resetTimers, webrtc.isConnected, webrtc.sendNewGame])
+    const c_ = connRef.current
+    if (c_.isConnected) c_.sendNewGame(newId)
+  }, [game.newGame, resetTimers])
 
   // Keep ref in sync so WebRTC onNewGame callback always calls the latest version
   handleNewGameRef.current = handleNewGame
@@ -150,8 +186,9 @@ export default function App() {
   const handleResign = useCallback(() => {
     game.resignGame()
     stopTimer()
-    if (webrtc.isConnected) webrtc.sendResign()
-  }, [game.resignGame, stopTimer, webrtc.isConnected, webrtc.sendResign])
+    const c_ = connRef.current
+    if (c_.isConnected) c_.sendResign()
+  }, [game.resignGame, stopTimer])
 
   const handleToggleAI = useCallback(() => {
     setAiMode((v) => !v)
@@ -160,21 +197,30 @@ export default function App() {
   }, [game.newGame, resetTimers])
 
   // ─── Quick-join handler (from GameLobby invite input) ─────────────────────
+  function looksLikeRoomCode(s) {
+    return /^[A-HJ-NP-Z2-9]{6}$/i.test(s.trim())
+  }
+
   const handleQuickJoin = useCallback((input) => {
-    let offerCode = input
-    if (input.includes('#join=')) {
-      try {
-        const fakeUrl = new URL(input.startsWith('http') ? input : `https://x.invalid/${input}`)
-        const encoded = fakeUrl.hash.slice('#join='.length)
-        offerCode = decodeURIComponent(encoded)
-      } catch {
-        offerCode = input
-      }
-    }
     setSelectedGame('gomoku')
-    setCurrentView('game')
-    setAutoJoinOffer(offerCode)
-    setShowP2PModal(true)
+    setCurrentView('mode')
+    if (looksLikeRoomCode(input)) {
+      setAutoJoinRoomCode(input.trim().toUpperCase())
+      setAutoJoinOffer(null)
+    } else {
+      let offerCode = input
+      if (input.includes('#join=')) {
+        try {
+          const fakeUrl = new URL(input.startsWith('http') ? input : `https://x.invalid/${input}`)
+          const encoded = fakeUrl.hash.slice('#join='.length)
+          offerCode = decodeURIComponent(encoded)
+        } catch {
+          offerCode = input
+        }
+      }
+      setAutoJoinOffer(offerCode)
+      setAutoJoinRoomCode(null)
+    }
   }, [])
 
   // ─── Lobby view ───────────────────────────────────────────────────────────
@@ -194,7 +240,11 @@ export default function App() {
   // ─── Platform view ────────────────────────────────────────────────────────
   if (currentView === 'platform') {
     return (
-      <PlatformView onBack={() => setCurrentView('lobby')} />
+      <PlatformView
+        onBack={() => setCurrentView('lobby')}
+        platform={platform}
+        onMatchReady={handleMatchReady}
+      />
     )
   }
 
@@ -203,18 +253,20 @@ export default function App() {
     return (
       <ModeSelect
         gameId={selectedGame}
-        onSelectMode={(mode) => {
+        webrtc={webrtc}
+        sig={sig}
+        onSelectMode={(mode, opts) => {
           if (mode === 'ai') {
             setAiMode(true)
+            if (opts?.difficulty) setDifficulty(opts.difficulty)
           } else {
             setAiMode(false)
           }
           setCurrentView('game')
-          if (mode === 'host' || mode === 'join') {
-            setTimeout(() => setShowP2PModal(true), 100)
-          }
         }}
         onBack={() => setCurrentView('lobby')}
+        autoJoinOffer={autoJoinOffer}
+        autoJoinRoomCode={autoJoinRoomCode}
       />
     )
   }
@@ -231,10 +283,43 @@ export default function App() {
         onBackToLobby={() => setCurrentView('lobby')}
       />
 
+      {/* ── Mobile player cards row ────────────────────────────────────── */}
+      <div
+        className="md:hidden flex gap-2 px-3 py-2 flex-shrink-0"
+        style={{
+          borderBottom: '1px solid var(--border-color)',
+          paddingLeft: 'max(12px, env(safe-area-inset-left))',
+          paddingRight: 'max(12px, env(safe-area-inset-right))',
+        }}
+      >
+        <div className="flex-1">
+          <PlayerCard
+            player={1}
+            name="黑方"
+            type={connIsConnected && conn.role === 'guest' ? 'REMOTE · P2P' : 'LOCAL'}
+            timer={timers.black}
+            isActive={game.currentPlayer === 1 && !game.gameOver}
+          />
+        </div>
+        <div className="flex-1">
+          <PlayerCard
+            player={2}
+            name={effectiveAiMode ? 'AI' : '白方'}
+            type={
+              effectiveAiMode
+                ? `AI · ${difficulty.toUpperCase()}`
+                : connIsConnected ? 'REMOTE · P2P' : 'LOCAL'
+            }
+            timer={timers.white}
+            isActive={game.currentPlayer === 2 && !game.gameOver}
+          />
+        </div>
+      </div>
+
       <div className="flex flex-1" style={{ minHeight: 0 }}>
 
-        {/* ── Left Sidebar ──────────────────────────────────────────────── */}
-        <aside className="w-56 flex-shrink-0 overflow-y-auto" style={{ borderRight: '1px solid var(--border-color)' }}>
+        {/* ── Left Sidebar (desktop only) ────────────────────────────── */}
+        <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 overflow-y-auto" style={{ borderRight: '1px solid var(--border-color)' }}>
           <div className="p-5 flex flex-col gap-5">
 
             {/* === 区域1：玩家信息（始终可见）=== */}
@@ -242,7 +327,7 @@ export default function App() {
               <PlayerCard
                 player={1}
                 name="黑方"
-                type={webrtc.isConnected && webrtc.role === 'guest' ? 'REMOTE · P2P' : 'PLAYER · LOCAL'}
+                type={connIsConnected && conn.role === 'guest' ? 'REMOTE · P2P' : 'PLAYER · LOCAL'}
                 timer={timers.black}
                 isActive={game.currentPlayer === 1 && !game.gameOver}
               />
@@ -252,7 +337,7 @@ export default function App() {
                 type={
                   effectiveAiMode
                     ? `AI · ${difficulty.toUpperCase()}`
-                    : webrtc.isConnected
+                    : connIsConnected
                       ? 'REMOTE · P2P'
                       : 'PLAYER · LOCAL'
                 }
@@ -261,7 +346,7 @@ export default function App() {
               />
             </div>
 
-            {/* === 区域2：主操作（始终可见）=== */}
+            {/* === 区域2：主操作 === */}
             <ControlButtons
               onNewGame={handleNewGame}
               onUndo={() => game.undoMove(effectiveAiMode)}
@@ -275,45 +360,32 @@ export default function App() {
               onReplay={() => { setShowVictoryOverlay(false); replay.enterReplay() }}
             />
 
-            {/* === 区域3：折叠设置（默认收起）=== */}
-            <Collapsible title="SETTINGS" icon="⚙" defaultOpen={false}>
-              {/* Difficulty (AI mode only) */}
-              {effectiveAiMode && (
-                <DifficultySelector
-                  difficulty={difficulty}
-                  onChange={setDifficulty}
-                  disabled={game.moveHistory.length > 0 && !game.gameOver}
-                />
-              )}
-              {/* Network mode */}
-              <NetworkModeSelector
-                mode={game.networkMode}
-                onChange={game.setNetworkMode}
-                onOpenP2P={() => setShowP2PModal(true)}
-                connectionStatus={
-                  webrtc.isEncrypted ? 'encrypted' :
-                  webrtc.isConnected ? 'connected' :
-                  (webrtc.step !== 'idle') ? 'connecting' :
-                  'idle'
-                }
-              />
-              {/* Game selector — plugin catalog */}
-              <GameSelector currentGameId={selectedGame || 'gomoku'} />
-              {/* Secondary controls: AI toggle, export, replay */}
-              <ControlButtons
-                onNewGame={handleNewGame}
-                onUndo={() => game.undoMove(effectiveAiMode)}
-                onToggleAI={handleToggleAI}
-                onExport={game.exportGame}
-                onResign={handleResign}
-                aiMode={effectiveAiMode}
-                gameOver={game.gameOver}
-                canUndo={game.moveHistory.length > 0}
-                canReplay={game.gameOver && game.moveHistory.length > 0}
-                onReplay={() => { setShowVictoryOverlay(false); replay.enterReplay() }}
-                mode="secondary"
-              />
-            </Collapsible>
+            {/* === 区域3：连接状态（P2P 时显示）=== */}
+            {connIsConnected && (
+              <div style={{
+                padding: '8px 10px',
+                border: `1px solid ${conn.isEncrypted ? 'var(--accent-success, #2d6a4f)' : 'var(--border-color)'}`,
+                borderRadius: 4,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                background: conn.isEncrypted
+                  ? 'color-mix(in srgb, var(--accent-success, #2d6a4f) 8%, var(--bg-surface))'
+                  : 'var(--bg-surface)',
+              }}>
+                <div style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: conn.isEncrypted ? 'var(--accent-success, #2d6a4f)' : 'var(--accent-primary)',
+                  flexShrink: 0,
+                }} />
+                <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
+                  {conn.isEncrypted ? '🔐 E2E ENCRYPTED' : 'P2P CONNECTED'}
+                  <div style={{ marginTop: 1, opacity: 0.7 }}>
+                    {sig.isConnected ? 'ROOM CODE' : 'DIRECT · SDP'}
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         </aside>
@@ -364,9 +436,9 @@ export default function App() {
           )}
         </div>
 
-        {/* ── Right Sidebar ─────────────────────────────────────────────── */}
+        {/* ── Right Sidebar (desktop only) ──────────────────────────── */}
         <aside
-          className="w-56 flex-shrink-0 flex flex-col"
+          className="hidden lg:flex lg:flex-col w-56 flex-shrink-0"
           style={{ borderLeft: '1px solid var(--border-color)', overflow: 'hidden' }}
         >
           <div className="p-5 flex-shrink-0">
@@ -383,12 +455,50 @@ export default function App() {
 
       </div>
 
-      <Footer gameId={game.gameId} networkMode={game.networkMode} isEncrypted={webrtc.isEncrypted} />
+      {/* ── Mobile bottom action bar ──────────────────────────────────── */}
+      <div
+        className="md:hidden flex gap-1 px-2 flex-shrink-0"
+        style={{
+          borderTop: '1px solid var(--border-color)',
+          backgroundColor: 'var(--bg-secondary)',
+          paddingTop: 8,
+          paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+        }}
+      >
+        {[
+          { label: '新局', onClick: handleNewGame },
+          { label: '悔棋', onClick: () => game.undoMove(effectiveAiMode), disabled: game.moveHistory.length === 0 },
+          { label: '认输', onClick: handleResign, disabled: game.gameOver || game.moveHistory.length === 0 },
+          { label: '导出', onClick: game.exportGame },
+        ].map(({ label, onClick, disabled }) => (
+          <button
+            key={label}
+            onClick={onClick}
+            disabled={disabled}
+            style={{
+              flex: 1,
+              padding: '10px 4px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 4,
+              color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
+              fontFamily: 'var(--font-primary)',
+              fontSize: 12,
+              letterSpacing: '0.05em',
+              cursor: disabled ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      <Footer gameId={game.gameId} networkMode={game.networkMode} isEncrypted={conn.isEncrypted} />
 
       {/* Disconnect banner */}
       {showDisconnectBanner && (
         <div style={{
-          position: 'fixed', top: 60, left: '50%', transform: 'translateX(-50%)',
+          position: 'fixed', top: 'max(60px, calc(env(safe-area-inset-top) + 12px))', left: '50%', transform: 'translateX(-50%)',
           background: 'var(--accent-danger, #8b3a3a)', color: '#fff',
           padding: '10px 24px', borderRadius: 6, zIndex: 1000,
           fontFamily: 'var(--font-primary, monospace)', fontSize: 13,
@@ -398,21 +508,6 @@ export default function App() {
         </div>
       )}
 
-      {/* P2P Modal */}
-      {showP2PModal && (
-        <P2PModal
-          webrtc={webrtc}
-          onClose={() => {
-            setShowP2PModal(false)
-            setAutoJoinOffer(null)
-            if (!webrtc.isConnected) {
-              webrtc.disconnect()
-              setCurrentView('mode')
-            }
-          }}
-          autoJoinOffer={autoJoinOffer}
-        />
-      )}
     </div>
   )
 }
