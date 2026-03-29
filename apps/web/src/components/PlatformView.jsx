@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
 // ── Rank helpers ──────────────────────────────────────────────────────────────
@@ -266,6 +267,7 @@ function MatchTab({ platform, onMatchReady }) {
 // ── PROFILE TAB ───────────────────────────────────────────────────────────────
 function ProfileTab({ platform }) {
   const { user, setNickname, isOnline } = platform
+  const navigate = useNavigate()
   const [nicknameInput, setNicknameInput] = useState('')
   const [registering, setRegistering] = useState(false)
   const [editingNickname, setEditingNickname] = useState(false)
@@ -481,6 +483,35 @@ function ProfileTab({ platform }) {
           </div>
         ))}
       </div>
+
+      {/* Style Center entry */}
+      <button
+        onClick={() => navigate('/styles')}
+        style={btn({
+          width: '100%',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        })}
+        onMouseEnter={e => {
+          e.currentTarget.style.borderColor = 'var(--accent-primary)'
+          e.currentTarget.style.color = 'var(--accent-primary)'
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.borderColor = 'var(--border-color)'
+          e.currentTarget.style.color = 'var(--text-primary)'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 20 }}>🎭</span>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em' }}>STYLE CENTER</div>
+            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>棋风中心 · 生成 / 导入 / 分享</div>
+          </div>
+        </div>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>→</span>
+      </button>
     </div>
   )
 }

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { GAME_CATALOG } from '../plugins/index.js'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { getLocalIP } from '../lib/lanIp.js'
 
 export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform }) {
+  const navigate = useNavigate()
   const { theme, setTheme, themes } = useTheme()
   const [joinInput, setJoinInput] = useState('')
   const [localIP, setLocalIP] = useState(null)
@@ -273,6 +275,50 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                   在线对弈平台 · 匹配对手 · 排行榜
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+              进入 →
+            </div>
+          </button>
+        </div>
+
+        {/* Style Center entry */}
+        <div style={{ marginTop: 12, width: '100%', maxWidth: '900px' }}>
+          <button
+            onClick={() => navigate('/styles')}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-color)',
+              borderRadius: 8,
+              cursor: 'pointer',
+              fontFamily: 'var(--font-primary)',
+              color: 'var(--text-primary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'var(--accent-primary)'
+              e.currentTarget.style.boxShadow = '0 0 16px color-mix(in srgb, var(--accent-primary) 20%, transparent)'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'var(--border-color)'
+              e.currentTarget.style.boxShadow = 'none'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+              <span style={{ fontSize: 24, flexShrink: 0 }}>🎭</span>
+              <div style={{ textAlign: 'left', minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--text-primary)' }}>
+                  STYLE CENTER
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                  棋风中心 · 生成 / 导入 / 分享个人棋风
                 </div>
               </div>
             </div>

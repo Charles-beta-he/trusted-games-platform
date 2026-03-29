@@ -1,7 +1,63 @@
 import { BOARD_SIZE, SCORE, DIFFICULTY_CONFIG } from './constants.js'
 
+// ---------------------------------------------------------------------------
+// Zobrist hashing — 15×15×2 random 32-bit pairs (simulating 64-bit keys)
+// Index: player 0 = index 0..449, player 1 = index 450..899
+// ---------------------------------------------------------------------------
+const ZOBRIST_LO = new Uint32Array(BOARD_SIZE * BOARD_SIZE * 2)
+const ZOBRIST_HI = new Uint32Array(BOARD_SIZE * BOARD_SIZE * 2)
+;(function initZobrist() {
+  for (let i = 0; i < ZOBRIST_LO.length; i++) {
+    ZOBRIST_LO[i] = (Math.random() * 0x100000000) >>> 0
+    ZOBRIST_HI[i] = (Math.random() * 0x100000000) >>> 0
+  }
+})()
+
+// player: 1 or 2  →  offset 0 or 450
+function _zobristIdx(r, c, player) {
+  return (player - 1) * BOARD_SIZE * BOARD_SIZE + r * BOARD_SIZE + c
+}
+
+export function computeHash(board) {
+  let lo = 0, hi = 0
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const p = board[r][c]
+      if (p !== 0) {
+        const idx = _zobristIdx(r, c, p)
+        lo ^= ZOBRIST_LO[idx]
+        hi ^= ZOBRIST_HI[idx]
+      }
+    }
+  }
+  return [lo, hi]
+}
+
+// Returns a NEW hash array — does not mutate the input array.
+export function updateHash(hash, r, c, player) {
+  const idx = _zobristIdx(r, c, player)
+  return [hash[0] ^ ZOBRIST_LO[idx], hash[1] ^ ZOBRIST_HI[idx]]
+}
+
+function hashKey(hash) {
+  // Combine two 32-bit halves into a Number (safe up to 2^53)
+  return hash[0] * 0x100000000 + hash[1]
+}
+
+// ---------------------------------------------------------------------------
+// Transposition table
+// ---------------------------------------------------------------------------
+const TT_LIMIT = 200_000
+let transpositionTable = new Map()
+
+export function clearTranspositionTable() {
+  transpositionTable = new Map()
+}
+
+// ---------------------------------------------------------------------------
 // Traverse one ray from (r, c) in direction (dr, dc) and return the number of
 // consecutive player stones and whether the ray ends on an open cell.
+// ---------------------------------------------------------------------------
 function countDirection(board, r, c, dr, dc, player) {
   let count = 0
   let openEnd = 0
@@ -102,36 +158,66 @@ export function checkWinBoard(board, r, c, player) {
   return false
 }
 
-function minimax(board, depth, alpha, beta, maximizing, ai, human, style) {
-  if (depth === 0) return boardScore(board, ai, human, style)
+function minimax(board, depth, alpha, beta, maximizing, ai, human, style, hash) {
+  // ---------------------------------------------------------------------------
+  // Transposition table lookup
+  // ---------------------------------------------------------------------------
+  const key = hashKey(hash)
+  const ttEntry = transpositionTable.get(key)
+  if (ttEntry !== undefined && ttEntry.depth >= depth) {
+    if (ttEntry.flag === 'exact') return ttEntry.score
+    if (ttEntry.flag === 'lower') alpha = Math.max(alpha, ttEntry.score)
+    else if (ttEntry.flag === 'upper') beta = Math.min(beta, ttEntry.score)
+    if (alpha >= beta) return ttEntry.score
+  }
+
+  if (depth === 0) {
+    const score = boardScore(board, ai, human, style)
+    // Store leaf node as exact
+    _ttStore(key, depth, score, 'exact')
+    return score
+  }
 
   const candidates = getCandidates(board)
+  const originalAlpha = alpha
 
   if (maximizing) {
     let best = -Infinity
     for (const { r, c } of candidates) {
       board[r][c] = ai
+      const newHash = updateHash(hash, r, c, ai)
       if (checkWinBoard(board, r, c, ai)) { board[r][c] = 0; return SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, false, ai, human, style)
+      const val = minimax(board, depth - 1, alpha, beta, false, ai, human, style, newHash)
       board[r][c] = 0
       best = Math.max(best, val)
       alpha = Math.max(alpha, best)
       if (beta <= alpha) break
     }
+    const flag = best <= originalAlpha ? 'upper' : best >= beta ? 'lower' : 'exact'
+    _ttStore(key, depth, best, flag)
     return best
   } else {
     let best = Infinity
+    const originalBeta = beta
     for (const { r, c } of candidates) {
       board[r][c] = human
+      const newHash = updateHash(hash, r, c, human)
       if (checkWinBoard(board, r, c, human)) { board[r][c] = 0; return -SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, true, ai, human, style)
+      const val = minimax(board, depth - 1, alpha, beta, true, ai, human, style, newHash)
       board[r][c] = 0
       best = Math.min(best, val)
       beta = Math.min(beta, best)
       if (beta <= alpha) break
     }
+    const flag = best >= originalBeta ? 'lower' : best <= alpha ? 'upper' : 'exact'
+    _ttStore(key, depth, best, flag)
     return best
   }
+}
+
+function _ttStore(key, depth, score, flag) {
+  if (transpositionTable.size >= TT_LIMIT) transpositionTable = new Map()
+  transpositionTable.set(key, { depth, score, flag })
 }
 
 export function getBestMove(board, difficulty, style = DEFAULT_STYLE) {
@@ -176,10 +262,14 @@ export function getBestMove(board, difficulty, style = DEFAULT_STYLE) {
     .sort((a, b) => b.s - a.s)
     .slice(0, 20)
 
+  // Compute initial board hash once before the search loop
+  const rootHash = computeHash(board)
+
   let best = -Infinity, bestMove = null
   for (const { r, c } of scored) {
     board[r][c] = ai
-    const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human, style)
+    const childHash = updateHash(rootHash, r, c, ai)
+    const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human, style, childHash)
     board[r][c] = 0
     if (val > best) { best = val; bestMove = { r, c } }
   }

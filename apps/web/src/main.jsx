@@ -4,9 +4,10 @@ import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom'
 import './index.css'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
 
-const LobbyPage    = lazy(() => import('./pages/LobbyPage.jsx'))
-const PlayPage     = lazy(() => import('./pages/PlayPage.jsx'))
-const PlatformPage = lazy(() => import('./pages/PlatformPage.jsx'))
+const LobbyPage        = lazy(() => import('./pages/LobbyPage.jsx'))
+const PlayPage         = lazy(() => import('./pages/PlayPage.jsx'))
+const PlatformPage     = lazy(() => import('./pages/PlatformPage.jsx'))
+const StyleCenterPage  = lazy(() => import('./pages/StyleCenterPage.jsx'))
 
 function PageLoader() {
   return (
@@ -38,6 +39,10 @@ const router = createBrowserRouter([
   {
     path: '/platform',
     element: <Suspense fallback={<PageLoader />}><PlatformPage /></Suspense>,
+  },
+  {
+    path: '/styles',
+    element: <Suspense fallback={<PageLoader />}><StyleCenterPage /></Suspense>,
   },
   {
     path: '*',
