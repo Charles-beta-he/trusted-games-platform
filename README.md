@@ -75,11 +75,33 @@ Set `VITE_SIGNALING_URL=ws://localhost:8787` in `apps/web/.env.local` to use the
 
 ---
 
+## Branch Strategy
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | **Production** — Cloudflare Pages auto-deploys on every push |
+| `master` | Development / staging — merge into `main` to trigger production deploy |
+
+To release to production:
+
+```bash
+git checkout main
+git merge master
+git push origin main   # triggers Cloudflare Pages deployment
+git checkout master
+```
+
+---
+
 ## Deployment
 
 ### Frontend → Cloudflare Pages
 
+Cloudflare Pages is connected to the GitHub repository and watches the **`main` branch**.
+Every push to `main` automatically builds and deploys the frontend.
+
 ```bash
+# Manual deploy (if needed)
 pnpm build
 npx wrangler pages deploy apps/web/dist --project-name trusted-games-platform --branch main
 ```
