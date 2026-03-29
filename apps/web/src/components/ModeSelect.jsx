@@ -707,18 +707,19 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '40px 24px',
-        gap: 32,
+        padding: '24px 16px',
+        gap: 20,
         overflowY: 'auto',
       }}>
 
-        {/* Phase 1: title + mode cards */}
+        {/* Phase 1: mode cards — hidden once a mode is selected */}
+        {!selectedMode && (
         <div style={{
           width: '100%',
           maxWidth: 680,
           display: 'flex',
           flexDirection: 'column',
-          gap: 24,
+          gap: 16,
         }}>
           {/* Title */}
           <div style={{ textAlign: 'center' }}>
@@ -726,13 +727,13 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
               fontSize: 11,
               letterSpacing: '0.4em',
               color: 'var(--text-muted)',
-              marginBottom: 10,
+              marginBottom: 6,
               textTransform: 'uppercase',
             }}>
-              {selectedMode ? '配置游戏参数' : 'CHOOSE YOUR BATTLE'}
+              CHOOSE YOUR BATTLE
             </div>
             <div style={{
-              fontSize: 30,
+              fontSize: 26,
               fontWeight: 'bold',
               color: 'var(--text-primary)',
               fontFamily: 'var(--font-display, var(--font-primary))',
@@ -745,12 +746,11 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
           {/* Mode cards grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))',
-            gap: 14,
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: 12,
           }}>
             {MODES.map((mode) => {
-              const isSelected = selectedMode === mode.id
-              const isOtherSelected = selectedMode && !isSelected
+              const isSelected = false
               return (
                 <button
                   key={mode.id}
@@ -758,40 +758,31 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
                   onMouseEnter={() => setHovered(mode.id)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    background: isSelected
-                      ? `linear-gradient(135deg, var(--bg-surface), ${mode.color}33)`
-                      : hovered === mode.id
-                        ? `linear-gradient(135deg, var(--bg-surface), ${mode.color}18)`
-                        : 'var(--bg-surface)',
-                    border: `1px solid ${isSelected ? mode.color : hovered === mode.id ? mode.color + '88' : 'var(--border-color)'}`,
+                    background: hovered === mode.id
+                      ? `linear-gradient(135deg, var(--bg-surface), ${mode.color}18)`
+                      : 'var(--bg-surface)',
+                    border: `1px solid ${hovered === mode.id ? mode.color + '88' : 'var(--border-color)'}`,
                     borderRadius: 8,
-                    padding: '18px 16px',
+                    padding: '16px 14px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.2s',
-                    boxShadow: isSelected
-                      ? `0 0 20px ${mode.color}44`
-                      : hovered === mode.id
-                        ? `0 0 12px ${mode.color}22`
-                        : 'none',
-                    opacity: isOtherSelected ? 0.45 : 1,
-                    outline: isSelected ? `1px solid ${mode.color}55` : 'none',
-                    outlineOffset: 2,
+                    boxShadow: hovered === mode.id ? `0 0 12px ${mode.color}22` : 'none',
                   }}
                 >
-                  <div style={{ fontSize: 30, marginBottom: 10 }}>{mode.icon}</div>
+                  <div style={{ fontSize: 26, marginBottom: 8 }}>{mode.icon}</div>
                   <div style={{
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: 'bold',
                     letterSpacing: '0.15em',
-                    color: isSelected || hovered === mode.id ? mode.color : 'var(--text-primary)',
-                    marginBottom: 3,
+                    color: hovered === mode.id ? mode.color : 'var(--text-primary)',
+                    marginBottom: 2,
                     fontFamily: 'var(--font-display, var(--font-primary))',
                     transition: 'color 0.15s',
                   }}>
                     {mode.title}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 6 }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
                     {mode.titleCn}
                   </div>
                   <div style={{
@@ -802,27 +793,14 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
                   }}>
                     {mode.desc}
                   </div>
-                  {isSelected && (
-                    <div style={{
-                      marginTop: 8,
-                      display: 'inline-block',
-                      fontSize: 9,
-                      letterSpacing: '0.15em',
-                      color: mode.color,
-                      border: `1px solid ${mode.color}`,
-                      padding: '2px 7px',
-                      borderRadius: 2,
-                    }}>
-                      SELECTED ✓
-                    </div>
-                  )}
                 </button>
               )
             })}
           </div>
         </div>
+        )}
 
-        {/* Phase 2: configuration panel (shown below cards when mode selected) */}
+        {/* Phase 2: configuration panel — replaces mode grid */}
         {selectedMode && (
           <div style={{
             width: '100%',

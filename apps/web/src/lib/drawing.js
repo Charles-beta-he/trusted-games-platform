@@ -160,7 +160,10 @@ function drawStone(ctx, r, col, player, isPreview = false, c, isSciFi) {
     const glowColor = isNeonCyber
       ? (isBlack ? '#ff00ff' : '#00ffcc')
       : (isBlack ? '#7c3aed' : '#00d4ff')
-    const baseColor = isBlack ? c.stoneBlack : c.stoneWhite
+    // Black stones get a slightly lighter fill so they're visible on dark bg
+    const baseColor = isBlack
+      ? (isNeonCyber ? '#1a0030' : '#0e1a3a')
+      : c.stoneWhite
 
     ctx.shadowBlur = isNeonCyber ? 8 : 12
     ctx.shadowColor = glowColor
@@ -169,8 +172,15 @@ function drawStone(ctx, r, col, player, isPreview = false, c, isSciFi) {
     ctx.fillStyle = baseColor
     ctx.fill()
 
-    // Inner highlight gradient
+    // Visible ring outline — critical for black stone legibility on dark bg
     ctx.shadowBlur = 0
+    ctx.strokeStyle = glowColor
+    ctx.lineWidth = isBlack ? 1.5 : 1
+    ctx.globalAlpha = isBlack ? 0.85 : 0.4
+    ctx.stroke()
+    ctx.globalAlpha = 1
+
+    // Inner highlight gradient
     const grad = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 1, x, y, radius)
     grad.addColorStop(0, isNeonCyber
       ? (isBlack ? 'rgba(255,0,255,0.35)' : 'rgba(0,255,204,0.4)')
@@ -263,7 +273,33 @@ function drawHoverPreview(ctx, hoverCell, currentPlayer, board, c, isSciFi) {
   ctx.restore()
 }
 
-export function drawBoard(ctx, dpr, { board, hoverCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking }) {
+/** Touch pending cell: prominent ring + semi-filled circle to distinguish from hover */
+function drawPendingCell(ctx, pendingCell, currentPlayer, board, c, isSciFi) {
+  const { r, c: col } = pendingCell
+  if (board[r][col] !== 0) return
+
+  const x = PADDING + col * CELL_SIZE
+  const y = PADDING + r * CELL_SIZE
+  const radius = CELL_SIZE * 0.44
+
+  ctx.save()
+
+  // Fill with player colour
+  ctx.globalAlpha = isSciFi ? 0.55 : 0.45
+  drawStone(ctx, r, col, currentPlayer, true, c, isSciFi)
+
+  // Outer pulsing ring
+  ctx.globalAlpha = 1
+  ctx.beginPath()
+  ctx.arc(x, y, radius + 4, 0, Math.PI * 2)
+  ctx.strokeStyle = isSciFi ? 'var(--accent-primary, #00d4ff)' : (currentPlayer === 1 ? '#ffffff' : '#333333')
+  ctx.lineWidth = 2
+  ctx.stroke()
+
+  ctx.restore()
+}
+
+export function drawBoard(ctx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking }) {
   const c = getThemeColors()
   const currentTheme = getCurrentTheme()
   const isSciFi = currentTheme === 'sci-fi' || currentTheme === 'neon-cyber'
@@ -287,7 +323,10 @@ export function drawBoard(ctx, dpr, { board, hoverCell, lastMove, winningLine, c
 
   if (lastMove) drawLastMoveIndicator(ctx, lastMove, board, c)
 
-  if (hoverCell && !gameOver && !aiThinking) {
+  // Pending cell (touch confirm) takes priority over hover
+  if (pendingCell && !gameOver && !aiThinking) {
+    drawPendingCell(ctx, pendingCell, currentPlayer, board, c, isSciFi)
+  } else if (hoverCell && !gameOver && !aiThinking) {
     drawHoverPreview(ctx, hoverCell, currentPlayer, board, c, isSciFi)
   }
 
