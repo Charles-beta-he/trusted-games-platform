@@ -172,7 +172,7 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
 
   // ── P2P setup for HOST ─────────────────────────────────────────────────────
   const setupAsHost = useCallback(async () => {
-    const pc = createPeerConnection()
+    const pc = await createPeerConnection()
     pcRef.current = pc
     p2pRoleRef.current = 'host'
 
@@ -188,7 +188,7 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
 
   // ── P2P setup for GUEST (triggered on signal/offer) ───────────────────────
   const handleGuestOffer = useCallback(async (offerCode) => {
-    const pc = createPeerConnection()
+    const pc = await createPeerConnection()
     pcRef.current = pc
     p2pRoleRef.current = 'guest'
 

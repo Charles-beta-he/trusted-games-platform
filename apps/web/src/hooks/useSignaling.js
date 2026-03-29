@@ -120,7 +120,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
     try {
       const ws  = await openWS()
-      const pc  = createPeerConnection()
+      const pc  = await createPeerConnection()
       pcRef.current = pc
 
       const ch = pc.createDataChannel('game')
@@ -178,7 +178,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
     try {
       const ws = await openWS()
-      const pc = createPeerConnection()
+      const pc = await createPeerConnection()
       pcRef.current = pc
 
       pc.ondatachannel = ({ channel }) => setupChannel(channel)
