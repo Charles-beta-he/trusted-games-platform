@@ -34,12 +34,22 @@ export function evaluatePosition(board, r, c, player) {
   return total
 }
 
-export function boardScore(board, ai, human) {
+const DEFAULT_STYLE = { attack: 1.0, defense: 1.1, center: 0, noise: 0 }
+
+export function boardScore(board, ai, human, style = DEFAULT_STYLE) {
   let score = 0
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let c = 0; c < BOARD_SIZE; c++) {
-      if (board[r][c] === ai) score += evaluatePosition(board, r, c, ai)
-      else if (board[r][c] === human) score -= evaluatePosition(board, r, c, human) * 1.1
+      if (board[r][c] === ai) {
+        let s = evaluatePosition(board, r, c, ai) * style.attack
+        if (style.center > 0) {
+          const dist = Math.max(Math.abs(r - 7), Math.abs(c - 7))
+          s += (7 - dist) * style.center * 2
+        }
+        score += s
+      } else if (board[r][c] === human) {
+        score -= evaluatePosition(board, r, c, human) * style.defense
+      }
     }
   }
   return score
@@ -92,8 +102,8 @@ export function checkWinBoard(board, r, c, player) {
   return false
 }
 
-function minimax(board, depth, alpha, beta, maximizing, ai, human) {
-  if (depth === 0) return boardScore(board, ai, human)
+function minimax(board, depth, alpha, beta, maximizing, ai, human, style) {
+  if (depth === 0) return boardScore(board, ai, human, style)
 
   const candidates = getCandidates(board)
 
@@ -102,7 +112,7 @@ function minimax(board, depth, alpha, beta, maximizing, ai, human) {
     for (const { r, c } of candidates) {
       board[r][c] = ai
       if (checkWinBoard(board, r, c, ai)) { board[r][c] = 0; return SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, false, ai, human)
+      const val = minimax(board, depth - 1, alpha, beta, false, ai, human, style)
       board[r][c] = 0
       best = Math.max(best, val)
       alpha = Math.max(alpha, best)
@@ -114,7 +124,7 @@ function minimax(board, depth, alpha, beta, maximizing, ai, human) {
     for (const { r, c } of candidates) {
       board[r][c] = human
       if (checkWinBoard(board, r, c, human)) { board[r][c] = 0; return -SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, true, ai, human)
+      const val = minimax(board, depth - 1, alpha, beta, true, ai, human, style)
       board[r][c] = 0
       best = Math.min(best, val)
       beta = Math.min(beta, best)
@@ -124,7 +134,7 @@ function minimax(board, depth, alpha, beta, maximizing, ai, human) {
   }
 }
 
-export function getBestMove(board, difficulty) {
+export function getBestMove(board, difficulty, style = DEFAULT_STYLE) {
   const ai = 2, human = 1
   const depth = DIFFICULTY_CONFIG[difficulty]?.depth ?? 3
   const candidates = getCandidates(board)
@@ -146,7 +156,9 @@ export function getBestMove(board, difficulty) {
     let best = -Infinity, bestMove = null
     for (const { r, c } of candidates) {
       board[r][c] = ai
-      const s = evaluatePosition(board, r, c, ai) - evaluatePosition(board, r, c, human) * 1.1
+      let s = evaluatePosition(board, r, c, ai) * style.attack
+            - evaluatePosition(board, r, c, human) * style.defense
+      if (style.noise > 0) s += (Math.random() - 0.5) * style.noise * SCORE.OPEN_THREE
       board[r][c] = 0
       if (s > best) { best = s; bestMove = { r, c } }
     }
@@ -156,7 +168,8 @@ export function getBestMove(board, difficulty) {
   const scored = candidates
     .map(({ r, c }) => {
       board[r][c] = ai
-      const s = evaluatePosition(board, r, c, ai)
+      let s = evaluatePosition(board, r, c, ai)
+      if (style.noise > 0) s += (Math.random() - 0.5) * style.noise * SCORE.OPEN_THREE
       board[r][c] = 0
       return { r, c, s }
     })
@@ -166,7 +179,7 @@ export function getBestMove(board, difficulty) {
   let best = -Infinity, bestMove = null
   for (const { r, c } of scored) {
     board[r][c] = ai
-    const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human)
+    const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human, style)
     board[r][c] = 0
     if (val > best) { best = val; bestMove = { r, c } }
   }

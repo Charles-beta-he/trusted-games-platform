@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { buildShareUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
+import StyleSelector from './ai/StyleSelector.jsx'
 
 // ─── Inline utilities ─────────────────────────────────────────────────────────
 
@@ -132,6 +133,7 @@ const DIFFICULTIES = [
 
 function PanelAI({ onConfirm }) {
   const [difficulty, setDifficulty] = useState('medium')
+  const [styleId, setStyleId] = useState('balanced')
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
@@ -161,7 +163,10 @@ function PanelAI({ onConfirm }) {
           ))}
         </div>
       </div>
-      <button onClick={() => onConfirm('ai', { difficulty })} style={startBtnStyle}>
+
+      <StyleSelector value={styleId} onChange={setStyleId} />
+
+      <button onClick={() => onConfirm('ai', { difficulty, styleId })} style={startBtnStyle}>
         START GAME →
       </button>
     </div>
