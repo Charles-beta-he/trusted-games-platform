@@ -21,7 +21,7 @@ function QRCanvas({ value, size = 160 }) {
       color: { dark: darkColor, light: lightColor },
     }).catch(console.error)
   }, [value, size])
-  return <canvas ref={canvasRef} style={{ borderRadius: 4, display: 'block' }} />
+  return <canvas ref={canvasRef} style={{ borderRadius: 4, display: 'block', width: size, height: size, maxWidth: '100%' }} />
 }
 
 function CopyButton({ text, label }) {
@@ -288,7 +288,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
           )}
         </div>
 
-        {/* ── LAN / QR panel (right) ── */}
+        {/* ── QR panel (right) ── */}
         <div style={{
           padding: 16,
           background: 'var(--bg-surface)',
@@ -306,42 +306,45 @@ function PanelHost({ webrtc, sig, onConfirm }) {
             fontWeight: 'bold',
             alignSelf: 'flex-start',
           }}>
-            局域网 / QR
+            二维码 / QR
           </div>
 
-          {webrtc.step === 'creating' && (
+          {/* 优先用房间码生成 QR（6字符，可扫）；其次用局域网链接 */}
+          {sig?.isAvailable && sig.step === 'waiting' && sig.roomCode && (
             <>
-              <Spinner />
-              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>生成二维码中...</div>
+              <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+                <QRCanvas value={sig.roomCode} size={120} />
+              </div>
+              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
+                扫码获取房间码
+              </div>
             </>
           )}
 
-          {webrtc.step === 'waiting_for_answer' && (lanUrl || shareUrl) && (
+          {(!sig?.isAvailable || sig.step !== 'waiting') && webrtc.step === 'waiting_for_answer' && lanUrl && (
             <>
-              <QRCanvas value={lanUrl || shareUrl} size={120} />
+              <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+                <QRCanvas value={lanUrl} size={120} />
+              </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
                 扫码加入 · 同网络设备
               </div>
               {lanUrl && (
                 <div style={{
-                  fontSize: 9,
-                  color: 'var(--accent-primary)',
-                  fontFamily: 'monospace',
-                  textAlign: 'center',
-                  wordBreak: 'break-all',
+                  fontSize: 9, color: 'var(--accent-primary)',
+                  fontFamily: 'monospace', textAlign: 'center', wordBreak: 'break-all',
                 }}>
                   {lanUrl.split('#')[0]}
                 </div>
               )}
-              {(lanUrl || shareUrl) && (
-                <CopyButton text={lanUrl || shareUrl} label="复制链接" />
-              )}
+              <CopyButton text={lanUrl} label="复制链接" />
             </>
           )}
 
-          {webrtc.step !== 'creating' && webrtc.step !== 'waiting_for_answer' && (
+          {(!sig?.isAvailable || sig.step !== 'waiting') &&
+           webrtc.step !== 'waiting_for_answer' && (
             <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
-              等待邀请码生成...
+              {webrtc.step === 'creating' ? '生成中...' : '等待生成...'}
             </div>
           )}
 

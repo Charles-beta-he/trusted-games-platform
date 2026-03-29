@@ -1040,7 +1040,6 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
       {/* ── Mobile Bottom Tab Bar ─────────────────────────────────────────────── */}
       <nav
         style={{
-          display: 'flex',
           position: 'fixed',
           bottom: 0,
           left: 0,
@@ -1050,7 +1049,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
           borderTop: '1px solid var(--border-color)',
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
-        className="md:hidden"
+        className="flex md:hidden"
       >
         {TABS.map(tab => (
           <button
