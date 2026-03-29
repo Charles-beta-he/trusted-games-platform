@@ -13,15 +13,56 @@
 
 // ─── Worker entry ─────────────────────────────────────────────────────────────
 
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    const upgrade = request.headers.get('Upgrade') ?? ''
 
-    // Route all WS upgrades and /health to the single GameServer DO instance
+    // ── TURN credentials (Worker-level, no DO needed) ──────────────────────
+    if (url.pathname === '/api/turn') {
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { status: 204, headers: CORS })
+      }
+      return handleTurn(env)
+    }
+
+    // Route everything else to the single GameServer DO instance
     const id = env.GAME_SERVER.idFromName('main')
     const stub = env.GAME_SERVER.get(id)
     return stub.fetch(request)
+  }
+}
+
+/**
+ * Generate Cloudflare TURN credentials.
+ * Requires secrets: CF_TURN_KEY_ID, CF_TURN_API_TOKEN
+ * Falls back to empty list (STUN-only) if secrets are missing.
+ */
+async function handleTurn(env) {
+  if (!env.CF_TURN_KEY_ID || !env.CF_TURN_API_TOKEN) {
+    return Response.json({ iceServers: [] }, { headers: CORS })
+  }
+  try {
+    const res = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${env.CF_TURN_KEY_ID}/credentials/generate`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.CF_TURN_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ttl: 86400 }),
+      }
+    )
+    if (!res.ok) return Response.json({ iceServers: [] }, { headers: CORS })
+    const data = await res.json()
+    return Response.json({ iceServers: data.iceServers ?? [] }, { headers: CORS })
+  } catch {
+    return Response.json({ iceServers: [] }, { headers: CORS })
   }
 }
 

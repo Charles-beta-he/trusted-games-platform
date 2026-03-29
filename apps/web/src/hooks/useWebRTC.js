@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import {
   createPeerConnection, encodeOffer, decodeOffer,
-  encodeAnswer, decodeAnswer, waitForICE,
+  encodeAnswer, decodeAnswer, waitForICE, getConnectionType,
 } from '../lib/webrtc.js'
 import {
   generateECDHKeyPair, exportPublicKey, importPublicKey,
@@ -34,6 +34,7 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
   const [answerCode, setAnswerCode] = useState('')
   const [error, setError] = useState('')
   const [isEncrypted, setIsEncrypted] = useState(false)
+  const [connType, setConnType] = useState(null)  // 'lan' | 'internet' | 'relay' | null
 
   const pcRef = useRef(null)
   const channelRef = useRef(null)
@@ -77,6 +78,8 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
         sessionKeyRef.current = sessionKey
         setIsEncrypted(true)
         setStep('connected')
+        // Detect actual connection path after handshake
+        getConnectionType(pcRef.current).then(setConnType)
       } catch (e) {
         console.warn('[WebRTC] key exchange failed', e)
         setError('Encryption handshake failed')
@@ -138,6 +141,7 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
       sessionKeyRef.current = null
       myKeyPairRef.current  = null
       setIsEncrypted(false)
+      setConnType(null)
       setStep('idle')
     }
     channel.onerror = () => setStep('error')
@@ -149,7 +153,7 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     setStep('creating')
     setError('')
     try {
-      const pc = createPeerConnection()
+      const pc = await createPeerConnection()
       pcRef.current = pc
 
       const channel = pc.createDataChannel('gomoku')
@@ -199,7 +203,7 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
       const data = decodeOffer(offerStr)
       if (!data?.sdp) throw new Error('Invalid offer code — please check and retry')
 
-      const pc = createPeerConnection()
+      const pc = await createPeerConnection()
       pcRef.current = pc
       pc.ondatachannel = (e) => setupChannel(e.channel)
 
@@ -241,7 +245,7 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
   return {
     role, step, offerCode, answerCode, error,
-    isEncrypted,
+    isEncrypted, connType,
     setRole,
     createRoom, acceptAnswer, joinRoom, disconnect,
     sendMove:     (r, c, hash) => sendMessage({ type: 'MOVE', r, c, hash }),

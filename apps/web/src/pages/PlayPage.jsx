@@ -278,6 +278,9 @@ export default function PlayPage() {
                   {conn.isEncrypted ? '🔐 E2E ENCRYPTED' : 'P2P CONNECTED'}
                   <div style={{ marginTop: 1, opacity: 0.7 }}>
                     {sig.isConnected ? 'ROOM CODE' : 'DIRECT · SDP'}
+                    {webrtc.connType === 'lan'     && ' · 🏠 LAN'}
+                    {webrtc.connType === 'internet' && ' · 🌐 INET'}
+                    {webrtc.connType === 'relay'   && ' · ☁ RELAY'}
                   </div>
                 </div>
               </div>
