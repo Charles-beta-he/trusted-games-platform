@@ -374,6 +374,120 @@ export function isStalemate(board, sideToMove) {
   return true
 }
 
+// ── AI 评估系统 ──────────────────────────────────────────────────────────────
+
+/**
+ * 棋子基础分值（厘兵 centipawn，兵=100）。
+ * 将帅取极大值用于将死检测；其余参考象棋棋子价值惯例。
+ */
+const PIECE_BASE_VALUE = {
+  [P.GENERAL]:  100000,
+  [P.CHARIOT]:    900,
+  [P.CANNON]:     450,
+  [P.HORSE]:      400,
+  [P.ADVISOR]:    200,
+  [P.ELEPHANT]:   200,
+  [P.SOLDIER]:    100,
+}
+
+/**
+ * 棋子位置奖励。
+ * pieceSide: 1=红, -1=黑。fwd 为前进方向上的距离（0=本阵底，9=对方阵底）。
+ */
+function positionalBonus(type, r, c, pieceSide) {
+  const fwd = pieceSide === 1 ? 9 - r : r  // 0=本阵, 9=对方底
+
+  switch (type) {
+    case P.CHARIOT: {
+      // 偏好中路纵线 + 适度前插
+      const center = c >= 3 && c <= 5 ? 15 : 0
+      return center + Math.min(fwd * 2, 20)
+    }
+    case P.CANNON: {
+      // 偏好中部横列、中路纵线（炮台）
+      const center = c >= 2 && c <= 6 ? 15 : 0
+      const rank = fwd >= 2 && fwd <= 6 ? 10 : 0
+      return center + rank
+    }
+    case P.HORSE: {
+      // 强偏好中腹，边角重惩
+      const distR = abs(r - 4.5)
+      const distC = abs(c - 4)
+      return Math.max(-30, 30 - (distR + distC) * 8)
+    }
+    case P.SOLDIER: {
+      // 过河前无奖励；过河后按前进距离 + 中路加分
+      const crossed = pieceSide === 1 ? r <= 4 : r >= 5
+      if (!crossed) return 0
+      const adv = fwd * 20
+      const center = c >= 2 && c <= 6 ? 15 : 0
+      return adv + center
+    }
+    case P.ADVISOR: {
+      // 偏好九宫中心（红 r=8,c=4；黑 r=1,c=4）
+      const pr = pieceSide === 1 ? 8 : 1
+      return r === pr && c === 4 ? 15 : 0
+    }
+    default:
+      return 0
+  }
+}
+
+/**
+ * 静态局面估值。正值 = 对 sideToMove 有利。
+ */
+function evaluate(board, sideToMove) {
+  let score = 0
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const p = board[r][c]
+      if (p === 0) continue
+      const type = abs(p)
+      const pSide = side(p)
+      const val = PIECE_BASE_VALUE[type] + positionalBonus(type, r, c, pSide)
+      score += pSide === sideToMove ? val : -val
+    }
+  }
+  return score
+}
+
+/**
+ * α-β Negamax 搜索。返回对 sideToMove 的分值。
+ * 使用 MVV-LVA 着法排序以提升剪枝效率。
+ */
+function xqNegamax(board, depth, alpha, beta, sideToMove) {
+  if (depth === 0) return evaluate(board, sideToMove)
+
+  const moves = []
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (side(board[r][c]) !== sideToMove) continue
+      for (const [tr, tc] of getValidMoves(board, r, c)) {
+        moves.push({ fr: r, fc: c, tr, tc, cap: board[tr][tc] })
+      }
+    }
+  }
+
+  if (moves.length === 0) {
+    // 将死 or 困毙
+    return isInCheck(board, sideToMove) ? -100000 - depth : 0
+  }
+
+  // MVV-LVA：高价值吃子优先
+  moves.sort((a, b) => PIECE_BASE_VALUE[abs(b.cap)] - PIECE_BASE_VALUE[abs(a.cap)])
+
+  let best = -Infinity
+  for (const m of moves) {
+    const next = applyMove(board, m.fr, m.fc, m.tr, m.tc)
+    const val = -xqNegamax(next, depth - 1, -beta, -alpha, -sideToMove)
+    if (val > best) best = val
+    if (val > alpha) alpha = val
+    if (alpha >= beta) break
+  }
+  return best
+}
+
+// 吃子移动排序分（用于 easy/medium 层的贪心排序，保留原有行为）
 const PIECE_CAPTURE_SCORE = {
   [P.GENERAL]: 20000,
   [P.ADVISOR]: 25,
@@ -391,15 +505,19 @@ function captureScore(cell) {
 }
 
 /**
- * 启发式 AI：易随机，中优先吃子，难做 1 层极大极小（吃子价值 + 机动性）。
+ * 象棋 AI — 四档难度，各使用不同算法：
+ *   easy:   纯随机
+ *   medium: 贪心吃子（优先吃高价子）
+ *   hard:   α-β Negamax depth 2 + 位置评估
+ *   expert: α-β Negamax depth 3 + 位置评估
  *
  * @param {object} [aiParams]
  *   aggression: 'conservative' | 'balanced' | 'aggressive'
- *     — 调节吃子权重与机动性系数
+ *     hard/expert: 在 top-pool 内偏好吃子或保守走法
  *   noise: 'none' | 'slight' | 'high'
- *     — 控制 top pool 宽度（确定性 vs 随机性）
+ *     hard/expert: 控制 top-pool 宽度（centipawn margin）
  *
- * @returns {{ fr: number, fc: number, tr: number, tc: number } | null}
+ * @returns {{ fr, fc, tr, tc } | null}
  */
 export function getBestMove(board, sideToMove, difficulty = 'medium', aiParams = {}) {
   const moves = []
@@ -407,8 +525,7 @@ export function getBestMove(board, sideToMove, difficulty = 'medium', aiParams =
     for (let c = 0; c < COLS; c++) {
       if (side(board[r][c]) !== sideToMove) continue
       for (const [tr, tc] of getValidMoves(board, r, c)) {
-        const cap = board[tr][tc]
-        moves.push({ fr: r, fc: c, tr, tc, cap })
+        moves.push({ fr: r, fc: c, tr, tc, cap: board[tr][tc] })
       }
     }
   }
@@ -416,8 +533,10 @@ export function getBestMove(board, sideToMove, difficulty = 'medium', aiParams =
 
   const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
+  // ── easy: 纯随机 ────────────────────────────────────────────────────────
   if (difficulty === 'easy') return pickRandom(moves)
 
+  // ── medium: 贪心吃子 ────────────────────────────────────────────────────
   if (difficulty === 'medium') {
     const captures = moves.filter((m) => m.cap !== 0)
     if (captures.length > 0 && Math.random() > 0.35) {
@@ -427,40 +546,36 @@ export function getBestMove(board, sideToMove, difficulty = 'medium', aiParams =
     return pickRandom(moves)
   }
 
-  // ── aiParams 解析 ────────────────────────────────────────────────────────
-  // aggression 控制吃子权重与机动性系数
-  const AGGRESSION_CFG = {
-    conservative: { captureW: 6,  selfMobW: 1.2, oppMobW: 0.6 },
-    balanced:     { captureW: 12, selfMobW: 1.0, oppMobW: 0.45 },
-    aggressive:   { captureW: 20, selfMobW: 0.8, oppMobW: 0.25 },
-  }
-  const { captureW, selfMobW, oppMobW } =
-    AGGRESSION_CFG[aiParams.aggression] ?? AGGRESSION_CFG.balanced
+  // ── hard / expert: α-β Negamax ──────────────────────────────────────────
+  const SEARCH_DEPTH = { hard: 2, expert: 3 }
+  const depth = SEARCH_DEPTH[difficulty] ?? 2
 
-  // noise 控制 top pool 宽度（margin 越大选择越随机）
-  const NOISE_MARGIN = { none: 0, slight: 8, high: 40 }
-  const topMargin = NOISE_MARGIN[aiParams.noise] ?? NOISE_MARGIN.slight
+  // noise 控制 top-pool margin（centipawn）
+  const NOISE_MARGIN = { none: 0, slight: 80, high: 300 }
+  const margin = NOISE_MARGIN[aiParams?.noise] ?? NOISE_MARGIN.slight
 
-  /** hard / expert：1-ply 搜索 */
-  const scores = moves.map((m) => {
+  // 根节点着法排序：高价吃子先搜（提升 α-β 效率）
+  moves.sort((a, b) => PIECE_BASE_VALUE[abs(b.cap)] - PIECE_BASE_VALUE[abs(a.cap)])
+
+  const results = moves.map((m) => {
     const next = applyMove(board, m.fr, m.fc, m.tr, m.tc)
-    let s = captureScore(m.cap) * captureW
-    const opp = -sideToMove
-    let oppMob = 0
-    let selfMob = 0
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        if (side(next[r][c]) === sideToMove) selfMob += getValidMoves(next, r, c).length
-        else if (side(next[r][c]) === opp) oppMob += getValidMoves(next, r, c).length
-      }
-    }
-    s += selfMob * selfMobW - oppMob * oppMobW
-    if (isInCheck(next, opp)) s += 28
-    if (isCheckmate(next, opp)) s += 8000
-    return { m, s }
+    const val = -xqNegamax(next, depth - 1, -Infinity, Infinity, -sideToMove)
+    return { m, val }
   })
-  scores.sort((a, b) => b.s - a.s)
-  const topScore = scores[0].s
-  const pool = scores.filter((x) => x.s >= topScore - topMargin).map((x) => x.m)
-  return pickRandom(pool.length ? pool : [scores[0].m])
+  results.sort((a, b) => b.val - a.val)
+
+  const topScore = results[0].val
+  const pool = results.filter((x) => x.val >= topScore - margin).map((x) => x.m)
+
+  // aggression: 在 top-pool 内进一步筛选风格
+  if (aiParams?.aggression === 'aggressive') {
+    const capPool = pool.filter((m) => m.cap !== 0)
+    if (capPool.length > 0) return pickRandom(capPool)
+  }
+  if (aiParams?.aggression === 'conservative') {
+    const safePool = pool.filter((m) => m.cap === 0)
+    if (safePool.length > 0 && Math.random() > 0.3) return pickRandom(safePool)
+  }
+
+  return pickRandom(pool)
 }

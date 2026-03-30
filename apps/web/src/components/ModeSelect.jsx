@@ -175,6 +175,9 @@ function PanelAI({ onConfirm, gameId }) {
   const schema = gameDesc?.aiParams ?? []
   const aiDescription = gameDesc?.aiDescription ?? null
 
+  // 从插件描述符读取每档难度的算法标签（如有）
+  const engineDifficulties = gameDesc?.aiEngines?.[0]?.difficulties ?? {}
+
   const [paramValues, setParamValues] = useState(
     () => Object.fromEntries(schema.map((p) => [p.id, p.default]))
   )
@@ -185,28 +188,31 @@ function PanelAI({ onConfirm, gameId }) {
       <div>
         <div style={labelStyle}>选择难度 · DIFFICULTY</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
-          {DIFFICULTIES.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => setDifficulty(d.id)}
-              style={{
-                padding: '12px 8px',
-                background: difficulty === d.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
-                border: `1px solid ${difficulty === d.id ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                borderRadius: 4,
-                color: difficulty === d.id ? '#000' : 'var(--text-primary)',
-                fontFamily: 'var(--font-primary)',
-                fontSize: 14,
-                fontWeight: difficulty === d.id ? 'bold' : 'normal',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                textAlign: 'center',
-              }}
-            >
-              <div>{d.label}</div>
-              <div style={{ fontSize: 9, letterSpacing: '0.1em', marginTop: 2, opacity: 0.7 }}>{d.desc}</div>
-            </button>
-          ))}
+          {DIFFICULTIES.map((d) => {
+            const algoLabel = engineDifficulties[d.id]?.label ?? d.desc
+            return (
+              <button
+                key={d.id}
+                onClick={() => setDifficulty(d.id)}
+                style={{
+                  padding: '12px 8px',
+                  background: difficulty === d.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                  border: `1px solid ${difficulty === d.id ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                  borderRadius: 4,
+                  color: difficulty === d.id ? '#000' : 'var(--text-primary)',
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 14,
+                  fontWeight: difficulty === d.id ? 'bold' : 'normal',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  textAlign: 'center',
+                }}
+              >
+                <div>{d.label}</div>
+                <div style={{ fontSize: 9, letterSpacing: '0.1em', marginTop: 2, opacity: 0.7 }}>{algoLabel}</div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

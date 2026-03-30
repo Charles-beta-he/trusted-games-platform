@@ -34,10 +34,15 @@ export const GAME_CATALOG = [
     aiEngines: [
       {
         id: 'gomoku-minimax-v1',
-        name: 'Minimax α-β',
+        name: 'Minimax α-β + Zobrist',
         algorithm: 'minimax',
         version: '1.0.0',
-        difficulties: ['easy', 'medium', 'hard', 'expert'],
+        difficulties: {
+          easy:   { label: '贪心 1-ply',      depth: 1 },
+          medium: { label: 'Minimax α-β d3',  depth: 3 },
+          hard:   { label: 'Minimax α-β d4',  depth: 4 },
+          expert: { label: 'Minimax α-β d5',  depth: 5 },
+        },
       },
     ],
     ranked: true,
@@ -99,11 +104,16 @@ export const GAME_CATALOG = [
     trustLevels: [],
     aiEngines: [
       {
-        id: 'xiangqi-heuristic-v1',
-        name: '启发式评估',
-        algorithm: 'heuristic',
-        version: '1.0.0',
-        difficulties: ['easy', 'medium', 'hard', 'expert'],
+        id: 'xiangqi-negamax-v2',
+        name: 'α-β Negamax + PST',
+        algorithm: 'negamax',
+        version: '2.0.0',
+        difficulties: {
+          easy:   { label: '随机走法',          depth: 0 },
+          medium: { label: '贪心吃子',           depth: 0 },
+          hard:   { label: 'α-β Negamax d2',    depth: 2 },
+          expert: { label: 'α-β Negamax d3',    depth: 3 },
+        },
       },
     ],
     ranked: false,
