@@ -12,9 +12,9 @@
  *   2. 在下方 ROUTES 数组里添加一条记录
  */
 
-import React, { lazy, Suspense } from 'react'
+import React, { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
-import PageLoader from './PageLoader.jsx'
+import { PlatformShell } from '../contexts/PlatformConnContext.jsx'
 
 // ── 按需加载的页面 chunk ───────────────────────────────────────────────────────
 const LobbyPage       = lazy(() => import('../pages/LobbyPage.jsx'))
@@ -46,17 +46,18 @@ const ROUTES = [
   },
 ]
 
-// ── 统一包装 Suspense ─────────────────────────────────────────────────────────
-function withSuspense(element) {
-  return <Suspense fallback={<PageLoader />}>{element}</Suspense>
-}
-
 // ── 导出路由实例 ──────────────────────────────────────────────────────────────
+// 根布局 PlatformShell：保持平台 WS + P2P 在页面切换时不被卸载
 export const router = createBrowserRouter([
-  ...ROUTES.map(({ path, element }) => ({
-    path,
-    element: withSuspense(element),
-  })),
+  {
+    path: '/',
+    element: <PlatformShell />,
+    children: ROUTES.map(({ path: p, element }) =>
+      p === '/'
+        ? { index: true, element }
+        : { path: p.replace(/^\//, ''), element },
+    ),
+  },
   {
     path: '*',
     element: <Navigate to="/" replace />,

@@ -11,6 +11,14 @@
  *   - users: persisted via DO storage API
  */
 
+import {
+  validateRankedReport,
+  witnessProcessRoomInit,
+  witnessProcessMove,
+  witnessProcessUndoPop,
+  witnessProcessResign,
+} from './witnessLogic.js'
+
 // ─── Worker entry ─────────────────────────────────────────────────────────────
 
 const CORS = {
@@ -112,7 +120,7 @@ export class GameServer {
     const pair = new WebSocketPair()
     const [client, server] = Object.values(pair)
     this.state.acceptWebSocket(server)
-    this.sessions.set(server, { userId: null, inQueue: false, queueMode: null })
+    this.sessions.set(server, { userId: null, inQueue: false, queueMode: null, queuedAt: null })
     return new Response(null, { status: 101, webSocket: client })
   }
 
@@ -122,9 +130,11 @@ export class GameServer {
 
   _session(ws) {
     if (!this.sessions.has(ws)) {
-      this.sessions.set(ws, { userId: null, inQueue: false, queueMode: null })
+      this.sessions.set(ws, { userId: null, inQueue: false, queueMode: null, queuedAt: null })
     }
-    return this.sessions.get(ws)
+    const s = this.sessions.get(ws)
+    if (s.queuedAt === undefined) s.queuedAt = null
+    return s
   }
 
   // ── WebSocket lifecycle ──────────────────────────────────────────────────────
@@ -178,7 +188,11 @@ export class GameServer {
         const mode = msg.mode === 'casual' ? 'casual' : 'ranked'
         const session = this._session(ws)
         if (session?.inQueue) { this.send(ws, { type: 'error', message: 'Already in queue' }); return }
-        if (session) { session.inQueue = true; session.queueMode = mode }
+        if (session) {
+          session.inQueue = true
+          session.queueMode = mode
+          session.queuedAt = Date.now()
+        }
         this.queues[mode].push(ws)
         this.tryMatch(mode)
         break
@@ -266,17 +280,41 @@ export class GameServer {
       }
 
       case 'report_result': {
-        const code = this._att(ws).roomCode
+        const att = this._att(ws)
+        const code = att.roomCode
         const room = code ? this.rooms.get(code) : null
         if (!room || room.resultReported) return
-        room.resultReported = true
 
         const result = msg.result  // 'win' | 'lose' | 'draw'
         const session = this._session(ws)
         const myUserId = session?.userId
-        const peerWs = this._att(ws).role === 'host' ? room.guest : room.host
+        const peerWs = att.role === 'host' ? room.guest : room.host
         const peerSession = peerWs ? this._session(peerWs) : null
         const peerUserId = peerSession?.userId
+
+        // 休闲 / 好友房 / 未标记 ranked：不计分，只 ack
+        if (room.mode !== 'ranked') {
+          room.resultReported = true
+          this.send(ws, { type: 'result_recorded', ranked: false })
+          if (peerWs) this.send(peerWs, { type: 'result_recorded', ranked: false })
+          break
+        }
+
+        // 天梯：必须与见证链尖哈希 + 终局状态一致，否则不计分
+        const reportGameId = String(msg.gameId ?? '')
+        const chainHash = String(msg.chainHash ?? '')
+        const v = validateRankedReport(room.witness, att.role, result, reportGameId, chainHash)
+        if (!v.ok) {
+          this.send(ws, {
+            type: 'result_recorded',
+            ranked: false,
+            witnessRejected: true,
+            message: v.message,
+          })
+          break
+        }
+
+        room.resultReported = true
 
         if (myUserId && this.users[myUserId] && peerUserId && this.users[peerUserId]) {
           const me = this.users[myUserId]
@@ -291,8 +329,26 @@ export class GameServer {
           if (result === 'lose') { me.losses++; peer.wins++ }
           if (result === 'draw') { me.draws++;  peer.draws++ }
           await this.persistUsers()
-          this.send(ws, { type: 'result_recorded', elo: me.elo, eloChange: myElo.delta, rank: getRank(me.elo) })
-          if (peerWs) this.send(peerWs, { type: 'result_recorded', elo: peer.elo, eloChange: peerElo.delta, rank: getRank(peer.elo) })
+          this.send(ws, {
+            type: 'result_recorded',
+            ranked: true,
+            elo: me.elo,
+            eloChange: myElo.delta,
+            rank: getRank(me.elo),
+          })
+          if (peerWs) {
+            this.send(peerWs, {
+              type: 'result_recorded',
+              ranked: true,
+              elo: peer.elo,
+              eloChange: peerElo.delta,
+              rank: getRank(peer.elo),
+            })
+          }
+        } else {
+          const bare = { type: 'result_recorded', ranked: true, elo: null, eloChange: null, rank: null }
+          this.send(ws, bare)
+          if (peerWs) this.send(peerWs, bare)
         }
         break
       }
@@ -315,6 +371,46 @@ export class GameServer {
           .slice(0, limit)
           .map((e, i) => ({ ...e, rank: i + 1, tier: getRank(e.elo) }))
         this.send(ws, { type: 'leaderboard', entries })
+        break
+      }
+
+      case 'witness_room_init': {
+        const att = this._att(ws)
+        const code = att.roomCode
+        const room = code ? this.rooms.get(code) : null
+        if (code) this.resetRoomTimer(code)
+        const out = await witnessProcessRoomInit(room, att.role, msg)
+        this.send(ws, out)
+        break
+      }
+
+      case 'move_witness': {
+        const att = this._att(ws)
+        const code = att.roomCode
+        const room = code ? this.rooms.get(code) : null
+        if (code) this.resetRoomTimer(code)
+        const out = await witnessProcessMove(room, att.role, msg)
+        this.send(ws, out)
+        break
+      }
+
+      case 'witness_undo_pop': {
+        const att = this._att(ws)
+        const code = att.roomCode
+        const room = code ? this.rooms.get(code) : null
+        if (code) this.resetRoomTimer(code)
+        const out = witnessProcessUndoPop(room, att.role, msg)
+        if (out) this.send(ws, out)
+        break
+      }
+
+      case 'witness_resign': {
+        const att = this._att(ws)
+        const code = att.roomCode
+        const room = code ? this.rooms.get(code) : null
+        if (code) this.resetRoomTimer(code)
+        const out = witnessProcessResign(room, att.role, msg)
+        this.send(ws, out)
         break
       }
 
@@ -403,20 +499,101 @@ export class GameServer {
     const session = this.sessions.get(ws)
     if (session?.inQueue) {
       session.inQueue = false
+      session.queuedAt = null
       const mode = session.queueMode ?? 'ranked'
       this.queues[mode] = this.queues[mode].filter(w => w !== ws)
     }
   }
 
+  _eloForWs(ws) {
+    const uid = this._session(ws)?.userId
+    if (!uid || !this.users?.[uid]) return ELO_INITIAL
+    return this.users[uid].elo ?? ELO_INITIAL
+  }
+
+  /** 段位队列最长等待（用于超时回退 FIFO，避免饿死） */
+  _rankedQueueMaxWaitMs() {
+    const now = Date.now()
+    let max = 0
+    for (const ws of this.queues.ranked) {
+      const qAt = this._session(ws)?.queuedAt
+      const wait = qAt != null ? now - qAt : 0
+      max = Math.max(max, wait)
+    }
+    return max
+  }
+
+  /**
+   * 段位：在 Elo 允许的「扩圈带」内选 |ΔElo| 最小的一对；否则不配。
+   * 休闲：严格 FIFO，最快开局。
+   */
   tryMatch(mode) {
+    if (mode === 'casual') {
+      while (this.queues.casual.length >= 2) this._tryMatchFIFO('casual')
+      return
+    }
+    while (this.queues.ranked.length >= 2) {
+      if (this._tryPairRankedByElo()) continue
+      if (this._rankedQueueMaxWaitMs() > 90_000) {
+        this._tryMatchFIFO('ranked')
+        continue
+      }
+      break
+    }
+  }
+
+  _tryMatchFIFO(mode) {
     const q = this.queues[mode]
     if (q.length < 2) return
     const wsA = q.shift()
     const wsB = q.shift()
+    this._finalizePair(wsA, wsB, mode)
+  }
+
+  _tryPairRankedByElo() {
+    const q = this.queues.ranked
+    if (q.length < 2) return false
+    const now = Date.now()
+    const BAND0 = 120
+    const GROW_PER_SEC = 22
+    const BAND_MAX = 700
+    let bestI = -1
+    let bestJ = -1
+    let bestDiff = Infinity
+    for (let i = 0; i < q.length; i++) {
+      const wsA = q[i]
+      const eloA = this._eloForWs(wsA)
+      const sA = this._session(wsA)
+      const waitA = sA?.queuedAt != null ? now - sA.queuedAt : 0
+      for (let j = i + 1; j < q.length; j++) {
+        const wsB = q[j]
+        const eloB = this._eloForWs(wsB)
+        const sB = this._session(wsB)
+        const waitB = sB?.queuedAt != null ? now - sB.queuedAt : 0
+        const wait = Math.min(waitA, waitB)
+        const band = Math.min(BAND_MAX, BAND0 + Math.floor(wait / 1000) * GROW_PER_SEC)
+        const diff = Math.abs(eloA - eloB)
+        if (diff <= band && diff < bestDiff) {
+          bestDiff = diff
+          bestI = i
+          bestJ = j
+        }
+      }
+    }
+    if (bestI < 0) return false
+    const hi = Math.max(bestI, bestJ)
+    const lo = Math.min(bestI, bestJ)
+    const wsB = q.splice(hi, 1)[0]
+    const wsA = q.splice(lo, 1)[0]
+    this._finalizePair(wsA, wsB, 'ranked')
+    return true
+  }
+
+  _finalizePair(wsA, wsB, mode) {
     const sA = this.sessions.get(wsA)
     const sB = this.sessions.get(wsB)
-    if (sA) sA.inQueue = false
-    if (sB) sB.inQueue = false
+    if (sA) { sA.inQueue = false; sA.queuedAt = null }
+    if (sB) { sB.inQueue = false; sB.queuedAt = null }
 
     const code = this.genRoomCode()
     const userA = sA?.userId ? this.users[sA.userId] : null

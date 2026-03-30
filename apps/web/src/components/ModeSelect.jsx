@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import QRCode from 'qrcode'
 import { useTheme } from '../contexts/ThemeContext.jsx'
-import { buildShareUrl } from '../lib/shareUrl.js'
+import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 import StyleSelector from './ai/StyleSelector.jsx'
 
@@ -131,9 +131,10 @@ const DIFFICULTIES = [
 
 // ─── Sub-panels ───────────────────────────────────────────────────────────────
 
-function PanelAI({ onConfirm }) {
+function PanelAI({ onConfirm, gameId }) {
   const [difficulty, setDifficulty] = useState('medium')
   const [styleId, setStyleId] = useState('balanced')
+  const isXq = gameId === 'xiangqi'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
@@ -164,20 +165,31 @@ function PanelAI({ onConfirm }) {
         </div>
       </div>
 
-      <StyleSelector value={styleId} onChange={setStyleId} />
+      {!isXq && <StyleSelector value={styleId} onChange={setStyleId} />}
+      {isXq && (
+        <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.06em', lineHeight: 1.6 }}>
+          你执红先行，AI 执黑。棋力为启发式评估（非五子棋 Minimax）。
+        </div>
+      )}
 
-      <button onClick={() => onConfirm('ai', { difficulty, styleId })} style={startBtnStyle}>
+      <button
+        onClick={() => onConfirm('ai', { difficulty, styleId: isXq ? 'balanced' : styleId })}
+        style={startBtnStyle}
+      >
         START GAME →
       </button>
     </div>
   )
 }
 
-function PanelLocal({ onConfirm }) {
+function PanelLocal({ onConfirm, gameId }) {
+  const isXq = gameId === 'xiangqi'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', lineHeight: 1.7 }}>
-        两名玩家在同一设备上轮流落子。黑方先行。
+        {isXq
+          ? '两名玩家在同一设备上轮流行棋。红方先行。'
+          : '两名玩家在同一设备上轮流落子。黑方先行。'}
       </div>
       <button onClick={() => onConfirm('local')} style={startBtnStyle}>
         START GAME →
@@ -198,12 +210,25 @@ function PanelHost({ webrtc, sig, onConfirm }) {
     webrtc.createRoom()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance when either connects
+  /**
+   * 房间码/二维码路径：必须由 sig（同一信令房）连上再进棋盘。
+   * 若仍在等 6 位房间码，webrtc 单独连通可能是另一条 SDP 隧道，会导致主机「无反应」与双方状态分叉。
+   */
+  const waitingForRoomCodeGuest = Boolean(
+    sig?.isAvailable && sig?.step === 'waiting' && sig?.roomCode,
+  )
   useEffect(() => {
-    if (webrtc.isConnected || sig?.isConnected) {
-      onConfirm('host')
+    if (waitingForRoomCodeGuest) {
+      if (sig?.isConnected) onConfirm('host')
+      return
     }
-  }, [webrtc.isConnected, sig?.isConnected]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (webrtc.isConnected || sig?.isConnected) onConfirm('host')
+  }, [
+    waitingForRoomCodeGuest,
+    webrtc.isConnected,
+    sig?.isConnected,
+    onConfirm,
+  ])
 
   // Build LAN URL when webrtc offer is ready
   const shareUrl = webrtc.offerCode ? buildShareUrl(webrtc.offerCode) : null
@@ -313,11 +338,12 @@ function PanelHost({ webrtc, sig, onConfirm }) {
           {sig?.isAvailable && sig.step === 'waiting' && sig.roomCode && (
             <>
               <div style={{ width: 120, height: 120, flexShrink: 0 }}>
-                <QRCanvas value={sig.roomCode} size={120} />
+                <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={120} />
               </div>
               <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
-                扫码获取房间码
+                扫码加入房间（自动连接）
               </div>
+              <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" />
             </>
           )}
 
@@ -398,12 +424,19 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
     }
   }, [autoJoinRoomCode]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-advance when either connects
+  const waitingToJoinViaCode = Boolean(autoJoinRoomCode && sig?.isAvailable)
   useEffect(() => {
-    if (webrtc.isConnected || sig?.isConnected) {
-      onConfirm('join')
+    if (waitingToJoinViaCode) {
+      if (sig?.isConnected) onConfirm('join')
+      return
     }
-  }, [webrtc.isConnected, sig?.isConnected]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (webrtc.isConnected || sig?.isConnected) onConfirm('join')
+  }, [
+    waitingToJoinViaCode,
+    webrtc.isConnected,
+    sig?.isConnected,
+    onConfirm,
+  ])
 
   const handleJoinCode = () => {
     if (roomCode.length < 6) return
@@ -585,7 +618,17 @@ const labelStyle = {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, autoJoinOffer, autoJoinRoomCode }) {
+export default function ModeSelect({
+  gameId,
+  webrtc,
+  sig,
+  onSelectMode,
+  onBack,
+  autoJoinOffer,
+  autoJoinRoomCode,
+  /** 为 false 时仅展示人机与本地双人对局（如象棋尚未接 P2P 协议） */
+  networkModesEnabled = true,
+}) {
   const { theme, themes, setTheme } = useTheme()
   const [selectedMode, setSelectedMode] = useState(null)
   const [hovered, setHovered] = useState(null)
@@ -600,12 +643,18 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
     setTheme(themes[idx].id)
   }
 
+  const visibleModes = useMemo(
+    () => (networkModesEnabled ? MODES : MODES.filter((m) => m.id === 'ai' || m.id === 'local')),
+    [networkModesEnabled],
+  )
+
   // When autoJoinOffer or autoJoinRoomCode is provided, skip directly to join phase
   useEffect(() => {
+    if (!networkModesEnabled) return
     if ((autoJoinOffer || autoJoinRoomCode) && !selectedMode) {
       setSelectedMode('join')
     }
-  }, [autoJoinOffer, autoJoinRoomCode]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [autoJoinOffer, autoJoinRoomCode, networkModesEnabled, selectedMode])
 
   const handleSelectMode = useCallback((modeId) => {
     setSelectedMode(modeId)
@@ -749,7 +798,7 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
             gridTemplateColumns: 'repeat(2, 1fr)',
             gap: 12,
           }}>
-            {MODES.map((mode) => {
+            {visibleModes.map((mode) => {
               const isSelected = false
               return (
                 <button
@@ -856,10 +905,10 @@ export default function ModeSelect({ gameId, webrtc, sig, onSelectMode, onBack, 
 
             {/* Panel content */}
             {selectedMode === 'ai' && (
-              <PanelAI onConfirm={onSelectMode} />
+              <PanelAI gameId={gameId} onConfirm={onSelectMode} />
             )}
             {selectedMode === 'local' && (
-              <PanelLocal onConfirm={onSelectMode} />
+              <PanelLocal gameId={gameId} onConfirm={onSelectMode} />
             )}
             {selectedMode === 'host' && (
               <PanelHost

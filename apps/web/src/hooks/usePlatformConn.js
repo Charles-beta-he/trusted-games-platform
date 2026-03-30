@@ -39,7 +39,10 @@ function saveUser(data) {
   localStorage.setItem(LS_KEY, JSON.stringify(data))
 }
 
-export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onRoomInit } = {}) {
+export function usePlatformConn({
+  onMatchReady, onMove, onResign, onNewGame, onRoomInit,
+  onUndoRequest, onUndoAccept, onUndoReject,
+} = {}) {
   const isAvailable = Boolean(SIGNALING_URL)
 
   // ── User identity ──────────────────────────────────────────────────────────
@@ -70,6 +73,9 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
   const onResignRef    = useRef(onResign)
   const onNewGameRef   = useRef(onNewGame)
   const onRoomInitRef  = useRef(onRoomInit)
+  const onUndoRequestRef = useRef(onUndoRequest)
+  const onUndoAcceptRef  = useRef(onUndoAccept)
+  const onUndoRejectRef  = useRef(onUndoReject)
 
   // P2P refs (for matched game)
   const pcRef          = useRef(null)
@@ -85,6 +91,9 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
   useEffect(() => { onResignRef.current   = onResign   }, [onResign])
   useEffect(() => { onNewGameRef.current  = onNewGame  }, [onNewGame])
   useEffect(() => { onRoomInitRef.current = onRoomInit }, [onRoomInit])
+  useEffect(() => { onUndoRequestRef.current = onUndoRequest }, [onUndoRequest])
+  useEffect(() => { onUndoAcceptRef.current = onUndoAccept }, [onUndoAccept])
+  useEffect(() => { onUndoRejectRef.current = onUndoReject }, [onUndoReject])
 
   // ── WebSocket send helper ──────────────────────────────────────────────────
   const wsSend = useCallback((obj) => {
@@ -112,11 +121,19 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
     isConnected: true,
     isEncrypted: Boolean(sessionKeyRef.current),
     role,
-    sendMove:    (r, c, hash) => dcSend({ type: 'MOVE', r, c, hash }),
-    sendResign:  ()           => dcSend({ type: 'RESIGN' }),
-    sendNewGame: (gameId)     => dcSend({ type: 'NEW_GAME', gameId }),
-    sendRoomInit:(gameId)     => dcSend({ type: 'ROOM_INIT', gameId }),
-  }), [dcSend])
+    sendMove:    (r, c, hash, player) => dcSend({ type: 'MOVE', r, c, hash, player }),
+    sendResign:  () => dcSend({ type: 'RESIGN' }),
+    sendNewGame: (gameId, meta = {}) => dcSend({ type: 'NEW_GAME', gameId, hostIsBlack: meta.hostIsBlack !== false }),
+    sendRoomInit:(gameId, meta = {}) => dcSend({ type: 'ROOM_INIT', gameId, hostIsBlack: meta.hostIsBlack !== false }),
+    sendUndoRequest:  () => dcSend({ type: 'UNDO_REQUEST' }),
+    sendUndoResponse: (accept) => dcSend({ type: accept ? 'UNDO_ACCEPT' : 'UNDO_REJECT' }),
+    sendWitnessRoomInit: (gameId, hostIsBlack) =>
+      wsSend({ type: 'witness_room_init', gameId, hostIsBlack: hostIsBlack !== false }),
+    sendMoveWitness: (payload) => wsSend({ type: 'move_witness', ...payload }),
+    sendWitnessUndoPop: (gameId) => wsSend({ type: 'witness_undo_pop', gameId }),
+    sendWitnessResign: (gameId, resignedPlayer) =>
+      wsSend({ type: 'witness_resign', gameId, resignedPlayer }),
+  }), [dcSend, wsSend])
 
   // ── DataChannel message handler ────────────────────────────────────────────
   const handleChannelMessage = useCallback(async ({ data }) => {
@@ -152,11 +169,19 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
       } catch { return }
     }
 
-    // Route incoming game messages to the registered callbacks
-    if (decrypted.type === 'ROOM_INIT') onRoomInitRef.current?.(decrypted.gameId)
-    if (decrypted.type === 'MOVE')      onMoveRef.current?.(decrypted.r, decrypted.c, decrypted.hash)
-    if (decrypted.type === 'RESIGN')    onResignRef.current?.()
-    if (decrypted.type === 'NEW_GAME')  onNewGameRef.current?.(decrypted.gameId)
+    if (decrypted.type === 'ROOM_INIT') {
+      onRoomInitRef.current?.({ gameId: decrypted.gameId, hostIsBlack: decrypted.hostIsBlack !== false })
+    }
+    if (decrypted.type === 'MOVE') {
+      onMoveRef.current?.(decrypted.r, decrypted.c, decrypted.hash, decrypted.player)
+    }
+    if (decrypted.type === 'RESIGN') onResignRef.current?.()
+    if (decrypted.type === 'NEW_GAME') {
+      onNewGameRef.current?.({ gameId: decrypted.gameId, hostIsBlack: decrypted.hostIsBlack !== false })
+    }
+    if (decrypted.type === 'UNDO_REQUEST') onUndoRequestRef.current?.()
+    if (decrypted.type === 'UNDO_ACCEPT') onUndoAcceptRef.current?.()
+    if (decrypted.type === 'UNDO_REJECT') onUndoRejectRef.current?.()
   }, [buildConnInterface])
 
   // ── Setup DataChannel ──────────────────────────────────────────────────────
@@ -335,11 +360,30 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
 
       case 'result_recorded':
         if (mountedRef.current) {
+          if (msg.witnessRejected && msg.message) {
+            window.dispatchEvent(
+              new CustomEvent('platform:witness_rejected', { detail: msg }),
+            )
+          } else if (msg.ranked === true && msg.witnessRejected !== true) {
+            window.dispatchEvent(
+              new CustomEvent('platform:ranked_recorded', { detail: msg }),
+            )
+          }
           setUser(prev => prev ? {
             ...prev,
             elo:  msg.elo  ?? prev.elo,
             rank: msg.rank ?? prev.rank,
           } : prev)
+        }
+        break
+
+      case 'witness_error':
+        if (mountedRef.current && msg.message) {
+          window.dispatchEvent(
+            new CustomEvent('platform:witness_server_error', {
+              detail: { message: msg.message },
+            }),
+          )
         }
         break
 
@@ -446,8 +490,13 @@ export function usePlatformConn({ onMatchReady, onMove, onResign, onNewGame, onR
     wsSend({ type: 'get_leaderboard', limit: 20 })
   }, [wsSend])
 
-  const reportResult = useCallback((result) => {
-    wsSend({ type: 'report_result', result })
+  const reportResult = useCallback((result, meta = {}) => {
+    wsSend({
+      type: 'report_result',
+      result,
+      gameId: meta.gameId,
+      chainHash: meta.chainHash ?? '',
+    })
   }, [wsSend])
 
   const disconnect = useCallback(() => {

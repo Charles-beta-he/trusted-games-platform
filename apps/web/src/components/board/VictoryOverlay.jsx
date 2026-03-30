@@ -1,4 +1,6 @@
-export default function VictoryOverlay({ show, winner, isDraw, lastHash, onNewGame, onReplay, moveCount }) {
+export default function VictoryOverlay({
+  show, winner, isDraw, lastHash, onNewGame, onReplay, onExport, moveCount,
+}) {
   const winnerName = winner === 1 ? '黑方' : winner === 2 ? '白方' : ''
   const displayTitle = isDraw ? '平局' : `${winnerName}胜`
   const shortHash = lastHash ? lastHash.substring(0, 24) + '...' : '—'
@@ -47,6 +49,20 @@ export default function VictoryOverlay({ show, winner, isDraw, lastHash, onNewGa
             }}
           >
             回放
+          </button>
+        )}
+        {onExport && moveCount > 0 && (
+          <button
+            type="button"
+            onClick={onExport}
+            className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors"
+            style={{
+              background: 'var(--bg-surface)',
+              border: '1px solid var(--border-color)',
+              color: 'var(--text-secondary)',
+            }}
+          >
+            导出棋谱
           </button>
         )}
       </div>

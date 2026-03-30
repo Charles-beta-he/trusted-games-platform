@@ -3,9 +3,8 @@
  *
  * ICE strategy:
  *   1. Fetch dynamic TURN credentials from signaling server (Cloudflare TURN)
- *   2. Use iceCandidatePoolSize:4 to pre-gather candidates immediately
- *   3. Smart ICE wait: resolve after 800ms if host (LAN) candidates exist,
- *      otherwise wait up to 4s for STUN/TURN candidates
+ *   2. iceCandidatePoolSize: desktop 预采集；iOS Safari 用 0（避免预采集与候选时序问题）
+ *   3. waitForICE：等到 gathering complete，保证 SDP 含 srflx/relay（手机 Safari ↔ PC 必备）
  *   4. After connection, call getConnectionType() to detect LAN vs Internet vs Relay
  */
 
@@ -22,7 +21,7 @@ export async function fetchIceServers() {
   // Convert ws(s):// to http(s)://
   const httpUrl = sigUrl.replace(/^ws/, 'http')
   try {
-    const res = await fetch(`${httpUrl}/api/turn`, { signal: AbortSignal.timeout(3000) })
+    const res = await fetch(`${httpUrl}/api/turn`, { signal: AbortSignal.timeout(8000) })
     if (!res.ok) return STATIC_ICE
     const { iceServers = [] } = await res.json()
     return [...STATIC_ICE, ...iceServers]
@@ -42,9 +41,22 @@ export async function getIceServers() {
   return cachedIceServers
 }
 
+/** iOS / iPadOS WebKit：预分配候选池在部分版本易与 DataChannel 跨端 ICE 冲突 */
+function recommendedIceCandidatePoolSize() {
+  if (typeof navigator === 'undefined') return 4
+  const ua = navigator.userAgent || ''
+  const iOS = /iPad|iPhone|iPod/.test(ua)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const webkitSafari = /WebKit/.test(ua) && !/(Chrome|CriOS|EdgiOS|FxiOS|OPiOS)/.test(ua)
+  return iOS && webkitSafari ? 0 : 4
+}
+
 export async function createPeerConnection() {
   const iceServers = await getIceServers()
-  return new RTCPeerConnection({ iceServers, iceCandidatePoolSize: 4 })
+  return new RTCPeerConnection({
+    iceServers,
+    iceCandidatePoolSize: recommendedIceCandidatePoolSize(),
+  })
 }
 
 export function encodeOffer(data) { return btoa(JSON.stringify(data)) }
@@ -57,49 +69,33 @@ export function decodeAnswer(str)  {
 }
 
 /**
- * Smart ICE gathering:
- * - Resolves immediately when host candidates appear (LAN path available)
- * - Falls back to 4s hard timeout for internet/relay scenarios
+ * Wait for ICE gathering to finish so Offer/Answer include srflx (and relay when TURN works).
+ * Do NOT stop early on the first host candidate: that breaks iOS Safari ↔ desktop where
+ * STUN reflexive candidates arrive later; same-PC tabs still complete gathering quickly.
+ *
+ * @param {RTCPeerConnection} pc
+ * @param {{ maxWaitMs?: number }} [options]
  */
-export function waitForICE(pc) {
+export function waitForICE(pc, options = {}) {
+  const maxWaitMs = options.maxWaitMs ?? 15000
   return new Promise((resolve) => {
-    if (pc.iceGatheringState === 'complete') { resolve(); return }
-
-    let hasHostCandidate = false
-    let lanTimer = null
-
-    const onCandidate = (e) => {
-      if (!e.candidate) return
-      if (e.candidate.type === 'host' && !hasHostCandidate) {
-        hasHostCandidate = true
-        // Give 800ms after first host candidate to collect more, then resolve
-        lanTimer = setTimeout(() => {
-          pc.removeEventListener('icecandidate', onCandidate)
-          pc.removeEventListener('icegatheringstatechange', onComplete)
-          resolve()
-        }, 800)
-      }
-    }
-
-    const onComplete = () => {
-      if (pc.iceGatheringState === 'complete') {
-        clearTimeout(lanTimer)
-        pc.removeEventListener('icecandidate', onCandidate)
-        pc.removeEventListener('icegatheringstatechange', onComplete)
-        resolve()
-      }
-    }
-
-    pc.addEventListener('icecandidate', onCandidate)
-    pc.addEventListener('icegatheringstatechange', onComplete)
-
-    // Hard timeout: 4s
-    setTimeout(() => {
-      clearTimeout(lanTimer)
-      pc.removeEventListener('icecandidate', onCandidate)
-      pc.removeEventListener('icegatheringstatechange', onComplete)
+    if (pc.iceGatheringState === 'complete') {
       resolve()
-    }, 4000)
+      return
+    }
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      pc.removeEventListener('icegatheringstatechange', onGather)
+      clearTimeout(hardCap)
+      resolve()
+    }
+    const onGather = () => {
+      if (pc.iceGatheringState === 'complete') finish()
+    }
+    pc.addEventListener('icegatheringstatechange', onGather)
+    const hardCap = setTimeout(finish, maxWaitMs)
   })
 }
 

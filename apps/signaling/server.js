@@ -38,6 +38,13 @@ import { randomUUID }      from 'crypto'
 import { readFileSync, writeFileSync, existsSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath }   from 'url'
+import {
+  validateRankedReport,
+  witnessProcessRoomInit,
+  witnessProcessMove,
+  witnessProcessUndoPop,
+  witnessProcessResign,
+} from '../signaling-cf/src/witnessLogic.js'
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
@@ -349,7 +356,7 @@ wss.on('connection', (ws) => {
 
   // ── Message dispatcher ────────────────────────────────────────────────────
 
-  ws.on('message', (raw) => {
+  ws.on('message', async (raw) => {
     let msg
     try { msg = JSON.parse(raw) } catch {
       send(ws, { type: 'error', message: 'Invalid JSON' })
@@ -586,14 +593,50 @@ wss.on('connection', (ws) => {
         break
       }
 
+      case 'witness_room_init': {
+        const code = ws._roomCode
+        const room = code ? rooms.get(code) : null
+        if (code) resetRoomTimer(code)
+        const out = await witnessProcessRoomInit(room, ws._role, msg)
+        send(ws, out)
+        break
+      }
+
+      case 'move_witness': {
+        const code = ws._roomCode
+        const room = code ? rooms.get(code) : null
+        if (code) resetRoomTimer(code)
+        const out = await witnessProcessMove(room, ws._role, msg)
+        send(ws, out)
+        break
+      }
+
+      case 'witness_undo_pop': {
+        const code = ws._roomCode
+        const room = code ? rooms.get(code) : null
+        if (code) resetRoomTimer(code)
+        const out = witnessProcessUndoPop(room, ws._role, msg)
+        if (out) send(ws, out)
+        break
+      }
+
+      case 'witness_resign': {
+        const code = ws._roomCode
+        const room = code ? rooms.get(code) : null
+        if (code) resetRoomTimer(code)
+        const out = witnessProcessResign(room, ws._role, msg)
+        send(ws, out)
+        break
+      }
+
       // ────────────────────────────────────────────────────────────────────
       // RESULT REPORTING & ELO
       // ────────────────────────────────────────────────────────────────────
 
       /**
        * Report game result and update ELO.
-       * { type: 'report_result', result: 'win' | 'lose' | 'draw' }
-       * Only processed once per room (idempotent guard via resultReported).
+       * { type: 'report_result', result: 'win' | 'lose' | 'draw', gameId?, chainHash? }
+       * Ranked: requires witness chain + terminal state (see witnessLogic.validateRankedReport).
        */
       case 'report_result': {
         const code = ws._roomCode
@@ -604,7 +647,6 @@ wss.on('connection', (ws) => {
           return
         }
         if (room.resultReported) {
-          send(ws, { type: 'error', message: 'Result already recorded for this room' })
           return
         }
 
@@ -614,7 +656,6 @@ wss.on('connection', (ws) => {
           return
         }
 
-        // Determine which userId is this player and which is the opponent
         const selfIsHost      = ws._role === 'host'
         const selfUserId      = selfIsHost ? room.playerA_userId : room.playerB_userId
         const opponentUserId  = selfIsHost ? room.playerB_userId : room.playerA_userId
@@ -622,6 +663,28 @@ wss.on('connection', (ws) => {
 
         const selfUser     = selfUserId     ? getUser(selfUserId)     : null
         const opponentUser = opponentUserId ? getUser(opponentUserId) : null
+
+        const isRanked = room.mode === 'ranked'
+
+        if (isRanked) {
+          const reportGameId = String(msg.gameId ?? '')
+          const chainHash = String(msg.chainHash ?? '')
+          const v = validateRankedReport(room.witness, ws._role, result, reportGameId, chainHash)
+          if (!v.ok) {
+            send(ws, {
+              type: 'result_recorded',
+              ranked: false,
+              witnessRejected: true,
+              message: v.message,
+            })
+            break
+          }
+        } else {
+          room.resultReported = true
+          send(ws, { type: 'result_recorded', ranked: false })
+          if (opponentWs) send(opponentWs, { type: 'result_recorded', ranked: false })
+          break
+        }
 
         room.resultReported = true
 
@@ -633,13 +696,11 @@ wss.on('connection', (ws) => {
           const selfResult     = calcElo(selfUser.elo, opponentUser.elo, selfScore)
           const opponentResult = calcElo(opponentUser.elo, selfUser.elo, opponentScore)
 
-          // Update self
           selfUser.elo = selfResult.newElo
           if (result === 'win')  selfUser.wins++
           if (result === 'lose') selfUser.losses++
           if (result === 'draw') selfUser.draws++
 
-          // Update opponent
           opponentUser.elo = opponentResult.newElo
           if (result === 'win')  opponentUser.losses++
           if (result === 'lose') opponentUser.wins++
@@ -647,26 +708,28 @@ wss.on('connection', (ws) => {
 
           schedulePersist()
 
-          // Notify both parties
           send(ws, {
             type:      'result_recorded',
+            ranked:    true,
             elo:       selfUser.elo,
             eloChange: selfResult.delta,
             rank:      getRank(selfUser.elo),
           })
-          send(opponentWs, {
-            type:      'result_recorded',
-            elo:       opponentUser.elo,
-            eloChange: opponentResult.delta,
-            rank:      getRank(opponentUser.elo),
-          })
+          if (opponentWs) {
+            send(opponentWs, {
+              type:      'result_recorded',
+              ranked:    true,
+              elo:       opponentUser.elo,
+              eloChange: opponentResult.delta,
+              rank:      getRank(opponentUser.elo),
+            })
+          }
 
           console.log(
             `[elo] ${selfUserId} ${result} → elo ${selfResult.newElo} (${selfResult.delta > 0 ? '+' : ''}${selfResult.delta})`,
           )
         } else {
-          // Guest player has no account — still acknowledge
-          send(ws, { type: 'result_recorded', elo: null, eloChange: null, rank: null })
+          send(ws, { type: 'result_recorded', ranked: isRanked, elo: null, eloChange: null, rank: null })
         }
         break
       }

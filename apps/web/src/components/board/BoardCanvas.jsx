@@ -9,21 +9,21 @@ export default function BoardCanvas({
   board, currentPlayer, moveHistory, gameOver, winningLine,
   lastMove, hoverCell, setHoverCell, isThinking,
   isDraw, resignedPlayer, placeStone, newGame, aiMode, localPlayer,
-  showVictoryOverlay, onReplay,
+  showVictoryOverlay, onReplay, onVictoryExport,
+  interactionLocked = false,
 }) {
   const canvasRef = useRef(null)
   const dprRef = useRef(window.devicePixelRatio || 1)
   const { theme } = useTheme()
   const [pendingCell, setPendingCell] = useState(null)
 
-  // Determine winner
   let winner = null
   if (gameOver && !isDraw) {
     if (resignedPlayer) winner = resignedPlayer === 1 ? 2 : 1
-    else winner = currentPlayer === 1 ? 1 : 2
-    // If game over by win, winner is currentPlayer when win was detected
-    // Actually: after placeStone sets gameOver, currentPlayer is still the one who won
-    if (winningLine) winner = currentPlayer
+    else {
+      const lastP = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1].player : null
+      winner = lastP
+    }
   }
 
   const lastHash = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1].hash : ''
@@ -48,11 +48,11 @@ export default function BoardCanvas({
   }, [setHoverCell])
 
   const canMove = useCallback(() => {
-    if (gameOver || isThinking) return false
+    if (interactionLocked || gameOver || isThinking) return false
     if (aiMode && currentPlayer === 2) return false
     if (localPlayer != null && currentPlayer !== localPlayer) return false
     return true
-  }, [gameOver, isThinking, aiMode, currentPlayer, localPlayer])
+  }, [interactionLocked, gameOver, isThinking, aiMode, currentPlayer, localPlayer])
 
   const handleClick = useCallback((e) => {
     if (!canMove()) return
@@ -140,6 +140,7 @@ export default function BoardCanvas({
           lastHash={lastHash}
           onNewGame={newGame}
           onReplay={onReplay}
+          onExport={onVictoryExport}
           moveCount={moveHistory.length}
         />
         <AIThinkingIndicator show={isThinking} />

@@ -26,11 +26,23 @@ export default function LobbyPage() {
     }
   }
 
+  const handleImportGomoku = async (file) => {
+    try {
+      const text = await file.text()
+      const record = JSON.parse(text)
+      if (!Array.isArray(record?.moves)) throw new Error('无效的 JSON 棋谱')
+      navigate('/play/gomoku', { state: { gomokuImport: record } })
+    } catch (e) {
+      alert('导入失败: ' + (e.message || String(e)))
+    }
+  }
+
   return (
     <GameLobby
       onSelectGame={(gameId) => navigate(`/play/${gameId}`)}
       onQuickJoin={handleQuickJoin}
       onOpenPlatform={() => navigate('/platform')}
+      onImportGomoku={handleImportGomoku}
     />
   )
 }

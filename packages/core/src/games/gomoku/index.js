@@ -9,6 +9,8 @@ export {
 
 export const PLUGIN_ID = 'gomoku'
 
+export { RULES, DEFAULT_RULE, validateMove } from './rules.js'
+
 export function createBoard(size = 15) {
   return Array.from({ length: size }, () => new Array(size).fill(0))
 }

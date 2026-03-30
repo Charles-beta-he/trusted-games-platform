@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTheme } from '../contexts/ThemeContext.jsx'
+import { GAME_CATALOG } from '../plugins/index.js'
 
 // ── Rank helpers ──────────────────────────────────────────────────────────────
 const RANK_TIERS = [
@@ -483,6 +484,50 @@ function ProfileTab({ platform }) {
           </div>
         ))}
       </div>
+
+      {/* Per-game ratings */}
+      {(() => {
+        const rankedGames = GAME_CATALOG.filter(g => g.ranked && g.eloKey)
+        if (rankedGames.length === 0) return null
+        return (
+          <div style={card()}>
+            <div style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--text-muted)', marginBottom: 12 }}>
+              段位 · 分游戏评分
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {rankedGames.map(g => {
+                const elo = user[g.eloKey] ?? (g.eloKey === 'elo' ? user.elo : null) ?? 1200
+                const tier = getRankForElo(elo)
+                return (
+                  <div key={g.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '10px 14px',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: 4,
+                    background: 'var(--bg-primary)',
+                  }}>
+                    <span style={{ fontSize: 20 }}>{g.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 11, fontWeight: 'bold', letterSpacing: '0.1em' }}>{g.name}</div>
+                      <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{g.nameEn}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 16, fontWeight: 'bold', color: tier.color }}>
+                        {elo}
+                      </div>
+                      <div style={{ fontSize: 9, color: tier.color, letterSpacing: '0.1em' }}>
+                        {tier.title}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Style Center entry */}
       <button

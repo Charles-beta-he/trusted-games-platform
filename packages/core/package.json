@@ -8,7 +8,9 @@
     "./crypto": "./src/crypto.js",
     "./ai": "./src/ai.js",
     "./constants": "./src/constants.js",
-    "./plugins": "./src/plugins.js"
+    "./plugins": "./src/plugins.js",
+    "./gomoku/rules": "./src/games/gomoku/rules.js",
+    "./xiangqi/rules": "./src/games/xiangqi/rules.js"
   },
   "main": "./index.js"
 }

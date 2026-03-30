@@ -7,6 +7,8 @@
 import pako from 'pako'
 
 const HASH_PREFIX = 'join='
+/** Room-code signaling: open app in join flow with this code (see PlayPage + ModeSelect). */
+const ROOM_HASH_PREFIX = 'room='
 
 /**
  * Convert Uint8Array to URL-safe base64 string (avoids stack overflow on large arrays)
@@ -66,5 +68,53 @@ export function extractOfferFromUrl() {
 export function clearShareHash() {
   if (window.location.hash.startsWith('#' + HASH_PREFIX)) {
     history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+}
+
+/**
+ * Full page URL for guests: same origin + #room=XXXXXX → auto join via signaling.
+ * @param {string} roomCode - 6-char room code
+ */
+export function buildRoomJoinUrl(roomCode) {
+  const code = String(roomCode ?? '').toUpperCase().replace(/[^A-HJ-NP-Z2-9]/gi, '').slice(0, 6)
+  const base = window.location.href.split('#')[0]
+  return `${base}#${ROOM_HASH_PREFIX}${encodeURIComponent(code)}`
+}
+
+/**
+ * @returns {string|null} room code if hash is #room=...
+ */
+export function extractRoomCodeFromUrl() {
+  const hash = window.location.hash
+  if (!hash.startsWith('#' + ROOM_HASH_PREFIX)) return null
+  try {
+    const raw = decodeURIComponent(hash.slice(ROOM_HASH_PREFIX.length + 1))
+    return raw.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, '').slice(0, 6) || null
+  } catch {
+    return null
+  }
+}
+
+export function clearRoomHash() {
+  if (window.location.hash.startsWith('#' + ROOM_HASH_PREFIX)) {
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+  }
+}
+
+/**
+ * Parse room code from pasted text that may contain a full URL with #room=
+ */
+export function extractRoomCodeFromPastedText(text) {
+  const t = String(text ?? '').trim()
+  if (!t) return null
+  const i = t.indexOf('#room=')
+  if (i === -1) return null
+  try {
+    const frag = t.slice(i + '#room='.length).split(/[#&\s]/)[0]
+    const raw = decodeURIComponent(frag)
+    const code = raw.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, '').slice(0, 6)
+    return code.length === 6 ? code : null
+  } catch {
+    return null
   }
 }

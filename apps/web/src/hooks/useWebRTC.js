@@ -16,9 +16,10 @@ import {
  *
  * Message protocol (all post-handshake messages are AES-GCM encrypted):
  *   ROOM_INIT  { gameId }               host→guest on channel open
- *   MOVE       { r, c, hash }           sender→peer each move
- *   RESIGN     {}                        sender→peer on resign
- *   NEW_GAME   { gameId }               host→guest on new game
+ *   MOVE       { r, c, hash, player }   sender→peer (player 1=black 2=white)
+ *   RESIGN     {}
+ *   NEW_GAME   { gameId, hostIsBlack }
+ *   UNDO_*     request / accept / reject
  *
  * Encryption handshake (happens immediately after DataChannel opens):
  *   1. Both peers generate an ECDH (P-256) key pair.
@@ -27,7 +28,10 @@ import {
  *      session key and marks step as 'connected'.
  *   4. All subsequent messages are encrypted: { iv, ciphertext } (base64).
  */
-export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
+export function useWebRTC({
+  onMove, onResign, onNewGame, onRoomInit,
+  onUndoRequest, onUndoAccept, onUndoReject,
+} = {}) {
   const [role, setRole] = useState(null)      // 'host' | 'guest'
   const [step, setStep] = useState('idle')    // see flows above
   const [offerCode, setOfferCode] = useState('')
@@ -104,11 +108,22 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     }
 
     // ── Application message routing ──────────────────────────────────────────
-    if      (parsed.type === 'MOVE')      onMove?.(parsed.r, parsed.c, parsed.hash)
-    else if (parsed.type === 'RESIGN')    onResign?.()
-    else if (parsed.type === 'NEW_GAME')  onNewGame?.(parsed.gameId)
-    else if (parsed.type === 'ROOM_INIT') onRoomInit?.(parsed.gameId)
-  }, [onMove, onResign, onNewGame, onRoomInit])
+    if (parsed.type === 'MOVE') {
+      onMove?.(parsed.r, parsed.c, parsed.hash, parsed.player)
+    } else if (parsed.type === 'RESIGN') {
+      onResign?.()
+    } else if (parsed.type === 'NEW_GAME') {
+      onNewGame?.({ gameId: parsed.gameId, hostIsBlack: parsed.hostIsBlack !== false })
+    } else if (parsed.type === 'ROOM_INIT') {
+      onRoomInit?.({ gameId: parsed.gameId, hostIsBlack: parsed.hostIsBlack !== false })
+    } else if (parsed.type === 'UNDO_REQUEST') {
+      onUndoRequest?.()
+    } else if (parsed.type === 'UNDO_ACCEPT') {
+      onUndoAccept?.()
+    } else if (parsed.type === 'UNDO_REJECT') {
+      onUndoReject?.()
+    }
+  }, [onMove, onResign, onNewGame, onRoomInit, onUndoRequest, onUndoAccept, onUndoReject])
 
   // ─── Channel setup ────────────────────────────────────────────────────────
 
@@ -248,10 +263,12 @@ export function useWebRTC({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     isEncrypted, connType,
     setRole,
     createRoom, acceptAnswer, joinRoom, disconnect,
-    sendMove:     (r, c, hash) => sendMessage({ type: 'MOVE', r, c, hash }),
+    sendMove:     (r, c, hash, player) => sendMessage({ type: 'MOVE', r, c, hash, player }),
     sendResign:   ()           => sendMessage({ type: 'RESIGN' }),
-    sendNewGame:  (gameId)     => sendMessage({ type: 'NEW_GAME', gameId }),
-    sendRoomInit: (gameId)     => sendMessage({ type: 'ROOM_INIT', gameId }),
+    sendNewGame:  (gameId, meta = {}) => sendMessage({ type: 'NEW_GAME', gameId, hostIsBlack: meta.hostIsBlack !== false }),
+    sendRoomInit: (gameId, meta = {}) => sendMessage({ type: 'ROOM_INIT', gameId, hostIsBlack: meta.hostIsBlack !== false }),
+    sendUndoRequest:  ()              => sendMessage({ type: 'UNDO_REQUEST' }),
+    sendUndoResponse: (accept)        => sendMessage({ type: accept ? 'UNDO_ACCEPT' : 'UNDO_REJECT' }),
     isConnected: step === 'connected',
   }
 }

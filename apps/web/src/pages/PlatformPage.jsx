@@ -1,38 +1,32 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { usePlatformConn } from '../hooks/usePlatformConn.js'
-import { useSignaling } from '../hooks/useSignaling.js'
+import { usePlatformGame } from '../contexts/PlatformConnContext.jsx'
 import PlatformView from '../components/PlatformView.jsx'
-
-// p2p callbacks are no-op stubs here — the actual game lives in PlayPage.
-// When a match is found, we navigate there carrying connection state.
-const noop = () => {}
 
 export default function PlatformPage() {
   const navigate = useNavigate()
+  const { platform } = usePlatformGame()
 
-  const handleMatchReady = useCallback(({ conn, matchInfo, roomCode, youAre }) => {
-    if (conn) {
-      navigate('/play/gomoku', { state: { matchConn: conn } })
-      return
-    }
-    const code = roomCode ?? matchInfo?.roomCode
-    navigate('/play/gomoku', { state: { autoJoinRoomCode: code, youAre } })
-  }, [navigate])
-
-  const platform = usePlatformConn({
-    onMatchReady: handleMatchReady,
-    onMove:     noop,
-    onResign:   noop,
-    onNewGame:  noop,
-    onRoomInit: noop,
-  })
+  const handleManualContinueToPlay = useCallback(
+    ({ roomCode, youAre, matchInfo, mode }) => {
+      const code = roomCode ?? matchInfo?.roomCode
+      const gameKind = matchInfo?.gameKind ?? 'gomoku'
+      navigate(`/play/${gameKind}`, {
+        state: {
+          autoJoinRoomCode: code,
+          youAre,
+          platformRoomMode: mode ?? matchInfo?.mode ?? 'casual',
+        },
+      })
+    },
+    [navigate],
+  )
 
   return (
     <PlatformView
       onBack={() => navigate('/')}
       platform={platform}
-      onMatchReady={handleMatchReady}
+      onMatchReady={handleManualContinueToPlay}
     />
   )
 }

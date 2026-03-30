@@ -3,44 +3,66 @@ import { DIFFICULTY_CONFIG } from '../lib/constants.js'
 import { resolveStyle } from '../lib/ai-styles.js'
 
 /**
- * useAI — 调用 Web Worker 运行 AI，支持棋风热切换
+ * useAI — Web Worker 运行各游戏 AI
  *
- * @param {object} opts
- * @param {string} opts.difficulty  — 'easy' | 'medium' | 'hard' | 'expert'
- * @param {string} opts.styleId     — 'balanced' | 'aggressive' | 'defensive' | 'chaotic' | 'personal'
+ * @param {'gomoku'|'xiangqi'} [opts.gameKind]
+ * @param {number} [opts.xiangqiAiSide] 象棋 AI 行棋方（默认 -1 执黑）
+ * @param {function} opts.onAIMove — 五子棋 (r,c)；象棋 ({ fr, fc, tr, tc })
  */
-export function useAI({ board, currentPlayer, aiMode, difficulty, styleId = 'balanced', gameOver, onAIMove }) {
+export function useAI({
+  board,
+  currentPlayer,
+  aiMode,
+  difficulty,
+  styleId = 'balanced',
+  gameOver,
+  onAIMove,
+  gameKind = 'gomoku',
+  xiangqiAiSide = -1,
+}) {
   const [isThinking, setIsThinking] = useState(false)
 
-  const workerRef   = useRef(null)
-  const reqIdRef    = useRef(0)
-  const boardRef    = useRef(board)
+  const workerRef = useRef(null)
+  const reqIdRef = useRef(0)
+  const boardRef = useRef(board)
   const onAIMoveRef = useRef(onAIMove)
-  boardRef.current    = board
+  boardRef.current = board
   onAIMoveRef.current = onAIMove
 
   const getWorker = useCallback(() => {
     if (!workerRef.current) {
       workerRef.current = new Worker(
         new URL('../lib/ai.worker.js', import.meta.url),
-        { type: 'module' }
+        { type: 'module' },
       )
-      workerRef.current.onmessage = (e) => {
-        const { id, move, error } = e.data
+      workerRef.current.onmessage = (ev) => {
+        const { id, move, game: gk, error } = ev.data
         if (id !== reqIdRef.current) return
         setIsThinking(false)
-        if (move && !error) onAIMoveRef.current(move.r, move.c)
+        if (error || !move) return
+        if (gk === 'xiangqi' || (move.fr != null && move.tr != null)) {
+          onAIMoveRef.current(move)
+        } else {
+          onAIMoveRef.current(move.r, move.c)
+        }
       }
     }
     return workerRef.current
   }, [])
 
   useEffect(() => {
-    return () => { workerRef.current?.terminate(); workerRef.current = null }
+    return () => {
+      workerRef.current?.terminate()
+      workerRef.current = null
+    }
   }, [])
 
   useEffect(() => {
-    if (!aiMode || currentPlayer !== 2 || gameOver) return
+    const aiTurn =
+      gameKind === 'gomoku'
+        ? currentPlayer === 2
+        : currentPlayer === xiangqiAiSide
+    if (!aiMode || !aiTurn || gameOver) return
 
     setIsThinking(true)
     const delay = DIFFICULTY_CONFIG[difficulty]?.delay ?? 400
@@ -48,12 +70,31 @@ export function useAI({ board, currentPlayer, aiMode, difficulty, styleId = 'bal
 
     const timer = setTimeout(() => {
       const b = boardRef.current.map((row) => [...row])
-      const style = resolveStyle(styleId)
-      getWorker().postMessage({ id, board: b, difficulty, style })
+      if (gameKind === 'xiangqi') {
+        getWorker().postMessage({
+          id,
+          game: 'xiangqi',
+          board: b,
+          difficulty,
+          sideToMove: xiangqiAiSide,
+        })
+      } else {
+        const style = resolveStyle(styleId)
+        getWorker().postMessage({ id, game: 'gomoku', board: b, difficulty, style })
+      }
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [currentPlayer, aiMode, gameOver, difficulty, styleId, getWorker])
+  }, [
+    currentPlayer,
+    aiMode,
+    gameOver,
+    difficulty,
+    styleId,
+    getWorker,
+    gameKind,
+    xiangqiAiSide,
+  ])
 
   return { isThinking }
 }

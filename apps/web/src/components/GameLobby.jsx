@@ -1,15 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GAME_CATALOG } from '../plugins/index.js'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { getLocalIP } from '../lib/lanIp.js'
 
-export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform }) {
+export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, onImportGomoku }) {
   const navigate = useNavigate()
   const { theme, setTheme, themes } = useTheme()
   const [joinInput, setJoinInput] = useState('')
   const [localIP, setLocalIP] = useState(null)
   const [ipCopied, setIpCopied] = useState(false)
+  const importInputRef = useRef(null)
 
   const currentThemeIndex = themes.findIndex(t => t.id === theme)
   const prevTheme = () => {
@@ -456,6 +457,39 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform })
               JOIN →
             </button>
           </div>
+          {onImportGomoku && (
+            <div style={{ marginTop: 14 }}>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const f = e.target.files?.[0]
+                  if (f) onImportGomoku(f)
+                  e.target.value = ''
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => importInputRef.current?.click()}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  background: 'transparent',
+                  border: '1px dashed var(--border-color)',
+                  borderRadius: 4,
+                  color: 'var(--text-muted)',
+                  fontFamily: 'var(--font-primary)',
+                  fontSize: 11,
+                  letterSpacing: '0.12em',
+                  cursor: 'pointer',
+                }}
+              >
+                导入五子棋棋谱（JSON）· 进入回放
+              </button>
+            </div>
+          )}
         </div>
       </main>
 

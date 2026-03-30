@@ -4,20 +4,26 @@ export default function BoardArea({
   board, currentPlayer, moveHistory, gameOver, winningLine,
   lastMove, hoverCell, setHoverCell, isThinking,
   isDraw, resignedPlayer, placeStone, newGame, aiMode, localPlayer,
-  showVictoryOverlay, onReplay, replayInfo,
+  showVictoryOverlay, onReplay, replayInfo, onVictoryExport,
+  interactionLocked = false,
 }) {
   const moveNum = moveHistory.length
-  const statusMain = replayInfo
-    ? `第 ${replayInfo.index} 手`
-    : gameOver
-      ? isDraw ? '平局' : `${resignedPlayer ? (resignedPlayer === 1 ? '白方' : '黑方') : (currentPlayer === 1 ? '黑方' : '白方')}胜`
-      : currentPlayer === 1 ? '黑方落子' : '白方落子'
+  const lastMovePlayer = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1].player : null
+  const statusMain = interactionLocked
+    ? '等待主机同步棋局…'
+    : replayInfo
+      ? `第 ${replayInfo.index} 手`
+      : gameOver
+        ? isDraw ? '平局' : `${resignedPlayer ? (resignedPlayer === 1 ? '白方' : '黑方') : (lastMovePlayer === 1 ? '黑方' : '白方')}胜`
+        : currentPlayer === 1 ? '黑方落子' : '白方落子'
 
-  const statusSub = replayInfo
-    ? `REPLAY · ${replayInfo.index} / ${replayInfo.total}`
-    : gameOver
-      ? `GAME OVER · ${moveNum} MOVES`
-      : `GAME IN PROGRESS · MOVE ${moveNum + 1}`
+  const statusSub = interactionLocked
+    ? 'ROOM INIT · P2P'
+    : replayInfo
+      ? `REPLAY · ${replayInfo.index} / ${replayInfo.total}`
+      : gameOver
+        ? `GAME OVER · ${moveNum} MOVES`
+        : `GAME IN PROGRESS · MOVE ${moveNum + 1}`
 
   return (
     <main className="flex items-center justify-center p-2 md:p-8">
@@ -49,6 +55,8 @@ export default function BoardArea({
           localPlayer={localPlayer}
           showVictoryOverlay={showVictoryOverlay}
           onReplay={onReplay}
+          onVictoryExport={onVictoryExport}
+          interactionLocked={interactionLocked}
         />
       </div>
     </main>

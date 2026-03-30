@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import QRCode from 'qrcode'
-import { buildShareUrl } from '../lib/shareUrl.js'
+import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 
 function Label({ children }) {
@@ -367,7 +367,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                     {sig.step === 'waiting' && sig.roomCode && (
                       <div>
                         <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
-                          将房间码发给对方
+                          将房间码或下方链接发给对方
                         </div>
                         <div style={{
                           fontFamily: 'monospace',
@@ -381,8 +381,13 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                           {sig.roomCode}
                         </div>
                         <CopyButton text={sig.roomCode} label="复制房间码" />
+                        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <Label>扫码加入（自动连接）</Label>
+                          <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={160} />
+                          <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" />
+                        </div>
                         <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
-                          等待对方输入房间码加入...
+                          等待对方加入...
                         </div>
                       </div>
                     )}

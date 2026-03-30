@@ -8,6 +8,7 @@
     "build":      "pnpm --filter @tg/web build",
     "preview":    "pnpm --filter @tg/web preview",
     "lint":       "pnpm --filter @tg/web lint",
+    "test":       "vitest run",
 
     "sig":        "pnpm --filter @tg/signaling-cf start",
     "sig:dev":    "pnpm --filter @tg/signaling-cf dev",
@@ -21,5 +22,7 @@
     "deploy:sig": "pnpm --filter @tg/signaling-cf deploy",
     "deploy":     "pnpm deploy:web"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
 }

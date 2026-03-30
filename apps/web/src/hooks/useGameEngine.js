@@ -1,6 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { BOARD_SIZE, COLS, TRUST_LEVELS } from '@tg/core/constants'
 import { generateId, generateGenesisHash, computeMoveHash } from '@tg/core/crypto'
+import { gomokuGame } from '@tg/core'
+
+const { validateMove: validateGomokuMove, DEFAULT_RULE } = gomokuGame
 
 const emptyBoard = () => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(0))
 
@@ -40,6 +43,19 @@ function computeTrustLevel(moveCount, networkMode) {
   return 'L5'
 }
 
+/** Gomoku coord e.g. "H8" → { r, c } */
+export function coordToRc(coord) {
+  if (!coord || typeof coord !== 'string') return null
+  const s = coord.trim().toUpperCase()
+  const col = s[0]
+  const rowNum = parseInt(s.slice(1), 10)
+  if (Number.isNaN(rowNum)) return null
+  const c = COLS.indexOf(col)
+  const r = BOARD_SIZE - rowNum
+  if (c < 0 || r < 0 || r >= BOARD_SIZE || c >= BOARD_SIZE) return null
+  return { r, c }
+}
+
 export function useGameEngine() {
   const [board, setBoard] = useState(emptyBoard)
   const [currentPlayer, setCurrentPlayer] = useState(1)
@@ -55,6 +71,12 @@ export function useGameEngine() {
   const [networkMode, setNetworkMode] = useState('offline-solo')
   const [isDraw, setIsDraw] = useState(false)
   const [resignedPlayer, setResignedPlayer] = useState(null)
+  /** 五子棋规则：`standard` 自由五子，`renju` 连珠黑禁手（仅本机落子校验） */
+  const [rulePreset, setRulePreset] = useState(DEFAULT_RULE)
+  const rulePresetRef = useRef(rulePreset)
+  useEffect(() => {
+    rulePresetRef.current = rulePreset
+  }, [rulePreset])
 
   const chainHashRef = useRef(null)
   const boardRef = useRef(board)
@@ -85,23 +107,43 @@ export function useGameEngine() {
 
   /**
    * Place a stone at (r, c).
-   * @param {string|null} expectedHash  If provided (remote move), compare against computed hash.
-   *   verified field on moveData: null=local, true=hash match, false=hash mismatch.
+   * @param {string|null} expectedHash  Remote move: verify chain; local: null.
+   * @param {number|null} networkPlayer  Remote: 1|2 from wire (avoids stale currentPlayerRef during async hash).
    */
-  const placeStone = useCallback(async (r, c, expectedHash = null) => {
+  const placeStone = useCallback(async (r, c, expectedHash = null, networkPlayer = null) => {
     const currentBoard = boardRef.current
     const currentHistory = moveHistoryRef.current
     const currentGameId = gameIdRef.current
 
-    if (currentBoard[r][c] !== 0) return false
+    if (currentBoard[r]?.[c] !== 0) return false
+
+    const expectedTurn = currentHistory.length % 2 === 0 ? 1 : 2
+    const isRemote = expectedHash != null
+    /** Import / replay: force color without treating as wire-verified */
+    const forcedSeat = !isRemote && networkPlayer != null
+
+    let player
+    if (forcedSeat) {
+      player = networkPlayer
+      if (player !== expectedTurn) return false
+    } else if (isRemote) {
+      player = networkPlayer != null ? networkPlayer : expectedTurn
+      if (player !== expectedTurn) {
+        console.warn('[game] remote move wrong turn', player, expectedTurn)
+        return false
+      }
+    } else {
+      player = currentPlayerRef.current
+      if (player !== expectedTurn) return false
+    }
+
+    /** 联网对手着法以哈希链为准，避免双方规则预设不一致拒收同步子 */
+    if (!isRemote) {
+      const vm = validateGomokuMove(currentBoard, r, c, player, rulePresetRef.current)
+      if (!vm.valid) return { illegal: true, reason: vm.reason }
+    }
 
     const newBoard = currentBoard.map((row) => [...row])
-    // BUG-C1 fix: read currentPlayer from ref instead of the closure variable.
-    // The ref is kept in sync on every render (currentPlayerRef.current = currentPlayer above),
-    // so this always reflects the latest value even if React batches state updates in ways
-    // that could make the closure capture stale. The deps array is updated to remove
-    // currentPlayer since we no longer rely on it being captured in the closure.
-    const player = currentPlayerRef.current
     newBoard[r][c] = player
 
     const coord = COLS[c] + (BOARD_SIZE - r)
@@ -112,8 +154,7 @@ export function useGameEngine() {
     const prevHash = chainHashRef.current || ''
     const hash = await computeMoveHash(moveData, prevHash, currentGameId)
     moveData.hash = hash
-    // null = local move; true = remote & verified; false = remote & tampered
-    moveData.verified = expectedHash == null ? null : hash === expectedHash
+    moveData.verified = (expectedHash == null && !forcedSeat) ? null : (expectedHash != null ? hash === expectedHash : null)
     chainHashRef.current = hash
 
     const newHistory = [...currentHistory, moveData]
@@ -121,25 +162,33 @@ export function useGameEngine() {
     setBoard(newBoard)
     setMoveHistory(newHistory)
     setLastMove({ r, c })
+    boardRef.current = newBoard
+    moveHistoryRef.current = newHistory
 
     if (player === 1) setBlackCount((n) => n + 1)
     else setWhiteCount((n) => n + 1)
 
     const winLine = checkWin(newBoard, r, c, player)
+    const meta = { num: moveNum, r, c, coord }
+
     if (winLine) {
+      currentPlayerRef.current = player
       setWinningLine(winLine)
       setGameOver(true)
-      return { won: true, player, hash }
+      return { won: true, player, hash, ...meta }
     }
 
     if (checkDraw(newBoard)) {
+      currentPlayerRef.current = player
       setIsDraw(true)
       setGameOver(true)
-      return { draw: true, hash }
+      return { draw: true, player, hash, ...meta }
     }
 
-    setCurrentPlayer(player === 1 ? 2 : 1)
-    return { ok: true, hash }
+    const next = player === 1 ? 2 : 1
+    currentPlayerRef.current = next
+    setCurrentPlayer(next)
+    return { ok: true, hash, player, ...meta }
   }, [])
 
   const undoMove = useCallback((isAiMode) => {
@@ -164,9 +213,13 @@ export function useGameEngine() {
 
     setBoard(newBoard)
     setMoveHistory(newHistory)
+    boardRef.current = newBoard
+    moveHistoryRef.current = newHistory
     // BUG-C3 fix: derive the current player from remaining move count instead of hardcoding 1.
     // Black (player 1) goes first, so even-length history → black's turn, odd-length → white's.
-    setCurrentPlayer(newHistory.length % 2 === 0 ? 1 : 2)
+    const nextP = newHistory.length % 2 === 0 ? 1 : 2
+    currentPlayerRef.current = nextP
+    setCurrentPlayer(nextP)
     setLastMove(newHistory.length > 0 ? { r: newHistory[newHistory.length - 1].r, c: newHistory[newHistory.length - 1].c } : null)
     setGameOver(false)
     setWinningLine(null)
@@ -193,6 +246,8 @@ export function useGameEngine() {
       moves: history.map((m) => ({
         num: m.num,
         player: m.player === 1 ? 'black' : 'white',
+        r: m.r,
+        c: m.c,
         coord: m.coord,
         hash: m.hash,
         verified: m.verified,
@@ -243,7 +298,8 @@ export function useGameEngine() {
     setGameId(hostGameId)
     setGenesisHash(h)
     chainHashRef.current = h
-    setBoard(emptyBoard())
+    const b = emptyBoard()
+    setBoard(b)
     setCurrentPlayer(1)
     setMoveHistory([])
     setGameOver(false)
@@ -254,13 +310,61 @@ export function useGameEngine() {
     setWhiteCount(0)
     setIsDraw(false)
     setResignedPlayer(null)
+    boardRef.current = b
+    moveHistoryRef.current = []
+    currentPlayerRef.current = 1
   }, [])
+
+  /** Replay a game from export JSON (Trusted Games format). */
+  const loadFromExport = useCallback(async (record) => {
+    const moves = record?.moves
+    if (!Array.isArray(moves) || moves.length === 0) return false
+    const id = record.gameId || generateId()
+    const h = await generateGenesisHash(id)
+    setGameId(id)
+    setGenesisHash(h)
+    chainHashRef.current = h
+    const b = emptyBoard()
+    setBoard(b)
+    setMoveHistory([])
+    setCurrentPlayer(1)
+    setGameOver(false)
+    setWinningLine(null)
+    setLastMove(null)
+    setBlackCount(0)
+    setWhiteCount(0)
+    setIsDraw(false)
+    setResignedPlayer(null)
+    boardRef.current = b
+    moveHistoryRef.current = []
+    currentPlayerRef.current = 1
+
+    for (const m of moves) {
+      const player = (m.player === 'black' || m.player === 1) ? 1 : 2
+      let rr, cc
+      if (typeof m.r === 'number' && typeof m.c === 'number') {
+        rr = m.r
+        cc = m.c
+      } else {
+        const rc = coordToRc(m.coord)
+        if (!rc) return false
+        rr = rc.r
+        cc = rc.c
+      }
+      const res = m.hash
+        ? await placeStone(rr, cc, m.hash, player)
+        : await placeStone(rr, cc, null, player)
+      if (!res || res.illegal) return false
+    }
+    return true
+  }, [placeStone])
 
   return {
     board, currentPlayer, moveHistory, gameOver, winningLine,
     lastMove, hoverCell, setHoverCell, blackCount, whiteCount,
     gameId, genesisHash, networkMode, setNetworkMode,
     trustLevel, trustConfig, isDraw, resignedPlayer,
-    placeStone, undoMove, resignGame, exportGame, newGame, initWithRoom,
+    rulePreset, setRulePreset,
+    placeStone, undoMove, resignGame, exportGame, newGame, initWithRoom, loadFromExport,
   }
 }

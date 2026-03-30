@@ -12,7 +12,7 @@
  *   sig.disconnect()
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import {
   createPeerConnection, encodeOffer, decodeOffer,
   encodeAnswer, decodeAnswer, waitForICE,
@@ -28,7 +28,10 @@ const SIGNALING_URL =
     ? 'ws://localhost:4001'
     : null)   // null = signaling unavailable in production until deployed
 
-export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
+export function useSignaling({
+  onMove, onResign, onNewGame, onRoomInit,
+  onUndoRequest, onUndoAccept, onUndoReject,
+} = {}) {
   const [roomCode, setRoomCode]   = useState('')
   const [step, setStep]           = useState('idle')   // idle | creating | waiting | joining | connected
   const [error, setError]         = useState('')
@@ -40,9 +43,18 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
   const channelRef     = useRef(null)
   const sessionKeyRef  = useRef(null)
   const myKeyPairRef   = useRef(null)
+  /** Guest may receive KEY_EXCHANGE before our async onopen finishes generating keys */
+  const pendingPeerKeyB64Ref = useRef(null)
 
   const isConnected = step === 'connected'
   const isAvailable = Boolean(SIGNALING_URL)
+
+  const sendWs = useCallback((obj) => {
+    const ws = wsRef.current
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(obj))
+    }
+  }, [])
 
   // ── Send on DataChannel (encrypted once session key is set) ─────────────
   const sendMessage = useCallback(async (msg) => {
@@ -63,6 +75,10 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
     if (parsed.type === 'KEY_EXCHANGE') {
       try {
+        if (!myKeyPairRef.current?.privateKey) {
+          pendingPeerKeyB64Ref.current = parsed.publicKey
+          return
+        }
         const theirPubKey = await importPublicKey(parsed.publicKey)
         const sessionKey  = await deriveSessionKey(myKeyPairRef.current.privateKey, theirPubKey)
         sessionKeyRef.current = sessionKey
@@ -70,6 +86,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
         setStep('connected')
       } catch (e) {
         setError('加密握手失败: ' + e.message)
+        setStep('idle')
       }
       return
     }
@@ -82,21 +99,43 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
       } catch { return }
     }
 
-    if (decrypted.type === 'ROOM_INIT')  onRoomInit?.(decrypted.gameId)
-    if (decrypted.type === 'MOVE')       onMove?.(decrypted.r, decrypted.c, decrypted.hash)
-    if (decrypted.type === 'RESIGN')     onResign?.()
-    if (decrypted.type === 'NEW_GAME')   onNewGame?.(decrypted.gameId)
-  }, [onMove, onResign, onNewGame, onRoomInit])
+    if (decrypted.type === 'ROOM_INIT') {
+      onRoomInit?.({ gameId: decrypted.gameId, hostIsBlack: decrypted.hostIsBlack !== false })
+    }
+    if (decrypted.type === 'MOVE') {
+      onMove?.(decrypted.r, decrypted.c, decrypted.hash, decrypted.player)
+    }
+    if (decrypted.type === 'RESIGN') onResign?.()
+    if (decrypted.type === 'NEW_GAME') {
+      onNewGame?.({ gameId: decrypted.gameId, hostIsBlack: decrypted.hostIsBlack !== false })
+    }
+    if (decrypted.type === 'UNDO_REQUEST') onUndoRequest?.()
+    if (decrypted.type === 'UNDO_ACCEPT') onUndoAccept?.()
+    if (decrypted.type === 'UNDO_REJECT') onUndoReject?.()
+  }, [onMove, onResign, onNewGame, onRoomInit, onUndoRequest, onUndoAccept, onUndoReject])
 
   // ── Setup DataChannel ────────────────────────────────────────────────────
   const setupChannel = useCallback((ch) => {
     channelRef.current = ch
     ch.onmessage = handleChannelMessage
     ch.onopen = async () => {
-      // Start ECDH key exchange
       myKeyPairRef.current = await generateECDHKeyPair()
       const pubKey = await exportPublicKey(myKeyPairRef.current.publicKey)
       ch.send(JSON.stringify({ type: 'KEY_EXCHANGE', publicKey: pubKey }))
+      const pendingB64 = pendingPeerKeyB64Ref.current
+      if (pendingB64) {
+        pendingPeerKeyB64Ref.current = null
+        try {
+          const theirPubKey = await importPublicKey(pendingB64)
+          const sessionKey  = await deriveSessionKey(myKeyPairRef.current.privateKey, theirPubKey)
+          sessionKeyRef.current = sessionKey
+          setIsEncrypted(true)
+          setStep('connected')
+        } catch (e) {
+          setError('加密握手失败: ' + e.message)
+          setStep('idle')
+        }
+      }
     }
   }, [handleChannelMessage])
 
@@ -105,7 +144,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     const ws = new WebSocket(SIGNALING_URL)
     wsRef.current = ws
     ws.onopen = () => resolve(ws)
-    ws.onerror = (e) => reject(new Error('无法连接信令服务器'))
+    ws.onerror = () => reject(new Error('无法连接信令服务器'))
     ws.onclose = () => {
       // If signaling WS closes, game may still continue via DataChannel
     }
@@ -120,21 +159,18 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
     try {
       const ws  = await openWS()
-      const pc  = await createPeerConnection()
-      pcRef.current = pc
+      /** SDP envelope string — set after ICE; peer_joined may arrive earlier */
+      let offerCode = null
+      let pc = null
+      let peerJoined = false
 
-      const ch = pc.createDataChannel('game')
-      setupChannel(ch)
+      const trySendOffer = () => {
+        if (offerCode && peerJoined) {
+          ws.send(JSON.stringify({ type: 'signal', data: { type: 'offer', offer: offerCode } }))
+        }
+      }
 
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-      await waitForICE(pc)
-
-      const offerCode = encodeOffer(pc.localDescription)
-
-      // Tell signaling server to open a room
-      ws.send(JSON.stringify({ type: 'create_room' }))
-
+      // Must register before ICE / create_room so peer_joined is never dropped
       ws.onmessage = async ({ data }) => {
         let msg
         try { msg = JSON.parse(data) } catch { return }
@@ -145,14 +181,16 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
         }
 
         if (msg.type === 'peer_joined') {
-          // Send our offer to guest via signaling
-          ws.send(JSON.stringify({ type: 'signal', data: { type: 'offer', offer: offerCode } }))
+          peerJoined = true
+          trySendOffer()
         }
 
-        if (msg.type === 'signal' && msg.data?.type === 'answer') {
+        if (msg.type === 'signal' && msg.data?.type === 'answer' && pc) {
           try {
-            const answerDesc = decodeAnswer(msg.data.answer)
-            await pc.setRemoteDescription(answerDesc)
+            const data_ = decodeAnswer(msg.data.answer)
+            const init = data_?.sdp ?? data_
+            if (!init?.sdp) throw new Error('invalid answer payload')
+            await pc.setRemoteDescription(init)
           } catch (e) {
             setError('应答码无效: ' + e.message)
           }
@@ -162,7 +200,30 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
           setError(msg.message)
           setStep('idle')
         }
+
+        if (msg.type === 'witness_error') {
+          window.dispatchEvent(
+            new CustomEvent('platform:witness_server_error', {
+              detail: { message: msg.message ?? '服务端见证校验失败' },
+            }),
+          )
+        }
       }
+
+      ws.send(JSON.stringify({ type: 'create_room' }))
+
+      pc = await createPeerConnection()
+      pcRef.current = pc
+
+      const ch = pc.createDataChannel('game')
+      setupChannel(ch)
+
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      await waitForICE(pc)
+
+      offerCode = encodeOffer({ sdp: pc.localDescription.toJSON() })
+      trySendOffer()
     } catch (e) {
       setError(e.message)
       setStep('idle')
@@ -183,20 +244,20 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
 
       pc.ondatachannel = ({ channel }) => setupChannel(channel)
 
-      ws.send(JSON.stringify({ type: 'join_room', room: code.toUpperCase() }))
-
       ws.onmessage = async ({ data }) => {
         let msg
         try { msg = JSON.parse(data) } catch { return }
 
         if (msg.type === 'signal' && msg.data?.type === 'offer') {
           try {
-            const offerDesc = decodeOffer(msg.data.offer)
-            await pc.setRemoteDescription(offerDesc)
+            const data_ = decodeOffer(msg.data.offer)
+            const init = data_?.sdp ?? data_
+            if (!init?.sdp) throw new Error('invalid offer payload')
+            await pc.setRemoteDescription(init)
             const answer = await pc.createAnswer()
             await pc.setLocalDescription(answer)
             await waitForICE(pc)
-            const answerCode = encodeAnswer(pc.localDescription)
+            const answerCode = encodeAnswer({ sdp: pc.localDescription.toJSON() })
             ws.send(JSON.stringify({ type: 'signal', data: { type: 'answer', answer: answerCode } }))
           } catch (e) {
             setError('连接失败: ' + e.message)
@@ -208,7 +269,17 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
           setError(msg.message)
           setStep('idle')
         }
+
+        if (msg.type === 'witness_error') {
+          window.dispatchEvent(
+            new CustomEvent('platform:witness_server_error', {
+              detail: { message: msg.message ?? '服务端见证校验失败' },
+            }),
+          )
+        }
       }
+
+      ws.send(JSON.stringify({ type: 'join_room', room: code.toUpperCase() }))
     } catch (e) {
       setError(e.message)
       setStep('idle')
@@ -225,6 +296,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     pcRef.current = null
     sessionKeyRef.current = null
     myKeyPairRef.current = null
+    pendingPeerKeyB64Ref.current = null
     setStep('idle')
     setRoomCode('')
     setRole(null)
@@ -233,10 +305,31 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
   }, [])
 
   // ── Public API (mirrors useWebRTC shape for drop-in use in P2PModal) ─────
-  const sendMove       = useCallback((r, c, hash) => sendMessage({ type: 'MOVE', r, c, hash }), [sendMessage])
-  const sendResign     = useCallback(()           => sendMessage({ type: 'RESIGN' }),             [sendMessage])
-  const sendNewGame    = useCallback((gameId)     => sendMessage({ type: 'NEW_GAME', gameId }),   [sendMessage])
-  const sendRoomInit   = useCallback((gameId)     => sendMessage({ type: 'ROOM_INIT', gameId }),  [sendMessage])
+  const sendMove       = useCallback((r, c, hash, player) => sendMessage({ type: 'MOVE', r, c, hash, player }), [sendMessage])
+  const sendResign     = useCallback(() => sendMessage({ type: 'RESIGN' }), [sendMessage])
+  const sendNewGame    = useCallback((gameId, meta = {}) => sendMessage({ type: 'NEW_GAME', gameId, hostIsBlack: meta.hostIsBlack !== false }), [sendMessage])
+  const sendRoomInit   = useCallback((gameId, meta = {}) => sendMessage({ type: 'ROOM_INIT', gameId, hostIsBlack: meta.hostIsBlack !== false }), [sendMessage])
+  const sendUndoRequest  = useCallback(() => sendMessage({ type: 'UNDO_REQUEST' }), [sendMessage])
+  const sendUndoResponse = useCallback((accept) => sendMessage({ type: accept ? 'UNDO_ACCEPT' : 'UNDO_REJECT' }), [sendMessage])
+
+  /** 信令 WS 仍通时，向 Worker 提交着法见证（与 @tg/core/crypto 链一致） */
+  const sendWitnessRoomInit = useCallback(
+    (gameId, hostIsBlack) =>
+      sendWs({ type: 'witness_room_init', gameId, hostIsBlack: hostIsBlack !== false }),
+    [sendWs]
+  )
+  const sendMoveWitness = useCallback(
+    (payload) => sendWs({ type: 'move_witness', ...payload }),
+    [sendWs]
+  )
+  const sendWitnessUndoPop = useCallback(
+    (gameId) => sendWs({ type: 'witness_undo_pop', gameId }),
+    [sendWs]
+  )
+  const sendWitnessResign = useCallback(
+    (gameId, resignedPlayer) => sendWs({ type: 'witness_resign', gameId, resignedPlayer }),
+    [sendWs]
+  )
 
   return {
     // State
@@ -244,5 +337,7 @@ export function useSignaling({ onMove, onResign, onNewGame, onRoomInit } = {}) {
     // Actions
     createRoom, joinRoom, disconnect,
     sendMove, sendResign, sendNewGame, sendRoomInit,
+    sendUndoRequest, sendUndoResponse,
+    sendWitnessRoomInit, sendMoveWitness, sendWitnessUndoPop, sendWitnessResign,
   }
 }

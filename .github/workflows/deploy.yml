@@ -31,8 +31,31 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Unit tests
+        run: pnpm test
+
+      # Vite production build only reads apps/web/.env.production (not .env.development).
+      # If Cloudflare Pages "Environment variables" defines VITE_SIGNALING_URL as empty,
+      # it overrides .env files and the client will have no signaling URL on non-localhost.
       - name: Build web
         run: pnpm -F @tg/web build
+
+      - name: Verify signaling URL is embedded in bundle
+        run: |
+          set -e
+          line=$(grep -E '^VITE_SIGNALING_URL=' apps/web/.env.production | tail -1)
+          host=${line#VITE_SIGNALING_URL=}
+          host=${host#wss://}
+          host=${host#ws://}
+          host=${host%%/*}
+          if [ -z "$host" ]; then
+            echo '::error::apps/web/.env.production missing VITE_SIGNALING_URL'
+            exit 1
+          fi
+          if ! grep -rF "$host" apps/web/dist --include='*.js' -q; then
+            echo "::error::Bundle missing signaling host \"$host\" — empty VITE_SIGNALING_URL in CI/Pages env overrides .env; or .env.production not applied (build cwd must be apps/web)."
+            exit 1
+          fi
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
