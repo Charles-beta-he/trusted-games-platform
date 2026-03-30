@@ -1,14 +1,19 @@
 /**
  * 热插拔游戏插件注册表
  *
- * 每个插件描述符实现 GamePluginDescriptor 接口：
- *   id, name, version, description, boardSize, players,
+ * GamePluginDescriptor 接口：
+ *   id, name, nameEn, version, description, boardSize, players,
  *   status: 'installed' | 'coming_soon',
+ *   icon, author, trustLevels,
  *   aiEngines: AIEngineDescriptor[],
- *   trustLevels: TrustLevel[]
+ *   ranked, p2pEnabled, aiEnabled, eloKey,
+ *   aiSide,            // AI 执哪一方（数值 = currentPlayer 的 AI 值），null 表示 player 2
+ *   aiStyleEnabled,    // AI 面板是否展示风格选择器（Minimax 类游戏有风格）
+ *   aiDescription,     // AI 面板底部额外说明文字（null = 无）
+ *   localDescription,  // 本地对战说明文字
  *
  * 运行时只有 status==='installed' 的插件可以加载。
- * 后续接入新游戏只需在此注册描述符并提供对应 hook/lib。
+ * 接入新游戏只需在此注册描述符并提供对应页面/hook/AI handler。
  */
 
 export const GAME_CATALOG = [
@@ -37,6 +42,10 @@ export const GAME_CATALOG = [
     p2pEnabled: true,
     aiEnabled: true,
     eloKey: 'elo',
+    aiSide: 2,
+    aiStyleEnabled: true,
+    aiDescription: null,
+    localDescription: '两名玩家在同一设备上轮流落子。黑方先行。',
   },
   {
     id: 'go',
@@ -55,6 +64,10 @@ export const GAME_CATALOG = [
     p2pEnabled: false,
     aiEnabled: false,
     eloKey: null,
+    aiSide: null,
+    aiStyleEnabled: false,
+    aiDescription: null,
+    localDescription: '两名玩家在同一设备上轮流落子。',
   },
   {
     id: 'xiangqi',
@@ -81,6 +94,10 @@ export const GAME_CATALOG = [
     p2pEnabled: false,
     aiEnabled: true,
     eloKey: 'elo_xiangqi',
+    aiSide: -1,
+    aiStyleEnabled: false,
+    aiDescription: '你执红先行，AI 执黑。棋力为启发式评估（非五子棋 Minimax）。',
+    localDescription: '两名玩家在同一设备上轮流行棋。红方先行。',
   },
   {
     id: 'chess',
@@ -99,6 +116,10 @@ export const GAME_CATALOG = [
     p2pEnabled: false,
     aiEnabled: false,
     eloKey: null,
+    aiSide: null,
+    aiStyleEnabled: false,
+    aiDescription: null,
+    localDescription: '两名玩家在同一设备上轮流行棋。白方先行。',
   },
 ]
 
@@ -113,3 +134,6 @@ export function getGameById(id) {
 export function getAllGames() {
   return GAME_CATALOG
 }
+
+/** 支持 P2P 的默认游戏 ID（用于 LobbyPage 快速加入） */
+export const P2P_GAME_ID = GAME_CATALOG.find((g) => g.p2pEnabled)?.id ?? 'gomoku'

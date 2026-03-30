@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import GameLobby from '../components/GameLobby.jsx'
+import { P2P_GAME_ID } from '../plugins/index.js'
 
 export default function LobbyPage() {
   const navigate = useNavigate()
@@ -10,7 +11,7 @@ export default function LobbyPage() {
 
   const handleQuickJoin = (input) => {
     if (looksLikeRoomCode(input)) {
-      navigate('/play/gomoku', { state: { autoJoinRoomCode: input.trim().toUpperCase() } })
+      navigate(`/play/${P2P_GAME_ID}`, { state: { autoJoinRoomCode: input.trim().toUpperCase() } })
     } else {
       let offerCode = input
       if (input.includes('#join=')) {
@@ -22,7 +23,7 @@ export default function LobbyPage() {
           offerCode = input
         }
       }
-      navigate('/play/gomoku', { state: { autoJoinOffer: offerCode } })
+      navigate(`/play/${P2P_GAME_ID}`, { state: { autoJoinOffer: offerCode } })
     }
   }
 
@@ -31,7 +32,7 @@ export default function LobbyPage() {
       const text = await file.text()
       const record = JSON.parse(text)
       if (!Array.isArray(record?.moves)) throw new Error('无效的 JSON 棋谱')
-      navigate('/play/gomoku', { state: { gomokuImport: record } })
+      navigate(`/play/${P2P_GAME_ID}`, { state: { gomokuImport: record } })
     } catch (e) {
       alert('导入失败: ' + (e.message || String(e)))
     }

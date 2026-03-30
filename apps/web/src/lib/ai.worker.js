@@ -1,25 +1,31 @@
 /**
- * AI Web Worker — 多游戏：五子棋 minimax；象棋启发式（见 @tg/core）
+ * AI Web Worker — 多游戏 AI 调度
  *
- * 接收:
- *   五子棋: { id, game: 'gomoku' | undefined, board, difficulty, style }
- *   象棋:   { id, game: 'xiangqi', board, difficulty, sideToMove }
- * 发送: { id, move, game? } | { id, error }
+ * 接收: { id, game: string, board, difficulty, ...gameParams }
+ * 发送: { id, move, game } | { id, error }
+ *
+ * 接入新游戏 AI：在 HANDLERS 中添加一个 key 即可，无需改动分发逻辑。
  */
 
 import { getBestMove as gomokuBest } from './ai.js'
 import { xiangqiGame } from '@tg/core'
 
+const HANDLERS = {
+  gomoku({ board, difficulty, style }) {
+    return gomokuBest(board, difficulty, style)
+  },
+  xiangqi({ board, difficulty, sideToMove }) {
+    return xiangqiGame.getBestMove(board, sideToMove, difficulty)
+  },
+}
+
 self.onmessage = (e) => {
-  const { id, game, board, difficulty, style, sideToMove } = e.data
+  const { id, game = 'gomoku', ...params } = e.data
   try {
-    if (game === 'xiangqi') {
-      const move = xiangqiGame.getBestMove(board, sideToMove, difficulty)
-      self.postMessage({ id, move, game: 'xiangqi' })
-      return
-    }
-    const move = gomokuBest(board, difficulty, style)
-    self.postMessage({ id, move, game: 'gomoku' })
+    const handler = HANDLERS[game]
+    if (!handler) throw new Error(`No AI handler registered for game: ${game}`)
+    const move = handler(params)
+    self.postMessage({ id, move, game })
   } catch (err) {
     self.postMessage({ id, error: err.message })
   }

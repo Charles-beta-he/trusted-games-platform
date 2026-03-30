@@ -44,7 +44,8 @@ export default function XiangqiPlayPage() {
     styleId,
     gameOver: xq.gameOver,
     gameKind: 'xiangqi',
-    xiangqiAiSide: -1,
+    aiSide: -1,
+    aiStyleEnabled: false,
     onAIMove,
   })
 

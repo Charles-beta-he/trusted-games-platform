@@ -5,9 +5,10 @@ import { resolveStyle } from '../lib/ai-styles.js'
 /**
  * useAI — Web Worker 运行各游戏 AI
  *
- * @param {'gomoku'|'xiangqi'} [opts.gameKind]
- * @param {number} [opts.xiangqiAiSide] 象棋 AI 行棋方（默认 -1 执黑）
- * @param {function} opts.onAIMove — 五子棋 (r,c)；象棋 ({ fr, fc, tr, tc })
+ * @param {string}   opts.gameKind     游戏 ID（对应 ai.worker HANDLERS key）
+ * @param {number}   opts.aiSide       AI 执哪一方（currentPlayer 等于此值时 AI 行棋）
+ * @param {boolean}  opts.aiStyleEnabled  是否使用 AI 风格（Minimax 类游戏）
+ * @param {function} opts.onAIMove     回调：棋子落子型传 (r,c)；移动型传 ({ fr,fc,tr,tc })
  */
 export function useAI({
   board,
@@ -18,7 +19,8 @@ export function useAI({
   gameOver,
   onAIMove,
   gameKind = 'gomoku',
-  xiangqiAiSide = -1,
+  aiSide = 2,
+  aiStyleEnabled = true,
 }) {
   const [isThinking, setIsThinking] = useState(false)
 
@@ -36,11 +38,12 @@ export function useAI({
         { type: 'module' },
       )
       workerRef.current.onmessage = (ev) => {
-        const { id, move, game: gk, error } = ev.data
+        const { id, move, error } = ev.data
         if (id !== reqIdRef.current) return
         setIsThinking(false)
         if (error || !move) return
-        if (gk === 'xiangqi' || (move.fr != null && move.tr != null)) {
+        // 移动型（象棋）: { fr, fc, tr, tc }；落子型（五子棋）: { r, c }
+        if (move.fr != null && move.tr != null) {
           onAIMoveRef.current(move)
         } else {
           onAIMoveRef.current(move.r, move.c)
@@ -58,11 +61,7 @@ export function useAI({
   }, [])
 
   useEffect(() => {
-    const aiTurn =
-      gameKind === 'gomoku'
-        ? currentPlayer === 2
-        : currentPlayer === xiangqiAiSide
-    if (!aiMode || !aiTurn || gameOver) return
+    if (!aiMode || currentPlayer !== aiSide || gameOver) return
 
     setIsThinking(true)
     const delay = DIFFICULTY_CONFIG[difficulty]?.delay ?? 400
@@ -70,31 +69,17 @@ export function useAI({
 
     const timer = setTimeout(() => {
       const b = boardRef.current.map((row) => [...row])
-      if (gameKind === 'xiangqi') {
-        getWorker().postMessage({
-          id,
-          game: 'xiangqi',
-          board: b,
-          difficulty,
-          sideToMove: xiangqiAiSide,
-        })
+      const msg = { id, game: gameKind, board: b, difficulty }
+      if (aiStyleEnabled) {
+        msg.style = resolveStyle(styleId)
       } else {
-        const style = resolveStyle(styleId)
-        getWorker().postMessage({ id, game: 'gomoku', board: b, difficulty, style })
+        msg.sideToMove = aiSide
       }
+      getWorker().postMessage(msg)
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [
-    currentPlayer,
-    aiMode,
-    gameOver,
-    difficulty,
-    styleId,
-    getWorker,
-    gameKind,
-    xiangqiAiSide,
-  ])
+  }, [currentPlayer, aiMode, gameOver, difficulty, styleId, getWorker, gameKind, aiSide, aiStyleEnabled])
 
   return { isThinking }
 }

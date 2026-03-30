@@ -4,6 +4,7 @@ import { useTheme } from '../contexts/ThemeContext.jsx'
 import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 import StyleSelector from './ai/StyleSelector.jsx'
+import { getGameById } from '../plugins/index.js'
 
 // ─── Inline utilities ─────────────────────────────────────────────────────────
 
@@ -134,7 +135,9 @@ const DIFFICULTIES = [
 function PanelAI({ onConfirm, gameId }) {
   const [difficulty, setDifficulty] = useState('medium')
   const [styleId, setStyleId] = useState('balanced')
-  const isXq = gameId === 'xiangqi'
+  const gameDesc = getGameById(gameId)
+  const aiStyleEnabled = gameDesc?.aiStyleEnabled ?? true
+  const aiDescription = gameDesc?.aiDescription ?? null
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
@@ -165,15 +168,15 @@ function PanelAI({ onConfirm, gameId }) {
         </div>
       </div>
 
-      {!isXq && <StyleSelector value={styleId} onChange={setStyleId} />}
-      {isXq && (
+      {aiStyleEnabled && <StyleSelector value={styleId} onChange={setStyleId} />}
+      {aiDescription && (
         <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.06em', lineHeight: 1.6 }}>
-          你执红先行，AI 执黑。棋力为启发式评估（非五子棋 Minimax）。
+          {aiDescription}
         </div>
       )}
 
       <button
-        onClick={() => onConfirm('ai', { difficulty, styleId: isXq ? 'balanced' : styleId })}
+        onClick={() => onConfirm('ai', { difficulty, styleId: aiStyleEnabled ? styleId : 'balanced' })}
         style={startBtnStyle}
       >
         START GAME →
@@ -183,13 +186,11 @@ function PanelAI({ onConfirm, gameId }) {
 }
 
 function PanelLocal({ onConfirm, gameId }) {
-  const isXq = gameId === 'xiangqi'
+  const localDescription = getGameById(gameId)?.localDescription ?? '两名玩家在同一设备上轮流行棋。'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', lineHeight: 1.7 }}>
-        {isXq
-          ? '两名玩家在同一设备上轮流行棋。红方先行。'
-          : '两名玩家在同一设备上轮流落子。黑方先行。'}
+        {localDescription}
       </div>
       <button onClick={() => onConfirm('local')} style={startBtnStyle}>
         START GAME →
