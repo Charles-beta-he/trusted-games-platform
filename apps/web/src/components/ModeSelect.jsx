@@ -3,7 +3,6 @@ import QRCode from 'qrcode'
 import { useTheme } from '../contexts/ThemeContext.jsx'
 import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
-import StyleSelector from './ai/StyleSelector.jsx'
 import { getGameById } from '../plugins/index.js'
 
 // ─── Inline utilities ─────────────────────────────────────────────────────────
@@ -132,12 +131,55 @@ const DIFFICULTIES = [
 
 // ─── Sub-panels ───────────────────────────────────────────────────────────────
 
+/** 渲染单个 select 类型的 AI 参数选择器 */
+function ParamSelect({ param, value, onChange }) {
+  const cols = param.options.length <= 3 ? param.options.length : 2
+  return (
+    <div>
+      <div style={labelStyle}>{param.label}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8, marginTop: 8 }}>
+        {param.options.map((opt) => {
+          const active = value === opt.id
+          return (
+            <button
+              key={opt.id}
+              onClick={() => onChange(opt.id)}
+              style={{
+                padding: '10px 8px',
+                background: active ? 'var(--accent-primary)' : 'var(--bg-surface)',
+                border: `1px solid ${active ? 'var(--accent-primary)' : 'var(--border-color)'}`,
+                borderRadius: 4,
+                color: active ? '#000' : 'var(--text-primary)',
+                fontFamily: 'var(--font-primary)',
+                fontSize: 13,
+                fontWeight: active ? 'bold' : 'normal',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                textAlign: 'center',
+              }}
+            >
+              {opt.icon && <div style={{ fontSize: 16, marginBottom: 3 }}>{opt.icon}</div>}
+              <div>{opt.label}</div>
+              <div style={{ fontSize: 9, letterSpacing: '0.08em', marginTop: 2, opacity: 0.7 }}>{opt.desc}</div>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function PanelAI({ onConfirm, gameId }) {
   const [difficulty, setDifficulty] = useState('medium')
-  const [styleId, setStyleId] = useState('balanced')
   const gameDesc = getGameById(gameId)
-  const aiStyleEnabled = gameDesc?.aiStyleEnabled ?? true
+  const schema = gameDesc?.aiParams ?? []
   const aiDescription = gameDesc?.aiDescription ?? null
+
+  const [paramValues, setParamValues] = useState(
+    () => Object.fromEntries(schema.map((p) => [p.id, p.default]))
+  )
+  const setParam = (id, val) => setParamValues((prev) => ({ ...prev, [id]: val }))
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div>
@@ -168,7 +210,17 @@ function PanelAI({ onConfirm, gameId }) {
         </div>
       </div>
 
-      {aiStyleEnabled && <StyleSelector value={styleId} onChange={setStyleId} />}
+      {schema.map((param) =>
+        param.type === 'select' ? (
+          <ParamSelect
+            key={param.id}
+            param={param}
+            value={paramValues[param.id] ?? param.default}
+            onChange={(val) => setParam(param.id, val)}
+          />
+        ) : null
+      )}
+
       {aiDescription && (
         <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.06em', lineHeight: 1.6 }}>
           {aiDescription}
@@ -176,7 +228,7 @@ function PanelAI({ onConfirm, gameId }) {
       )}
 
       <button
-        onClick={() => onConfirm('ai', { difficulty, styleId: aiStyleEnabled ? styleId : 'balanced' })}
+        onClick={() => onConfirm('ai', { difficulty, aiParams: paramValues })}
         style={startBtnStyle}
       >
         START GAME →

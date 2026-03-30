@@ -57,7 +57,7 @@ export default function GomokuPlayPage() {
   // ─── Game config ───────────────────────────────────────────────────────────
   const [aiMode, setAiMode] = useState(false)
   const [difficulty, setDifficulty] = useState('medium')
-  const [styleId, setStyleId] = useState('balanced')
+  const [aiParams, setAiParams] = useState({ style: 'balanced' })
   const [showDisconnectBanner, setShowDisconnectBanner] = useState(false)
   const [showVictoryOverlay, setShowVictoryOverlay] = useState(false)
   /** P2P：房主下一局是否执黑；每开新局由房主切换 */
@@ -374,7 +374,7 @@ export default function GomokuPlayPage() {
     currentPlayer: game.currentPlayer,
     aiMode: effectiveAiMode,
     difficulty,
-    styleId,
+    aiParams,
     gameOver: game.gameOver,
     onAIMove: useCallback((r, c) => placeStoneRef.current(r, c), []),
   })
@@ -476,7 +476,7 @@ export default function GomokuPlayPage() {
           if (mode === 'ai') {
             setAiMode(true)
             if (opts?.difficulty) setDifficulty(opts.difficulty)
-            if (opts?.styleId)    setStyleId(opts.styleId)
+            if (opts?.aiParams)   setAiParams(opts.aiParams)
           } else {
             setAiMode(false)
           }

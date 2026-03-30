@@ -7,13 +7,15 @@
  *   icon, author, trustLevels,
  *   aiEngines: AIEngineDescriptor[],
  *   ranked, p2pEnabled, aiEnabled, eloKey,
- *   aiSide,            // AI 执哪一方（数值 = currentPlayer 的 AI 值），null 表示 player 2
- *   aiStyleEnabled,    // AI 面板是否展示风格选择器（Minimax 类游戏有风格）
- *   aiDescription,     // AI 面板底部额外说明文字（null = 无）
- *   localDescription,  // 本地对战说明文字
+ *   aiSide,          // AI 执哪一方（currentPlayer 等于此值时 AI 行棋）
+ *   aiDescription,   // AI 面板底部补充说明（可选）
+ *   localDescription,// 本地双人说明文字
+ *   aiParams: AiParamSchema[]  // AI 可配置参数声明，空数组 = 无额外配置
  *
- * 运行时只有 status==='installed' 的插件可以加载。
- * 接入新游戏只需在此注册描述符并提供对应页面/hook/AI handler。
+ * AiParamSchema:
+ *   { id, label, type: 'select', options: [{ id, label, desc, icon }], default }
+ *
+ * 接入新游戏：注册此描述符 + 创建页面 + PlayPage 加一行 lazy + ai.worker 加一个 handler。
  */
 
 export const GAME_CATALOG = [
@@ -43,9 +45,23 @@ export const GAME_CATALOG = [
     aiEnabled: true,
     eloKey: 'elo',
     aiSide: 2,
-    aiStyleEnabled: true,
     aiDescription: null,
     localDescription: '两名玩家在同一设备上轮流落子。黑方先行。',
+    aiParams: [
+      {
+        id: 'style',
+        label: '棋风 · STYLE',
+        type: 'select',
+        options: [
+          { id: 'balanced',   label: '均衡', nameEn: 'Balanced',   desc: '攻守平衡，标准博弈',    icon: '⚖' },
+          { id: 'aggressive', label: '强攻', nameEn: 'Aggressive', desc: '优先构建威胁，主动进攻', icon: '⚔' },
+          { id: 'defensive',  label: '稳守', nameEn: 'Defensive',  desc: '优先封堵对手，稳健应对', icon: '🛡' },
+          { id: 'chaotic',    label: '随性', nameEn: 'Chaotic',    desc: '带有随机性，走法难以预测', icon: '🎲' },
+          { id: 'personal',   label: '个人', nameEn: 'Personal',   desc: '使用 Style Center 中的自定义参数', icon: '✦' },
+        ],
+        default: 'balanced',
+      },
+    ],
   },
   {
     id: 'go',
@@ -65,9 +81,9 @@ export const GAME_CATALOG = [
     aiEnabled: false,
     eloKey: null,
     aiSide: null,
-    aiStyleEnabled: false,
     aiDescription: null,
     localDescription: '两名玩家在同一设备上轮流落子。',
+    aiParams: [],
   },
   {
     id: 'xiangqi',
@@ -95,9 +111,32 @@ export const GAME_CATALOG = [
     aiEnabled: true,
     eloKey: 'elo_xiangqi',
     aiSide: -1,
-    aiStyleEnabled: false,
-    aiDescription: '你执红先行，AI 执黑。棋力为启发式评估（非五子棋 Minimax）。',
+    aiDescription: '你执红先行，AI 执黑。',
     localDescription: '两名玩家在同一设备上轮流行棋。红方先行。',
+    aiParams: [
+      {
+        id: 'aggression',
+        label: '进取性 · AGGRESSION',
+        type: 'select',
+        options: [
+          { id: 'conservative', label: '稳健', nameEn: 'Conservative', desc: '轻吃子，重守势', icon: '🛡' },
+          { id: 'balanced',     label: '均衡', nameEn: 'Balanced',     desc: '攻守兼备',       icon: '⚖' },
+          { id: 'aggressive',   label: '凶猛', nameEn: 'Aggressive',   desc: '重吃子，求将军', icon: '⚔' },
+        ],
+        default: 'balanced',
+      },
+      {
+        id: 'noise',
+        label: '随机性 · RANDOMNESS',
+        type: 'select',
+        options: [
+          { id: 'none',   label: '确定', nameEn: 'Deterministic', desc: '走法固定，最优解', icon: '📐' },
+          { id: 'slight', label: '轻微', nameEn: 'Slight',        desc: '偶有变化，较难预测', icon: '〰' },
+          { id: 'high',   label: '高度', nameEn: 'Chaotic',       desc: '飘忽不定，风格多变', icon: '🎲' },
+        ],
+        default: 'slight',
+      },
+    ],
   },
   {
     id: 'chess',
@@ -117,9 +156,9 @@ export const GAME_CATALOG = [
     aiEnabled: false,
     eloKey: null,
     aiSide: null,
-    aiStyleEnabled: false,
     aiDescription: null,
     localDescription: '两名玩家在同一设备上轮流行棋。白方先行。',
+    aiParams: [],
   },
 ]
 

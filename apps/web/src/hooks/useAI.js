@@ -1,26 +1,24 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { DIFFICULTY_CONFIG } from '../lib/constants.js'
-import { resolveStyle } from '../lib/ai-styles.js'
 
 /**
  * useAI — Web Worker 运行各游戏 AI
  *
- * @param {string}   opts.gameKind     游戏 ID（对应 ai.worker HANDLERS key）
- * @param {number}   opts.aiSide       AI 执哪一方（currentPlayer 等于此值时 AI 行棋）
- * @param {boolean}  opts.aiStyleEnabled  是否使用 AI 风格（Minimax 类游戏）
- * @param {function} opts.onAIMove     回调：棋子落子型传 (r,c)；移动型传 ({ fr,fc,tr,tc })
+ * @param {string}  opts.gameKind   游戏 ID（对应 ai.worker HANDLERS key）
+ * @param {number}  opts.aiSide     AI 执哪一方（currentPlayer 等于此值时 AI 行棋）
+ * @param {object}  opts.aiParams   游戏自定义 AI 参数（来自 plugin aiParams schema 的用户配置）
+ * @param {function} opts.onAIMove  落子型传 (r,c)；移动型传 ({ fr,fc,tr,tc })
  */
 export function useAI({
   board,
   currentPlayer,
   aiMode,
   difficulty,
-  styleId = 'balanced',
   gameOver,
   onAIMove,
   gameKind = 'gomoku',
   aiSide = 2,
-  aiStyleEnabled = true,
+  aiParams = {},
 }) {
   const [isThinking, setIsThinking] = useState(false)
 
@@ -42,7 +40,7 @@ export function useAI({
         if (id !== reqIdRef.current) return
         setIsThinking(false)
         if (error || !move) return
-        // 移动型（象棋）: { fr, fc, tr, tc }；落子型（五子棋）: { r, c }
+        // 移动型（象棋等）: { fr, fc, tr, tc }；落子型（五子棋等）: { r, c }
         if (move.fr != null && move.tr != null) {
           onAIMoveRef.current(move)
         } else {
@@ -69,17 +67,18 @@ export function useAI({
 
     const timer = setTimeout(() => {
       const b = boardRef.current.map((row) => [...row])
-      const msg = { id, game: gameKind, board: b, difficulty }
-      if (aiStyleEnabled) {
-        msg.style = resolveStyle(styleId)
-      } else {
-        msg.sideToMove = aiSide
-      }
-      getWorker().postMessage(msg)
+      getWorker().postMessage({
+        id,
+        game: gameKind,
+        board: b,
+        difficulty,
+        sideToMove: aiSide,
+        aiParams,
+      })
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [currentPlayer, aiMode, gameOver, difficulty, styleId, getWorker, gameKind, aiSide, aiStyleEnabled])
+  }, [currentPlayer, aiMode, gameOver, difficulty, aiParams, getWorker, gameKind, aiSide])
 
   return { isThinking }
 }

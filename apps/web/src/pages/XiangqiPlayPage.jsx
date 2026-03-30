@@ -16,7 +16,7 @@ export default function XiangqiPlayPage() {
   const [currentView, setCurrentView] = useState('mode')
   const [aiMode, setAiMode] = useState(false)
   const [difficulty, setDifficulty] = useState('medium')
-  const [styleId, setStyleId] = useState('balanced')
+  const [aiParams, setAiParams] = useState({ aggression: 'balanced', noise: 'slight' })
 
   const xq = useXiangqiGame()
 
@@ -41,11 +41,10 @@ export default function XiangqiPlayPage() {
     currentPlayer: xq.sideToMove,
     aiMode,
     difficulty,
-    styleId,
+    aiParams,
     gameOver: xq.gameOver,
     gameKind: 'xiangqi',
     aiSide: -1,
-    aiStyleEnabled: false,
     onAIMove,
   })
 
@@ -83,7 +82,7 @@ export default function XiangqiPlayPage() {
           if (mode === 'ai') {
             setAiMode(true)
             if (opts?.difficulty) setDifficulty(opts.difficulty)
-            if (opts?.styleId) setStyleId(opts.styleId)
+            if (opts?.aiParams)   setAiParams(opts.aiParams)
           } else {
             setAiMode(false)
           }

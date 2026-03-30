@@ -391,10 +391,17 @@ function captureScore(cell) {
 }
 
 /**
- * 启发式 AI：易随机，中优先吃子，难做 1 层极大极小（吃子价值 + 微弱机动性）。
+ * 启发式 AI：易随机，中优先吃子，难做 1 层极大极小（吃子价值 + 机动性）。
+ *
+ * @param {object} [aiParams]
+ *   aggression: 'conservative' | 'balanced' | 'aggressive'
+ *     — 调节吃子权重与机动性系数
+ *   noise: 'none' | 'slight' | 'high'
+ *     — 控制 top pool 宽度（确定性 vs 随机性）
+ *
  * @returns {{ fr: number, fc: number, tr: number, tc: number } | null}
  */
-export function getBestMove(board, sideToMove, difficulty = 'medium') {
+export function getBestMove(board, sideToMove, difficulty = 'medium', aiParams = {}) {
   const moves = []
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
@@ -420,10 +427,24 @@ export function getBestMove(board, sideToMove, difficulty = 'medium') {
     return pickRandom(moves)
   }
 
+  // ── aiParams 解析 ────────────────────────────────────────────────────────
+  // aggression 控制吃子权重与机动性系数
+  const AGGRESSION_CFG = {
+    conservative: { captureW: 6,  selfMobW: 1.2, oppMobW: 0.6 },
+    balanced:     { captureW: 12, selfMobW: 1.0, oppMobW: 0.45 },
+    aggressive:   { captureW: 20, selfMobW: 0.8, oppMobW: 0.25 },
+  }
+  const { captureW, selfMobW, oppMobW } =
+    AGGRESSION_CFG[aiParams.aggression] ?? AGGRESSION_CFG.balanced
+
+  // noise 控制 top pool 宽度（margin 越大选择越随机）
+  const NOISE_MARGIN = { none: 0, slight: 8, high: 40 }
+  const topMargin = NOISE_MARGIN[aiParams.noise] ?? NOISE_MARGIN.slight
+
   /** hard / expert：1-ply 搜索 */
   const scores = moves.map((m) => {
     const next = applyMove(board, m.fr, m.fc, m.tr, m.tc)
-    let s = captureScore(m.cap) * 12
+    let s = captureScore(m.cap) * captureW
     const opp = -sideToMove
     let oppMob = 0
     let selfMob = 0
@@ -433,13 +454,13 @@ export function getBestMove(board, sideToMove, difficulty = 'medium') {
         else if (side(next[r][c]) === opp) oppMob += getValidMoves(next, r, c).length
       }
     }
-    s += selfMob - oppMob * 0.45
+    s += selfMob * selfMobW - oppMob * oppMobW
     if (isInCheck(next, opp)) s += 28
     if (isCheckmate(next, opp)) s += 8000
     return { m, s }
   })
   scores.sort((a, b) => b.s - a.s)
   const topScore = scores[0].s
-  const pool = scores.filter((x) => x.s >= topScore - 8).map((x) => x.m)
+  const pool = scores.filter((x) => x.s >= topScore - topMargin).map((x) => x.m)
   return pickRandom(pool.length ? pool : [scores[0].m])
 }
