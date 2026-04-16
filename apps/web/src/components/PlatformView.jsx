@@ -32,8 +32,6 @@ function formatTimeSince(isoString) {
   return `${Math.floor(hrs / 24)}天前`
 }
 
-// ── Shared style tokens ───────────────────────────────────────────────────────
-const RANK_TIERS = [
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow({ cols = 3 }) {
