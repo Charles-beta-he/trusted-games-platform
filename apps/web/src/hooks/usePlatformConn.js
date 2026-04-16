@@ -197,36 +197,48 @@ export function usePlatformConn({
 
   // ── P2P setup for HOST ─────────────────────────────────────────────────────
   const setupAsHost = useCallback(async () => {
-    const pc = await createPeerConnection()
-    pcRef.current = pc
-    p2pRoleRef.current = 'host'
+    try {
+      const pc = await createPeerConnection()
+      pcRef.current = pc
+      p2pRoleRef.current = 'host'
 
-    const ch = pc.createDataChannel('game')
-    setupChannel(ch)
+      const ch = pc.createDataChannel('game')
+      setupChannel(ch)
 
-    const offer = await pc.createOffer()
-    await pc.setLocalDescription(offer)
-    await waitForICE(pc)
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+      await waitForICE(pc)
 
-    wsSend({ type: 'signal', data: { type: 'offer', offer: encodeOffer(pc.localDescription) } })
+      wsSend({ type: 'signal', data: { type: 'offer', offer: encodeOffer(pc.localDescription) } })
+    } catch (e) {
+      console.error('[platform] setupAsHost failed:', e)
+      setStep('error')
+      setError(e.message || 'P2P 连接建立失败')
+    }
   }, [setupChannel, wsSend])
 
   // ── P2P setup for GUEST (triggered on signal/offer) ───────────────────────
   const handleGuestOffer = useCallback(async (offerCode) => {
-    const pc = await createPeerConnection()
-    pcRef.current = pc
-    p2pRoleRef.current = 'guest'
+    try {
+      const pc = await createPeerConnection()
+      pcRef.current = pc
+      p2pRoleRef.current = 'guest'
 
-    pc.ondatachannel = ({ channel }) => setupChannel(channel)
+      pc.ondatachannel = ({ channel }) => setupChannel(channel)
 
-    const offerDesc = decodeOffer(offerCode)
-    if (!offerDesc) { console.error('[platform] bad offer code'); return }
-    await pc.setRemoteDescription(offerDesc)
-    const answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-    await waitForICE(pc)
+      const offerDesc = decodeOffer(offerCode)
+      if (!offerDesc) { console.error('[platform] bad offer code'); return }
+      await pc.setRemoteDescription(offerDesc)
+      const answer = await pc.createAnswer()
+      await pc.setLocalDescription(answer)
+      await waitForICE(pc)
 
-    wsSend({ type: 'signal', data: { type: 'answer', answer: encodeAnswer(pc.localDescription) } })
+      wsSend({ type: 'signal', data: { type: 'answer', answer: encodeAnswer(pc.localDescription) } })
+    } catch (e) {
+      console.error('[platform] handleGuestOffer failed:', e)
+      setStep('error')
+      setError(e.message || 'P2P 应答失败')
+    }
   }, [setupChannel, wsSend])
 
   // ── WS message dispatch ────────────────────────────────────────────────────
