@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       'packages/core/src/**/*.test.js',
       'apps/signaling-cf/src/**/*.test.js',
+      'apps/web/src/**/*.test.js',
     ],
   },
 })

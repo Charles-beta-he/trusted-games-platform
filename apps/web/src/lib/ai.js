@@ -1,4 +1,4 @@
-import { BOARD_SIZE, SCORE, DIFFICULTY_CONFIG } from './constants.js'
+import { BOARD_SIZE, SCORE, DIFFICULTY_CONFIG } from '@tg/core'
 
 // ---------------------------------------------------------------------------
 // Zobrist hashing — 15×15×2 random 32-bit pairs (simulating 64-bit keys)

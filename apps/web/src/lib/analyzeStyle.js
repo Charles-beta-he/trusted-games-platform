@@ -7,7 +7,7 @@
  * 至少需要 10 局数据，建议 20 局以上。
  */
 
-import { BOARD_SIZE, SCORE } from './constants.js'
+import { BOARD_SIZE, SCORE } from '@tg/core'
 import { evaluatePosition } from './ai.js'
 import { savePersonalStyle } from './ai-styles.js'
 
