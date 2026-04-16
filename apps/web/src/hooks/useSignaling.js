@@ -38,13 +38,36 @@ export function useSignaling({
   const [isEncrypted, setIsEncrypted] = useState(false)
   const [role, setRole]           = useState(null)     // 'host' | 'guest'
 
+  // ── 连接池 ─────────────────────────────────────────────────────────────────
   const wsRef          = useRef(null)
   const pcRef          = useRef(null)
   const channelRef     = useRef(null)
   const sessionKeyRef  = useRef(null)
   const myKeyPairRef   = useRef(null)
-  /** Guest may receive KEY_EXCHANGE before our async onopen finishes generating keys */
   const pendingPeerKeyB64Ref = useRef(null)
+  
+  // 心跳保活（每 30s 发送 ping）
+  const heartbeatIdRef = useRef(null)
+  const lastPingTimeRef = useRef(Date.now())
+  const HEARTBEAT_INTERVAL = 30000
+
+  // 连接池：复用 WebSocket 连接
+  const connectionPool = useRef(new Map()) // key: roomId, value: { ws, pc, channel, cleanup }
+
+  // 清理旧连接
+  const cleanupOldConnections = useCallback(() => {
+    const now = Date.now()
+    for (const [roomId, conn] of connectionPool.current.entries()) {
+      if (now - conn.lastActivity > HEARTBEAT_INTERVAL * 2) {
+        // 清理超时连接
+        if (conn.ws && conn.ws.readyState === WebSocket.OPEN) {
+          conn.ws.close(1000, 'Connection timeout')
+        }
+        connectionPool.current.delete(roomId)
+      }
+      conn.lastActivity = now
+    }
+  }, [])
 
   const isConnected = step === 'connected'
   const isAvailable = Boolean(SIGNALING_URL)
@@ -143,10 +166,30 @@ export function useSignaling({
   const openWS = useCallback(() => new Promise((resolve, reject) => {
     const ws = new WebSocket(SIGNALING_URL)
     wsRef.current = ws
-    ws.onopen = () => resolve(ws)
-    ws.onerror = () => reject(new Error('无法连接信令服务器'))
+    ws.onopen = () => {
+      resolve(ws)
+      // 启动心跳
+      heartbeatIdRef.current = setInterval(() => {
+        const now = Date.now()
+        if (now - lastPingTimeRef.current > HEARTBEAT_INTERVAL) {
+          lastPingTimeRef.current = now
+          ws.send(JSON.stringify({ type: 'ping' }))
+        }
+      }, HEARTBEAT_INTERVAL)
+    }
+    ws.onerror = () => {
+      if (heartbeatIdRef.current) clearInterval(heartbeatIdRef.current)
+      reject(new Error('无法连接信令服务器'))
+    }
     ws.onclose = () => {
-      // If signaling WS closes, game may still continue via DataChannel
+      if (heartbeatIdRef.current) clearInterval(heartbeatIdRef.current)
+      // 清理连接池中的对应连接
+      if (connectionPool.current.size > 0) {
+        const currentRoom = connectionPool.current.keys().next().value
+        if (currentRoom === roomId) {
+          connectionPool.current.delete(roomId)
+        }
+      }
     }
   }), [])
 

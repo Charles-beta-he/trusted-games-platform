@@ -16,7 +16,8 @@ const HANDLERS = {
   gomoku({ board, difficulty, aiParams }) {
     // aiParams.style: 'balanced' | 'aggressive' | 'defensive' | 'chaotic' | 'personal'
     const style = resolveStyle(aiParams?.style ?? 'balanced')
-    return gomokuBest(board, difficulty, style)
+    const timeLimitMs = aiParams?.timeLimitMs ?? 2000
+    return gomokuBest(board, difficulty, style, { ...aiParams, timeLimitMs })
   },
 
   xiangqi({ board, difficulty, sideToMove, aiParams }) {

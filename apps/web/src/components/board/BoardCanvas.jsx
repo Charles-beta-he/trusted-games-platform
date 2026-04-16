@@ -28,15 +28,68 @@ export default function BoardCanvas({
 
   const lastHash = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1].hash : ''
 
+  // ── OffscreenCanvas + RAF 优化 ─────────────────────────────────────────────
+  const offscreenRef = useRef(null)
+  const rafIdRef = useRef(null)
+  const lastDrawTimeRef = useRef(0)
+  const drawThrottleMs = 16 // ~60fps
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = dprRef.current
-    canvas.width = CANVAS_PX * dpr
-    canvas.height = CANVAS_PX * dpr
+    
+    // 初始化 OffscreenCanvas（用于预渲染）
+    const offscreen = new OffscreenCanvas(CANVAS_PX * dpr, CANVAS_PX * dpr)
+    offscreenRef.current = offscreen
+    const offCtx = offscreen.getContext('2d')
+    drawBoard(offCtx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking: isThinking })
+
+    // 主 Canvas 使用 requestAnimationFrame 渲染
     const ctx = canvas.getContext('2d')
-    drawBoard(ctx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking: isThinking })
+    
+    const drawLoop = () => {
+      const now = performance.now()
+      if (now - lastDrawTimeRef.current < drawThrottleMs) {
+        rafIdRef.current = requestAnimationFrame(drawLoop)
+        return
+      }
+      lastDrawTimeRef.current = now
+      
+      // 从 OffscreenCanvas 拷贝到主 Canvas（零拷贝优化）
+      ctx.drawImage(offscreen, 0, 0)
+      
+      // 局部重绘：使用 destination-out 清除，减少内存分配
+      if (hoverCell) {
+        const { x, y, size } = getCellPixelPos(hoverCell)
+        ctx.globalCompositeOperation = 'destination-out'
+        ctx.fillRect(x - size/2, y - size/2, size, size)
+        ctx.globalCompositeOperation = 'source-over'
+        drawBoard(offCtx, dpr, { hoverCell: null })
+        drawBoard(offCtx, dpr, { hoverCell })
+        ctx.drawImage(offscreen, x - size/2, y - size/2, size, size)
+      }
+      
+      rafIdRef.current = requestAnimationFrame(drawLoop)
+    }
+    
+    rafIdRef.current = requestAnimationFrame(drawLoop)
+    
+    return () => {
+      if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
+    }
   }, [board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, isThinking, theme])
+
+  // 辅助：获取格子像素位置
+  function getCellPixelPos(cell) {
+    const dpr = dprRef.current
+    const cellSize = CANVAS_PX / dpr
+    return {
+      x: cell.c * cellSize,
+      y: (BOARD_SIZE - cell.r) * cellSize,
+      size: cellSize
+    }
+  }
 
   const handleMouseMove = useCallback((e) => {
     const cell = getCellFromEvent(e, canvasRef.current)

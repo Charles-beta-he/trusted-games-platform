@@ -1,58 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import QRCode from 'qrcode'
-import { useTheme } from '../contexts/ThemeContext.jsx'
 import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 import { getGameById } from '../plugins/index.js'
+import QRCanvas from './ui/QRCanvas.jsx'
+import CopyButton from './ui/CopyButton.jsx'
+import useThemeCycle from '../hooks/useThemeCycle.js'
 
 // ─── Inline utilities ─────────────────────────────────────────────────────────
 
-function QRCanvas({ value, size = 160 }) {
-  const canvasRef = useRef(null)
-  useEffect(() => {
-    if (!value || !canvasRef.current) return
-    const style = getComputedStyle(document.documentElement)
-    const darkColor = style.getPropertyValue('--accent-primary').trim() || '#00d4ff'
-    const lightColor = style.getPropertyValue('--bg-primary').trim() || '#050a14'
-    QRCode.toCanvas(canvasRef.current, value, {
-      width: size,
-      margin: 2,
-      errorCorrectionLevel: 'L',
-      color: { dark: darkColor, light: lightColor },
-    }).catch(console.error)
-  }, [value, size])
-  return <canvas ref={canvasRef} style={{ borderRadius: 4, display: 'block', width: size, height: size, maxWidth: '100%' }} />
-}
-
-function CopyButton({ text, label }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    await navigator.clipboard.writeText(text).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <button
-      onClick={copy}
-      style={{
-        width: '100%',
-        marginTop: 6,
-        padding: '7px 12px',
-        background: copied ? 'transparent' : 'var(--bg-surface)',
-        border: `1px solid ${copied ? 'var(--accent-success, #2d6a4f)' : 'var(--border-color)'}`,
-        borderRadius: 4,
-        color: copied ? 'var(--accent-success, #2d6a4f)' : 'var(--text-muted)',
-        fontFamily: 'var(--font-primary)',
-        fontSize: 11,
-        letterSpacing: '0.1em',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-      }}
-    >
-      {copied ? '✓ 已复制' : (label || '复制')}
-    </button>
-  )
-}
 
 function Spinner() {
   return (
@@ -266,7 +221,9 @@ function PanelHost({ webrtc, sig, onConfirm }) {
     if (initCalled.current) return
     initCalled.current = true
     if (sig?.isAvailable) sig.createRoom()
-    webrtc.createRoom()
+    // 当 signaling 可用时，只走同一条“房间码 -> signaling 握手 -> DataChannel”的路径，
+    // 避免并行启动 webrtc 造成另一条 SDP 隧道与主机界面状态分叉。
+    else webrtc.createRoom()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
@@ -296,7 +253,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
     getLocalIP().then(() => {
       const hash = shareUrl.split('#')[1]
       setLanUrl(hash ? buildLanUrl(hash) : null)
-    })
+    }).catch(() => setLanUrl(null))
   }, [shareUrl])
 
   return (
@@ -688,19 +645,10 @@ export default function ModeSelect({
   /** 为 false 时仅展示人机与本地双人对局（如象棋尚未接 P2P 协议） */
   networkModesEnabled = true,
 }) {
-  const { theme, themes, setTheme } = useTheme()
+  const { theme, themes, setTheme, prevTheme, nextTheme } = useThemeCycle()
   const [selectedMode, setSelectedMode] = useState(null)
   const [hovered, setHovered] = useState(null)
 
-  const currentThemeIndex = themes.findIndex(t => t.id === theme)
-  const prevTheme = () => {
-    const idx = (currentThemeIndex - 1 + themes.length) % themes.length
-    setTheme(themes[idx].id)
-  }
-  const nextTheme = () => {
-    const idx = (currentThemeIndex + 1) % themes.length
-    setTheme(themes[idx].id)
-  }
 
   const visibleModes = useMemo(
     () => (networkModesEnabled ? MODES : MODES.filter((m) => m.id === 'ai' || m.id === 'local')),

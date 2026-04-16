@@ -83,7 +83,7 @@ export function useWebRTC({
         setIsEncrypted(true)
         setStep('connected')
         // Detect actual connection path after handshake
-        getConnectionType(pcRef.current).then(setConnType)
+        getConnectionType(pcRef.current).then(setConnType).catch(() => {})
       } catch (e) {
         console.warn('[WebRTC] key exchange failed', e)
         setError('Encryption handshake failed')

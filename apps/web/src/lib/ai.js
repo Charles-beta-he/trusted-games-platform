@@ -39,6 +39,44 @@ export function updateHash(hash, r, c, player) {
   return [hash[0] ^ ZOBRIST_LO[idx], hash[1] ^ ZOBRIST_HI[idx]]
 }
 
+// ---------------------------------------------------------------------------
+// Worker API: compute best move asynchronously
+// ---------------------------------------------------------------------------
+
+export async function computeBestMoveAsync(board, game, difficulty, aiParams) {
+  return new Promise((resolve, reject) => {
+    if (typeof Worker !== 'undefined') {
+      const worker = new Worker(new URL('./ai.worker.js', import.meta.url), { type: 'module' })
+      worker.postMessage({ id: 'root', game, board, difficulty, aiParams })
+      
+      const timeout = setTimeout(() => {
+        worker.terminate()
+        reject(new Error('AI computation timeout'))
+      }, 10000)
+      
+      worker.onmessage = (e) => {
+        clearTimeout(timeout)
+        worker.terminate()
+        if (e.data.error) reject(new Error(e.data.error))
+        else resolve(e.data.move)
+      }
+      
+      worker.onerror = (err) => {
+        clearTimeout(timeout)
+        worker.terminate()
+        reject(err)
+      }
+    } else {
+      // Fallback for Node.js testing
+      const style = resolveStyle(aiParams?.style ?? 'balanced')
+      const timeLimitMs = aiParams?.timeLimitMs ?? 2000
+      resolve(gomokuBest(board, difficulty, style, { ...aiParams, timeLimitMs }))
+    }
+  })
+}
+
+export { resolveStyle } from './ai-styles.js'
+
 function hashKey(hash) {
   // Combine two 32-bit halves into a Number (safe up to 2^53)
   return hash[0] * 0x100000000 + hash[1]
@@ -111,7 +149,7 @@ export function boardScore(board, ai, human, style = DEFAULT_STYLE) {
   return score
 }
 
-export function getCandidates(board) {
+export function getCandidates(board, limit = null) {
   const candidates = new Set()
   const range = 2
   for (let r = 0; r < BOARD_SIZE; r++) {
@@ -136,6 +174,7 @@ export function getCandidates(board) {
       return { r, c, score }
     })
     .sort((a, b) => b.score - a.score)
+    .slice(0, limit ?? Number.POSITIVE_INFINITY)
     .map(({ r, c }) => ({ r, c }))
 }
 
@@ -158,7 +197,13 @@ export function checkWinBoard(board, r, c, player) {
   return false
 }
 
-function minimax(board, depth, alpha, beta, maximizing, ai, human, style, hash) {
+const TIMEOUT = Symbol('AI_SEARCH_TIMEOUT')
+function nowMs() {
+  return typeof performance !== 'undefined' ? performance.now() : Date.now()
+}
+
+function minimax(board, depth, alpha, beta, maximizing, ai, human, style, hash, endTimeMs) {
+  if (endTimeMs !== Infinity && nowMs() >= endTimeMs) throw TIMEOUT
   // ---------------------------------------------------------------------------
   // Transposition table lookup
   // ---------------------------------------------------------------------------
@@ -178,20 +223,29 @@ function minimax(board, depth, alpha, beta, maximizing, ai, human, style, hash) 
     return score
   }
 
-  const candidates = getCandidates(board)
+  // Candidate beam-width: keep branching factor under control as depth increases.
+  const beam =
+    depth >= 3 ? 16
+      : depth === 2 ? 20
+        : depth === 1 ? 24
+          : 0
+  const candidates = beam > 0 ? getCandidates(board, beam) : getCandidates(board)
   const originalAlpha = alpha
 
   if (maximizing) {
     let best = -Infinity
     for (const { r, c } of candidates) {
       board[r][c] = ai
-      const newHash = updateHash(hash, r, c, ai)
-      if (checkWinBoard(board, r, c, ai)) { board[r][c] = 0; return SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, false, ai, human, style, newHash)
-      board[r][c] = 0
-      best = Math.max(best, val)
-      alpha = Math.max(alpha, best)
-      if (beta <= alpha) break
+      try {
+        const newHash = updateHash(hash, r, c, ai)
+        if (checkWinBoard(board, r, c, ai)) return SCORE.FIVE * 10
+        const val = minimax(board, depth - 1, alpha, beta, false, ai, human, style, newHash, endTimeMs)
+        best = Math.max(best, val)
+        alpha = Math.max(alpha, best)
+        if (beta <= alpha) break
+      } finally {
+        board[r][c] = 0
+      }
     }
     const flag = best <= originalAlpha ? 'upper' : best >= beta ? 'lower' : 'exact'
     _ttStore(key, depth, best, flag)
@@ -201,13 +255,16 @@ function minimax(board, depth, alpha, beta, maximizing, ai, human, style, hash) 
     const originalBeta = beta
     for (const { r, c } of candidates) {
       board[r][c] = human
-      const newHash = updateHash(hash, r, c, human)
-      if (checkWinBoard(board, r, c, human)) { board[r][c] = 0; return -SCORE.FIVE * 10 }
-      const val = minimax(board, depth - 1, alpha, beta, true, ai, human, style, newHash)
-      board[r][c] = 0
-      best = Math.min(best, val)
-      beta = Math.min(beta, best)
-      if (beta <= alpha) break
+      try {
+        const newHash = updateHash(hash, r, c, human)
+        if (checkWinBoard(board, r, c, human)) return -SCORE.FIVE * 10
+        const val = minimax(board, depth - 1, alpha, beta, true, ai, human, style, newHash, endTimeMs)
+        best = Math.min(best, val)
+        beta = Math.min(beta, best)
+        if (beta <= alpha) break
+      } finally {
+        board[r][c] = 0
+      }
     }
     const flag = best >= originalBeta ? 'lower' : best <= alpha ? 'upper' : 'exact'
     _ttStore(key, depth, best, flag)
@@ -220,22 +277,31 @@ function _ttStore(key, depth, score, flag) {
   transpositionTable.set(key, { depth, score, flag })
 }
 
-export function getBestMove(board, difficulty, style = DEFAULT_STYLE) {
+export function getBestMove(board, difficulty, style = DEFAULT_STYLE, aiParams = {}) {
   const ai = 2, human = 1
-  const depth = DIFFICULTY_CONFIG[difficulty]?.depth ?? 3
+  const maxDepth = DIFFICULTY_CONFIG[difficulty]?.depth ?? 3
   const candidates = getCandidates(board)
+
+  const timeLimitMs = aiParams?.timeLimitMs ?? 2000
+  const endTimeMs = timeLimitMs > 0 ? nowMs() + timeLimitMs : Infinity
 
   // Immediate win
   for (const { r, c } of candidates) {
     board[r][c] = ai
-    if (checkWinBoard(board, r, c, ai)) { board[r][c] = 0; return { r, c } }
-    board[r][c] = 0
+    try {
+      if (checkWinBoard(board, r, c, ai)) return { r, c }
+    } finally {
+      board[r][c] = 0
+    }
   }
   // Block opponent
   for (const { r, c } of candidates) {
     board[r][c] = human
-    if (checkWinBoard(board, r, c, human)) { board[r][c] = 0; return { r, c } }
-    board[r][c] = 0
+    try {
+      if (checkWinBoard(board, r, c, human)) return { r, c }
+    } finally {
+      board[r][c] = 0
+    }
   }
 
   if (difficulty === 'easy') {
@@ -260,18 +326,44 @@ export function getBestMove(board, difficulty, style = DEFAULT_STYLE) {
       return { r, c, s }
     })
     .sort((a, b) => b.s - a.s)
-    .slice(0, 20)
+    .slice(0, 26)
 
   // Compute initial board hash once before the search loop
   const rootHash = computeHash(board)
 
-  let best = -Infinity, bestMove = null
-  for (const { r, c } of scored) {
-    board[r][c] = ai
-    const childHash = updateHash(rootHash, r, c, ai)
-    const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human, style, childHash)
-    board[r][c] = 0
-    if (val > best) { best = val; bestMove = { r, c } }
+  let bestMove = null
+  let lastCompletedMove = null
+
+  for (let depth = 1; depth <= maxDepth; depth++) {
+    if (endTimeMs !== Infinity && nowMs() >= endTimeMs) break
+    let best = -Infinity
+    let curBestMove = null
+
+    // PV move first: increases alpha-beta cutoffs for deeper iterations.
+    const pv = lastCompletedMove
+    const ordered = pv
+      ? [...scored].sort((a, b) => (a.r === pv.r && a.c === pv.c) ? -1 : (b.r === pv.r && b.c === pv.c) ? 1 : 0)
+      : scored
+
+    try {
+      for (const { r, c } of ordered) {
+        if (endTimeMs !== Infinity && nowMs() >= endTimeMs) throw TIMEOUT
+        board[r][c] = ai
+        try {
+          const childHash = updateHash(rootHash, r, c, ai)
+          const val = minimax(board, depth - 1, -Infinity, Infinity, false, ai, human, style, childHash, endTimeMs)
+          if (val > best) { best = val; curBestMove = { r, c } }
+        } finally {
+          board[r][c] = 0
+        }
+      }
+      bestMove = curBestMove
+      lastCompletedMove = curBestMove
+    } catch (err) {
+      if (err !== TIMEOUT) throw err
+      break
+    }
   }
-  return bestMove ?? scored[0]
+
+  return bestMove ?? lastCompletedMove ?? scored[0]
 }

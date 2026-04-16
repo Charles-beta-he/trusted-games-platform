@@ -15,29 +15,11 @@ import {
   savePersonalStyle,
   resolveStyle,
 } from '../lib/ai-styles.js'
+import { btn as btnBase, card as cardBase } from '../lib/sharedStyles.js'
 
-// ── Shared style tokens ────────────────────────────────────────────────────────
-const btn = (extra = {}) => ({
-  fontFamily: 'var(--font-primary)',
-  fontSize: 11,
-  letterSpacing: '0.12em',
-  cursor: 'pointer',
-  border: '1px solid var(--border-color)',
-  borderRadius: 4,
-  padding: '8px 16px',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-primary)',
-  transition: 'all 0.15s',
-  ...extra,
-})
-
-const card = (extra = {}) => ({
-  border: '1px solid var(--border-color)',
-  borderRadius: 8,
-  background: 'var(--bg-surface)',
-  padding: '20px',
-  ...extra,
-})
+// ── Local style overrides ─────────────────────────────────────────────────────
+const btn = (extra = {}) => btnBase({ padding: '8px 16px', ...extra })
+const card = (extra = {}) => cardBase({ padding: '20px', ...extra })
 
 function SectionLabel({ children }) {
   return (

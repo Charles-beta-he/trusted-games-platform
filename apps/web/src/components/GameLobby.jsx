@@ -1,29 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GAME_CATALOG } from '../plugins/index.js'
-import { useTheme } from '../contexts/ThemeContext.jsx'
 import { getLocalIP } from '../lib/lanIp.js'
+import useThemeCycle from '../hooks/useThemeCycle.js'
 
 export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, onImportGomoku }) {
   const navigate = useNavigate()
-  const { theme, setTheme, themes } = useTheme()
+  const { theme, setTheme, themes, prevTheme, nextTheme } = useThemeCycle()
   const [joinInput, setJoinInput] = useState('')
   const [localIP, setLocalIP] = useState(null)
   const [ipCopied, setIpCopied] = useState(false)
   const importInputRef = useRef(null)
 
-  const currentThemeIndex = themes.findIndex(t => t.id === theme)
-  const prevTheme = () => {
-    const idx = (currentThemeIndex - 1 + themes.length) % themes.length
-    setTheme(themes[idx].id)
-  }
-  const nextTheme = () => {
-    const idx = (currentThemeIndex + 1) % themes.length
-    setTheme(themes[idx].id)
-  }
-
   useEffect(() => {
-    getLocalIP().then(ip => setLocalIP(ip))
+    getLocalIP().then(ip => setLocalIP(ip)).catch(() => {})
   }, [])
 
   const lanOrigin = localIP

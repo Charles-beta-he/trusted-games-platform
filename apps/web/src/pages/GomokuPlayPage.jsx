@@ -91,10 +91,13 @@ export default function GomokuPlayPage() {
 
   // 平台匹配 / 邀请码 / 平台加密连接建立中会直接进入棋盘
   useEffect(() => {
-    if (matchConn || autoJoinOffer || autoJoinRoomCode || fromPlatformP2PRef.current) {
+    // Important: 对于 `autoJoinOffer/autoJoinRoomCode`，必须保留 `currentView='mode'`
+    // 让 `ModeSelect -> PanelJoin` 的自动加入逻辑有机会执行（否则不会调用
+    // `sig.joinRoom(...) / webrtc.joinRoom(...)`，从而出现“已进入对弈界面但连接未建立”的卡住状态）。
+    if (matchConn || fromPlatformP2PRef.current) {
       setCurrentView('game')
     }
-  }, [matchConn, autoJoinOffer, autoJoinRoomCode])
+  }, [matchConn])
 
   useEffect(() => {
     return () => {
@@ -257,6 +260,14 @@ export default function GomokuPlayPage() {
 
   const guestAwaitingRoomInit =
     connIsConnected && conn.role === 'guest' && !p2pRoomSynced
+
+  // 如果是“由邀请码/自动进入”触发的 P2P 对局，但底层连接尚未建立，
+  // 则不应允许本地双人落子（否则会出现黑白都可轮番走）。
+  const expectsP2P =
+    !aiMode && (matchConn || autoJoinOffer || autoJoinRoomCode || fromPlatformP2PRef.current)
+
+  const p2pInteractionLocked =
+    guestAwaitingRoomInit || (expectsP2P && !connIsConnected)
 
   const rankedEloReportedRef = useRef(null)
   const rankedLoginNudgeRef = useRef(null)
@@ -743,7 +754,7 @@ export default function GomokuPlayPage() {
             replayInfo={replay.isReplaying ? { index: replay.replayIndex, total: replay.totalMoves } : null}
             onReplay={() => { setShowVictoryOverlay(false); replay.enterReplay() }}
             onVictoryExport={game.exportGame}
-            interactionLocked={guestAwaitingRoomInit}
+            interactionLocked={p2pInteractionLocked}
           />
           {replay.isReplaying && (
             <ReplayBar

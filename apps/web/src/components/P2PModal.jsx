@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import QRCode from 'qrcode'
 import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
+import QRCanvas from './ui/QRCanvas.jsx'
+import CopyButton from './ui/CopyButton.jsx'
 
 function Label({ children }) {
   return (
@@ -37,26 +38,6 @@ function CodeBox({ text }) {
   )
 }
 
-function CopyButton({ text, label }) {
-  const [copied, setCopied] = useState(false)
-  const copy = async () => {
-    await navigator.clipboard.writeText(text).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <button
-      onClick={copy}
-      className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors"
-      style={{
-        borderColor: copied ? 'var(--accent-success, #2d6a4f)' : undefined,
-        color: copied ? 'var(--accent-success, #2d6a4f)' : undefined,
-      }}
-    >
-      {copied ? '✓ 已复制' : (label || '复制')}
-    </button>
-  )
-}
 
 function StepIndicator({ steps, currentStep }) {
   return (
@@ -87,25 +68,6 @@ function StepIndicator({ steps, currentStep }) {
       ))}
     </div>
   )
-}
-
-function QRCanvas({ value, size = 180 }) {
-  const canvasRef = useRef(null)
-
-  useEffect(() => {
-    if (!value || !canvasRef.current) return
-    const style = getComputedStyle(document.documentElement)
-    const darkColor = style.getPropertyValue('--accent-primary').trim() || '#00d4ff'
-    const lightColor = style.getPropertyValue('--bg-primary').trim() || '#050a14'
-    QRCode.toCanvas(canvasRef.current, value, {
-      width: size,
-      margin: 2,
-      errorCorrectionLevel: 'L',
-      color: { dark: darkColor, light: lightColor },
-    }).catch(console.error)
-  }, [value, size])
-
-  return <canvas ref={canvasRef} style={{ borderRadius: 6, display: 'block', margin: '0 auto' }} />
 }
 
 const HOST_STEPS = ['CREATE OFFER', 'WAIT FOR GUEST', 'ENTER ANSWER', 'CONNECTED']
@@ -188,7 +150,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
       const hash = shareUrl.split('#')[1]
       const url = hash ? buildLanUrl(hash) : null
       setLanUrl(url)
-    })
+    }).catch(() => setLanUrl(null))
   }, [shareUrl])
 
   // ── Connected screen ──────────────────────────────────────────────────────
@@ -380,11 +342,11 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                         }}>
                           {sig.roomCode}
                         </div>
-                        <CopyButton text={sig.roomCode} label="复制房间码" />
+                        <CopyButton text={sig.roomCode} label="复制房间码" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                         <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <Label>扫码加入（自动连接）</Label>
-                          <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={160} />
-                          <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" />
+                          <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={160} centered borderRadius={6} />
+                          <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                         </div>
                         <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
                           等待对方加入...
@@ -479,7 +441,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                     }}>
                       {shareUrl.length > 80 ? shareUrl.slice(0, 80) + '...' : shareUrl}
                     </div>
-                    <CopyButton text={shareUrl} label="复制链接" />
+                    <CopyButton text={shareUrl} label="复制链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                   </div>
                 )}
 
@@ -504,7 +466,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'start' }}>
                       <div>
-                        <QRCanvas value={lanUrl} size={140} />
+                        <QRCanvas value={lanUrl} size={140} centered borderRadius={6} />
                         <div style={{ marginTop: 6, fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', textAlign: 'center' }}>
                           同一 WiFi 设备扫码即可加入
                         </div>
@@ -522,7 +484,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                         }}>
                           {lanUrl.split('#')[0]}
                         </div>
-                        <CopyButton text={lanUrl} label="复制局域网链接" />
+                        <CopyButton text={lanUrl} label="复制局域网链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                         <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.5 }}>
                           仅限本地网络有效<br />可分享给同一热点的设备
                         </div>
@@ -535,7 +497,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                 {shareUrl && (
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <Label>互联网分享 · INTERNET SHARE</Label>
-                    <QRCanvas value={shareUrl} size={180} />
+                    <QRCanvas value={shareUrl} size={180} centered borderRadius={6} />
                     <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
                       任意网络均可使用（需对方能访问相同域名）
                     </div>
@@ -555,7 +517,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                       <div>
                         <Label>第 1 步：或手动复制邀请码发送给对方</Label>
                         <CodeBox text={offerCode} />
-                        <CopyButton text={offerCode} label="复制邀请码" />
+                        <CopyButton text={offerCode} label="复制邀请码" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                       </div>
                       <div>
                         <Label>第 2 步：粘贴对方的应答码</Label>
@@ -616,7 +578,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
               <div>
                 <Label>复制应答码，发送给主机</Label>
                 <CodeBox text={answerCode} />
-                <CopyButton text={answerCode} label="复制应答码 →" />
+                <CopyButton text={answerCode} label="复制应答码 →" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                 <div className="mt-3 flex items-center gap-2 font-mono text-[10px] text-ink-faint">
                   <div className="w-2 h-2 rounded-full bg-trust-l3 animate-net-pulse flex-shrink-0" />
                   等待主机确认连接...

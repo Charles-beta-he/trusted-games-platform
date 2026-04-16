@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useTheme } from '../contexts/ThemeContext.jsx'
 import { GAME_CATALOG } from '../plugins/index.js'
+import useThemeCycle from '../hooks/useThemeCycle.js'
+import { btn, btnPrimary, card } from '../lib/sharedStyles.js'
 
 // ── Rank helpers ──────────────────────────────────────────────────────────────
 const RANK_TIERS = [
@@ -32,34 +33,7 @@ function formatTimeSince(isoString) {
 }
 
 // ── Shared style tokens ───────────────────────────────────────────────────────
-const btn = (extra = {}) => ({
-  fontFamily: 'var(--font-primary)',
-  fontSize: 11,
-  letterSpacing: '0.12em',
-  cursor: 'pointer',
-  border: '1px solid var(--border-color)',
-  borderRadius: 4,
-  padding: '7px 16px',
-  background: 'var(--bg-surface)',
-  color: 'var(--text-primary)',
-  transition: 'all 0.15s',
-  ...extra,
-})
-
-const btnPrimary = (extra = {}) => btn({
-  background: 'var(--accent-primary)',
-  borderColor: 'var(--accent-primary)',
-  color: '#000',
-  fontWeight: 'bold',
-  ...extra,
-})
-
-const card = (extra = {}) => ({
-  border: '1px solid var(--border-color)',
-  borderRadius: 8,
-  background: 'var(--bg-surface)',
-  ...extra,
-})
+const RANK_TIERS = [
 
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow({ cols = 3 }) {
@@ -932,18 +906,9 @@ const TABS = [
 
 // ── PlatformView ──────────────────────────────────────────────────────────────
 export default function PlatformView({ onBack, platform, onMatchReady }) {
-  const { theme, themes, setTheme } = useTheme()
+  const { theme, themes, setTheme, prevTheme, nextTheme } = useThemeCycle()
   const [activeTab, setActiveTab] = useState('match')
 
-  const currentThemeIndex = themes.findIndex(t => t.id === theme)
-  const prevTheme = () => {
-    const idx = (currentThemeIndex - 1 + themes.length) % themes.length
-    setTheme(themes[idx].id)
-  }
-  const nextTheme = () => {
-    const idx = (currentThemeIndex + 1) % themes.length
-    setTheme(themes[idx].id)
-  }
 
   useEffect(() => { injectStyles() }, [])
 
