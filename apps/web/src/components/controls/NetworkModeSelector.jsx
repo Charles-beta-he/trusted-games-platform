@@ -1,4 +1,4 @@
-import { NETWORK_MODES } from '../../lib/constants.js'
+import { NETWORK_MODES } from '@tg/core'
 
 const CONNECTION_STATUS_DISPLAY = {
   idle:       { label: 'NOT CONNECTED', color: 'var(--text-muted, #999)' },

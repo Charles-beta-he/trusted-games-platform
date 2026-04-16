@@ -1,4 +1,4 @@
-import { TRUST_LEVELS } from '../../lib/constants.js'
+import { TRUST_LEVELS } from '@tg/core'
 
 export default function TrustBadge({ level, moveCount }) {
   const config = TRUST_LEVELS[level]

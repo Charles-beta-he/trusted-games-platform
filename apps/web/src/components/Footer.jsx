@@ -1,4 +1,4 @@
-import { NETWORK_MODES } from '../lib/constants.js'
+import { NETWORK_MODES } from '@tg/core'
 
 const DOT_COLORS = {
   'offline-solo': '#8b3a3a',

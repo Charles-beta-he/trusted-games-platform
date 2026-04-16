@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { DIFFICULTY_CONFIG } from '../lib/constants.js'
+import { DIFFICULTY_CONFIG } from '@tg/core'
 
 /**
  * useAI — Web Worker 运行各游戏 AI

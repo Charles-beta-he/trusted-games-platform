@@ -1,4 +1,4 @@
-import { DIFFICULTY_CONFIG } from '../../lib/constants.js'
+import { DIFFICULTY_CONFIG } from '@tg/core'
 
 export default function DifficultySelector({ difficulty, onChange, disabled }) {
   const entries = Object.entries(DIFFICULTY_CONFIG)
