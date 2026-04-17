@@ -10,7 +10,7 @@
 
 import { getBestMove as gomokuBest } from './ai.js'
 import { resolveStyle } from './ai-styles.js'
-import { xiangqiGame, chessGame } from '@tg/core'
+import { xiangqiGame, chessGame, goGame } from '@tg/core'
 
 const HANDLERS = {
   gomoku({ board, difficulty, aiParams }) {
@@ -29,6 +29,10 @@ const HANDLERS = {
   chess({ board, difficulty, sideToMove, aiParams }) {
     return chessGame.getBestMove(board, sideToMove, difficulty, aiParams)
   },
+
+  go({ board, difficulty, sideToMove }) {
+    return goGame.getBestMove(board, sideToMove, difficulty)
+  },
 }
 
 self.onmessage = (e) => {
@@ -36,8 +40,16 @@ self.onmessage = (e) => {
   try {
     const handler = HANDLERS[game]
     if (!handler) throw new Error(`No AI handler registered for game: ${game}`)
-    const move = handler(params)
-    self.postMessage({ id, move, game })
+    const result = handler(params)
+    // Handle async handlers (e.g., go MCTS uses dynamic import)
+    if (result && typeof result.then === 'function') {
+      result.then(
+        (move) => self.postMessage({ id, move, game }),
+        (err) => self.postMessage({ id, error: err.message }),
+      )
+    } else {
+      self.postMessage({ id, move: result, game })
+    }
   } catch (err) {
     self.postMessage({ id, error: err.message })
   }

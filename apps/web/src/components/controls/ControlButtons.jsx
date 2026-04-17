@@ -28,6 +28,7 @@ export default function ControlButtons({
   onNewGame, onUndo, onToggleAI, onExport, onResign,
   aiMode, gameOver, canUndo,
   onReplay, canReplay,
+  onPass,
   mode = 'primary',
 }) {
   const showHeader    = mode !== 'secondary'
@@ -52,6 +53,9 @@ export default function ControlButtons({
               onClick={onUndo}
               disabled={!canUndo || gameOver}
             />
+            {onPass && !gameOver && (
+              <Btn label="跳过 · Pass" sub="Pass this turn" onClick={onPass} />
+            )}
             {!gameOver && (
               <Btn label="认输 · Resign" sub="Forfeit current game" onClick={onResign} variant="danger" />
             )}

@@ -14,6 +14,7 @@ const GAME_PAGES = {
   gomoku:  lazy(() => import('./GomokuPlayPage.jsx')),
   xiangqi: lazy(() => import('./XiangqiPlayPage.jsx')),
   chess:   lazy(() => import('./ChessPlayPage.jsx')),
+  go:      lazy(() => import('./GoPlayPage.jsx')),
 }
 
 export default function PlayPage() {
