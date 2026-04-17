@@ -13,6 +13,7 @@ import { getGameById } from '../plugins/index.js'
 const GAME_PAGES = {
   gomoku:  lazy(() => import('./GomokuPlayPage.jsx')),
   xiangqi: lazy(() => import('./XiangqiPlayPage.jsx')),
+  chess:   lazy(() => import('./ChessPlayPage.jsx')),
 }
 
 export default function PlayPage() {

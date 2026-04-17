@@ -10,7 +10,7 @@
 
 import { getBestMove as gomokuBest } from './ai.js'
 import { resolveStyle } from './ai-styles.js'
-import { xiangqiGame } from '@tg/core'
+import { xiangqiGame, chessGame } from '@tg/core'
 
 const HANDLERS = {
   gomoku({ board, difficulty, aiParams }) {
@@ -24,6 +24,10 @@ const HANDLERS = {
     // aiParams.aggression: 'conservative' | 'balanced' | 'aggressive'
     // aiParams.noise:      'none' | 'slight' | 'high'
     return xiangqiGame.getBestMove(board, sideToMove, difficulty, aiParams)
+  },
+
+  chess({ board, difficulty, sideToMove, aiParams }) {
+    return chessGame.getBestMove(board, sideToMove, difficulty, aiParams)
   },
 }
 
