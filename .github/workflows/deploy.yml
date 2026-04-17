@@ -63,3 +63,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy apps/web/dist --project-name=trusted-games-platform --branch=${{ github.ref_name }}
+          # 使用 npm 安装 wrangler 避免 pnpm workspace 限制
+          packageManager: npm
