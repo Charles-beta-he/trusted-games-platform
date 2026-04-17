@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { GAME_CATALOG } from '../plugins/index.js'
 import { getLocalIP } from '../lib/lanIp.js'
 import useThemeCycle from '../hooks/useThemeCycle.js'
+import { useStaggerAnimation, useIntersectionObserver } from '../hooks/useIntersectionObserver.js'
 
 export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, onImportGomoku }) {
   const navigate = useNavigate()
@@ -11,6 +12,12 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
   const [localIP, setLocalIP] = useState(null)
   const [ipCopied, setIpCopied] = useState(false)
   const importInputRef = useRef(null)
+  
+  // 滚动入场动画
+  const [titleRef, titleVisible] = useIntersectionObserver({ threshold: 0.2 })
+  const [cardsRef, getCardStyle] = useStaggerAnimation(GAME_CATALOG.length, { staggerDelay: 80 })
+  const [platformRef, platformVisible] = useIntersectionObserver({ threshold: 0.2 })
+  const [quickJoinRef, quickJoinVisible] = useIntersectionObserver({ threshold: 0.2 })
 
   useEffect(() => {
     getLocalIP().then(ip => setLocalIP(ip)).catch(() => {})
@@ -117,8 +124,11 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
       {/* ── Main ──────────────────────────────────────────────────────────── */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 py-12">
 
-        {/* Title block */}
-        <div className="text-center mb-12">
+        {/* Title block - 带入场动画 */}
+        <div 
+          ref={titleRef}
+          className={`text-center mb-12 transition-all duration-700 ${titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+        >
           <div
             className="font-mono font-bold tracking-[0.25em] mb-2"
             style={{
@@ -132,29 +142,36 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           </div>
           <div
             className="font-mono text-[11px] tracking-[0.4em] uppercase"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ 
+              color: 'var(--text-muted)',
+              opacity: titleVisible ? 1 : 0,
+              transform: titleVisible ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s',
+            }}
           >
             SELECT YOUR BATTLE
           </div>
         </div>
 
-        {/* Game card grid */}
+        {/* Game card grid - 交错入场 */}
         <div
+          ref={cardsRef}
           className="grid gap-4 w-full"
           style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
         >
-          {GAME_CATALOG.map((game) => {
+          {GAME_CATALOG.map((game, index) => {
             const isInstalled = game.status === 'installed'
             return (
               <div
                 key={game.id}
                 onClick={() => isInstalled && onSelectGame(game.id)}
-                className="relative flex flex-col gap-3 p-5 transition-all"
+                className="relative flex flex-col gap-3 p-5 transition-all hover-lift gpu-accelerated"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   border: '1px solid var(--border-color)',
                   cursor: isInstalled ? 'pointer' : 'not-allowed',
                   opacity: isInstalled ? 1 : 0.5,
+                  ...getCardStyle(index),
                 }}
                 onMouseEnter={e => {
                   if (!isInstalled) return
@@ -231,12 +248,22 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           })}
         </div>
 
-        {/* Platform entry */}
-        <div style={{ marginTop: 24, width: '100%', maxWidth: '900px' }}>
+        {/* Platform entry - 带入场动画 */}
+        <div 
+          ref={platformRef}
+          style={{ 
+            marginTop: 24, 
+            width: '100%', 
+            maxWidth: '900px',
+            opacity: platformVisible ? 1 : 0,
+            transform: platformVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
           <button
             onClick={onOpenPlatform}
+            className="w-full hover-lift"
             style={{
-              width: '100%',
               padding: '16px 24px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-color)',
@@ -276,11 +303,20 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         </div>
 
         {/* Style Center entry */}
-        <div style={{ marginTop: 12, width: '100%', maxWidth: '900px' }}>
+        <div 
+          style={{ 
+            marginTop: 12, 
+            width: '100%', 
+            maxWidth: '900px',
+            opacity: platformVisible ? 1 : 0,
+            transform: platformVisible ? 'translateY(0)' : 'translateY(20px)',
+            transition: 'opacity 0.5s ease 0.1s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.1s',
+          }}
+        >
           <button
             onClick={() => navigate('/styles')}
+            className="w-full hover-lift"
             style={{
-              width: '100%',
               padding: '14px 24px',
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-color)',
@@ -319,21 +355,27 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           </button>
         </div>
 
-        {/* LAN IP banner */}
+        {/* LAN IP banner - 带入场动画 */}
         {lanOrigin && (
-          <div style={{
-            marginTop: 24,
-            maxWidth: 480,
-            width: '100%',
-            padding: '14px 20px',
-            border: '1px solid var(--accent-primary)',
-            borderRadius: 8,
-            background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}>
+          <div 
+            ref={quickJoinRef}
+            style={{
+              marginTop: 24,
+              maxWidth: 480,
+              width: '100%',
+              padding: '14px 20px',
+              border: '1px solid var(--accent-primary)',
+              borderRadius: 8,
+              background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+              opacity: quickJoinVisible ? 1 : 0,
+              transform: quickJoinVisible ? 'translateY(0) scale(1)' : 'translateY(15px) scale(0.98)',
+              transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
             <div>
               <div style={{
                 fontFamily: 'monospace',
@@ -365,6 +407,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             </div>
             <button
               onClick={copyLanUrl}
+              className="transition-smooth"
               style={{
                 flexShrink: 0,
                 padding: '10px 16px',
@@ -376,7 +419,6 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                 fontSize: 11,
                 cursor: 'pointer',
                 letterSpacing: '0.1em',
-                transition: 'all 0.2s',
               }}
             >
               {ipCopied ? '✓ 已复制' : '复制'}
@@ -384,17 +426,22 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           </div>
         )}
 
-        {/* Quick join room */}
-        <div style={{
-          marginTop: 16,
-          padding: '20px 24px',
-          border: '1px dashed var(--border-color)',
-          borderRadius: 8,
-          textAlign: 'center',
-          background: 'var(--bg-surface)',
-          maxWidth: 480,
-          width: '100%',
-        }}>
+        {/* Quick join room - 带入场动画 */}
+        <div
+          style={{
+            marginTop: 16,
+            padding: '20px 24px',
+            border: '1px dashed var(--border-color)',
+            borderRadius: 8,
+            textAlign: 'center',
+            background: 'var(--bg-surface)',
+            maxWidth: 480,
+            width: '100%',
+            opacity: quickJoinVisible ? 1 : 0,
+            transform: quickJoinVisible ? 'translateY(0)' : 'translateY(15px)',
+            transition: 'opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
+          }}
+        >
           <div style={{
             fontSize: 11,
             color: 'var(--text-muted)',

@@ -205,8 +205,9 @@
   }
 }
 
-/* ─── Animations ──────────────────────────────────────────────────────────── */
+/* ─── Animations (参考 Lusion.co 动效方案) ────────────────────────────────── */
 
+/* 胜利动画 */
 @keyframes victory-appear {
   from { transform: scale(0.8); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
@@ -217,20 +218,227 @@
   to   { transform: scale(1) rotate(0deg); }
 }
 
+/* 扫描线效果 - 科技感 */
 @keyframes scan-line {
   0%   { transform: translateY(-100%); opacity: 0.6; }
   100% { transform: translateY(100vh); opacity: 0; }
 }
 
+/* 发光脉冲 */
 @keyframes glow-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  0%, 100% { opacity: 1; filter: brightness(1); }
+  50%      { opacity: 0.8; filter: brightness(1.2); }
 }
 
+/* 边框扫光 */
 @keyframes border-sweep {
   0%   { box-shadow: 0 0 4px var(--border-glow), inset 0 0 4px transparent; }
   50%  { box-shadow: 0 0 16px var(--border-glow), inset 0 0 8px rgba(0,212,255,0.05); }
   100% { box-shadow: 0 0 4px var(--border-glow), inset 0 0 4px transparent; }
+}
+
+/* ── 新增：Lusion.co 风格动效 ────────────────────────────────────────────── */
+
+/* 落子弹跳效果 */
+@keyframes stone-drop {
+  0% {
+    transform: scale(0) translateY(-20px);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) translateY(0);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 落子涟漪效果 */
+@keyframes stone-ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* 卡片入场 - 交错淡入 */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 卡片悬停提升 */
+@keyframes card-hover {
+  from {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  to {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+  }
+}
+
+/* 文字打字机效果 */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* 光标闪烁 */
+@keyframes blink-cursor {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: var(--accent-primary); }
+}
+
+/* 按钮点击波纹 */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* AI 思考点动画优化 */
+@keyframes thinking-dot {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 进度条加载 */
+@keyframes progress-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* 滑入动画 - 从左 */
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 滑入动画 - 从右 */
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 滑入动画 - 从下 */
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 淡入缩放 */
+@keyframes fade-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 数字滚动 */
+@keyframes number-roll {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+/* 粒子飘散 */
+@keyframes particle-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx, 50px), var(--ty, -50px)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 呼吸灯效果 - 科技感主题 */
+@keyframes breathe {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--accent-primary), 0 0 10px transparent;
+  }
+  50% {
+    box-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary);
+  }
+}
+
+/* 赢线绘制 */
+@keyframes draw-line {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* 页面过渡 */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(4px);
+  }
 }
 
 /* ─── Utilities ───────────────────────────────────────────────────────────── */
@@ -277,4 +485,92 @@
   .border-theme         { border-color: var(--border-color); }
   .font-theme           { font-family: var(--font-primary); }
   .font-theme-display   { font-family: var(--font-display); }
+
+  /* ── 动效工具类 (参考 Lusion.co) ────────────────────────────────────────── */
+
+  /* 动画基础类 */
+  .animate-stone-drop {
+    animation: stone-drop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  .animate-stone-ripple {
+    animation: stone-ripple 0.6s ease-out forwards;
+  }
+  .animate-card-enter {
+    animation: card-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-slide-in-left {
+    animation: slide-in-left 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-slide-in-up {
+    animation: slide-in-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-fade-scale-in {
+    animation: fade-scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+  .animate-breathe {
+    animation: breathe 2s ease-in-out infinite;
+  }
+  .animate-thinking {
+    animation: thinking-dot 1.4s ease-in-out infinite;
+  }
+  .animate-page-enter {
+    animation: page-enter 0.3s ease-out forwards;
+  }
+
+  /* 交错延迟类 */
+  .stagger-1 { animation-delay: 0.05s; }
+  .stagger-2 { animation-delay: 0.1s; }
+  .stagger-3 { animation-delay: 0.15s; }
+  .stagger-4 { animation-delay: 0.2s; }
+  .stagger-5 { animation-delay: 0.25s; }
+  .stagger-6 { animation-delay: 0.3s; }
+
+  /* 过渡增强类 */
+  .transition-smooth {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .transition-bounce {
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .transition-fast {
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* GPU 加速优化 */
+  .gpu-accelerated {
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  /* 悬停效果 */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .hover-glow {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 16px color-mix(in srgb, var(--accent-primary) 30%, transparent);
+    border-color: var(--accent-primary);
+  }
+
+  /* 初始隐藏状态（用于入场动画） */
+  .initial-hidden {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .initial-hidden.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 }
