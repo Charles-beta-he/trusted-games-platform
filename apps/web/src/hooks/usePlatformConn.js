@@ -19,25 +19,13 @@ import {
   deriveSessionKey, encryptMessage, decryptMessage,
 } from '../lib/p2pCrypto.js'
 
+import { loadStoredUser, saveUser, buildConnInterface as makeConnBuilder, parseWsMessage } from '../lib/platformConnUtils.js'
+
 const SIGNALING_URL =
   import.meta.env.VITE_SIGNALING_URL ??
   (window.location.hostname === 'localhost' ? 'ws://localhost:4001' : null)
 
-const LS_KEY = 'tg_user'
-
-function loadStoredUser() {
-  try {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return null
-    return JSON.parse(raw)
-  } catch {
-    return null
-  }
-}
-
-function saveUser(data) {
-  localStorage.setItem(LS_KEY, JSON.stringify(data))
-}
+// loadStoredUser and saveUser are now imported from platformConnUtils.js
 
 export function usePlatformConn({
   onMatchReady, onMove, onResign, onNewGame, onRoomInit,
