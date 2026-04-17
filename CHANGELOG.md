@@ -1,3 +1,9 @@
+## [1.2.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.1.0...v1.2.0) (2026-04-17)
+
+### ✨ Features
+
+* 实现围棋 (go) 前端页面 ([17435eb](https://github.com/Charles-beta-he/trusted-games-platform/commit/17435ebb1c05b050e39103f197ecc516a7984112))
+
 ## [1.1.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.0.0...v1.1.0) (2026-04-17)
 
 ### ✨ Features
