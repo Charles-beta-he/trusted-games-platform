@@ -36,6 +36,72 @@ export default function BoardCanvas({
 
   const lastHash = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1].hash : ''
 
+  // ── Ref 同步（供 render 函数读取最新值）────────────────────────────────────
+  const boardRef = useRef(board)
+  const hoverCellRef = useRef(hoverCell)
+  const pendingCellRef = useRef(pendingCell)
+  const lastMoveR = useRef(lastMove)
+  const currentPlayerRef = useRef(currentPlayer)
+  const gameOverRef = useRef(gameOver)
+  const isThinkingRef = useRef(isThinking)
+  const winningLineRef = useRef(winningLine)
+  const themeRef = useRef(theme)
+  const animProgressRef = useRef(animProgress)
+  const winLineProgressRef = useRef(winLineProgress)
+  const undoAnimCellRef = useRef(undoAnimCell)
+  const undoAnimProgressRef = useRef(undoAnimProgress)
+
+  boardRef.current = board
+  hoverCellRef.current = hoverCell
+  pendingCellRef.current = pendingCell
+  lastMoveR.current = lastMove
+  currentPlayerRef.current = currentPlayer
+  gameOverRef.current = gameOver
+  isThinkingRef.current = isThinking
+  winningLineRef.current = winningLine
+  themeRef.current = theme
+  animProgressRef.current = animProgress
+  winLineProgressRef.current = winLineProgress
+  undoAnimCellRef.current = undoAnimCell
+  undoAnimProgressRef.current = undoAnimProgress
+
+  // ── 动画互斥队列 ────────────────────────────────────────────────────────────
+  const animQueueRef = useRef(Promise.resolve())
+
+  function enqueueAnimation(duration, easing, updateKey, doneState) {
+    const prev = animQueueRef.current
+    let cancel = null
+
+    const p = new Promise((resolve) => {
+      const startAnim = () => {
+        cancel = animate({
+          from: 0,
+          to: 1,
+          duration,
+          easing,
+          onUpdate: (value) => {
+            if (updateKey === 'drop') setAnimProgress(value)
+            else if (updateKey === 'win') setWinLineProgress(value)
+            else if (updateKey === 'undo') setUndoAnimProgress(value)
+          },
+          onComplete: resolve,
+        })
+      }
+      prev.then(startAnim)
+    })
+
+    animQueueRef.current = p.then(() => {
+      if (updateKey === 'drop') setAnimProgress(doneState)
+      else if (updateKey === 'win') setWinLineProgress(doneState)
+      else if (updateKey === 'undo') {
+        setUndoAnimProgress(doneState)
+        if (doneState === null) setUndoAnimCell(null)
+      }
+    })
+
+    return () => { cancel?.() }
+  }
+
   // ── 落子缩放弹跳动画 ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!lastMove) { prevLastMoveRef.current = null; return }
@@ -44,33 +110,15 @@ export default function BoardCanvas({
     const isSameMove = prev && prev.r === lastMove.r && prev.c === lastMove.c
     prevLastMoveRef.current = lastMove
 
-    if (isSameMove) return // same move, don't re-animate
+    if (isSameMove) return
 
-    setAnimProgress(0)
-    const cancel = animate({
-      from: 0,
-      to: 1,
-      duration: 350,
-      easing: easings.bounce,
-      onUpdate: (value) => setAnimProgress(value),
-      onComplete: () => setAnimProgress(null),
-    })
-    return cancel
+    return enqueueAnimation(350, easings.bounce, 'drop', null)
   }, [lastMove])
 
   // ── 胜利线绘制动画 ────────────────────────────────────────────────────────
   useEffect(() => {
     if (winningLine) {
-      setWinLineProgress(0)
-      const cancel = animate({
-        from: 0,
-        to: 1,
-        duration: 700,
-        easing: easings.smoothOut,
-        onUpdate: (value) => setWinLineProgress(value),
-        onComplete: () => setWinLineProgress(1),
-      })
-      return cancel
+      return enqueueAnimation(700, easings.smoothOut, 'win', 1)
     } else {
       setWinLineProgress(null)
     }
@@ -79,29 +127,15 @@ export default function BoardCanvas({
   // ── 悔棋消失动画 ──────────────────────────────────────────────────────────
   useEffect(() => {
     const prevBoard = prevBoardRef.current
-    // Detect: a stone was present before but is now empty → undo happened
     if (prevBoard && prevBoard !== board) {
       for (let r = 0; r < BOARD_SIZE; r++) {
         for (let col = 0; col < BOARD_SIZE; col++) {
           if (prevBoard[r][col] !== 0 && board[r][col] === 0) {
-            // Found removed stone — trigger vanish animation
             const removedPlayer = prevBoard[r][col]
             setUndoAnimCell({ r, c: col, player: removedPlayer })
             setUndoAnimProgress(0)
-            const cancel = animate({
-              from: 0,
-              to: 1,
-              duration: 280,
-              easing: easings.smoothIn,
-              onUpdate: (value) => setUndoAnimProgress(value),
-              onComplete: () => {
-                setUndoAnimProgress(null)
-                setUndoAnimCell(null)
-              },
-            })
-            // Cancel on cleanup if component unmounts mid-animation
             prevBoardRef.current = board
-            return cancel
+            return enqueueAnimation(280, easings.smoothIn, 'undo', null)
           }
         }
       }
@@ -109,68 +143,66 @@ export default function BoardCanvas({
     prevBoardRef.current = board
   }, [board])
 
-  // ── OffscreenCanvas + RAF 优化 ─────────────────────────────────────────────
+  // ── OffscreenCanvas 复用 + RAF 渲染 ───────────────────────────────────────
   const offscreenRef = useRef(null)
   const rafIdRef = useRef(null)
   const lastDrawTimeRef = useRef(0)
   const drawThrottleMs = 16 // ~60fps
 
+  // 初始化 OffscreenCanvas（只创建一次）
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = dprRef.current
-    
-    // 初始化 OffscreenCanvas（用于预渲染）
     const offscreen = new OffscreenCanvas(CANVAS_PX * dpr, CANVAS_PX * dpr)
     offscreenRef.current = offscreen
-    const offCtx = offscreen.getContext('2d')
-    drawBoard(offCtx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking: isThinking, lastMoveAnimationProgress: animProgress, winningLineProgress: winLineProgress, undoAnimCell, undoAnimProgress })
+  }, [])
 
-    // 主 Canvas 使用 requestAnimationFrame 渲染
+  // 渲染函数（通过 ref 让 RAF 循环始终读取最新状态）
+  const renderRef = useRef(null)
+  renderRef.current = () => {
+    const offscreen = offscreenRef.current
+    if (!offscreen) return
+    const offCtx = offscreen.getContext('2d')
+    const dpr = dprRef.current
+    drawBoard(offCtx, dpr, {
+      board: boardRef.current,
+      hoverCell: hoverCellRef.current,
+      pendingCell: pendingCellRef.current,
+      lastMove: lastMoveR.current,
+      winningLine: winningLineRef.current,
+      currentPlayer: currentPlayerRef.current,
+      gameOver: gameOverRef.current,
+      aiThinking: isThinkingRef.current,
+      lastMoveAnimationProgress: animProgressRef.current,
+      winningLineProgress: winLineProgressRef.current,
+      undoAnimCell: undoAnimCellRef.current,
+      undoAnimProgress: undoAnimProgressRef.current,
+    })
+  }
+
+  // RAF 循环（只启动一次，通过 ref 读取最新 render 函数）
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
     const ctx = canvas.getContext('2d')
-    
-    const drawLoop = () => {
+
+    const loop = () => {
       const now = performance.now()
-      if (now - lastDrawTimeRef.current < drawThrottleMs) {
-        rafIdRef.current = requestAnimationFrame(drawLoop)
-        return
+      if (now - lastDrawTimeRef.current >= drawThrottleMs) {
+        lastDrawTimeRef.current = now
+        renderRef.current?.()
+        const offscreen = offscreenRef.current
+        if (offscreen) ctx.drawImage(offscreen, 0, 0)
       }
-      lastDrawTimeRef.current = now
-      
-      // 从 OffscreenCanvas 拷贝到主 Canvas（零拷贝优化）
-      ctx.drawImage(offscreen, 0, 0)
-      
-      // 局部重绘：使用 destination-out 清除，减少内存分配
-      if (hoverCell) {
-        const { x, y, size } = getCellPixelPos(hoverCell)
-        ctx.globalCompositeOperation = 'destination-out'
-        ctx.fillRect(x - size/2, y - size/2, size, size)
-        ctx.globalCompositeOperation = 'source-over'
-        drawBoard(offCtx, dpr, { hoverCell: null })
-        drawBoard(offCtx, dpr, { hoverCell })
-        ctx.drawImage(offscreen, x - size/2, y - size/2, size, size)
-      }
-      
-      rafIdRef.current = requestAnimationFrame(drawLoop)
+      rafIdRef.current = requestAnimationFrame(loop)
     }
-    
-    rafIdRef.current = requestAnimationFrame(drawLoop)
-    
+    rafIdRef.current = requestAnimationFrame(loop)
+
     return () => {
       if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current)
     }
-  }, [board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, isThinking, theme, animProgress, winLineProgress, undoAnimProgress])
-
-  // 辅助：获取格子像素位置
-  function getCellPixelPos(cell) {
-    const dpr = dprRef.current
-    const cellSize = CANVAS_PX / dpr
-    return {
-      x: cell.c * cellSize,
-      y: (BOARD_SIZE - cell.r) * cellSize,
-      size: cellSize
-    }
-  }
+  }, [])
 
   const handleMouseMove = useCallback((e) => {
     const cell = getCellFromEvent(e, canvasRef.current)

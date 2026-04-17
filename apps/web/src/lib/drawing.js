@@ -137,7 +137,7 @@ function drawWinningLine(ctx, winningLine, c, progress = 1) {
     { x: PADDING + c1 * CELL_SIZE, y: PADDING + r1 * CELL_SIZE },
     { x: PADDING + c2 * CELL_SIZE, y: PADDING + r2 * CELL_SIZE },
   ]
-  canvasAnimations.drawWinningLine(ctx, points, progress, c.accentDanger)
+  canvasAnimations.drawWinningLine(ctx, points, progress, c.accentPrimary)
 }
 
 function drawStone(ctx, r, col, player, isPreview = false, c, isSciFi) {
