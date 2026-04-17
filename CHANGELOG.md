@@ -1,3 +1,13 @@
+## [1.1.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.0.0...v1.1.0) (2026-04-17)
+
+### ✨ Features
+
+* 实现国际象棋 (chess) 游戏 ([36a73f6](https://github.com/Charles-beta-he/trusted-games-platform/commit/36a73f62f8790eb43adb9811e68a7b71393f8ed2))
+
+### 🐛 Bug Fixes
+
+* 修复页面展示问题 (P10+UI 走查通过) ([6fa1d37](https://github.com/Charles-beta-he/trusted-games-platform/commit/6fa1d37089ac7e83aec8fd553a8229f8eed98c6a))
+
 ## 1.0.0 (2026-04-17)
 
 ### ✨ Features
