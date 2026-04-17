@@ -76,6 +76,7 @@ export function estimateScore(board, komi = 6.5) {
   return { black, white: white + komi }
 }
 
-export function getBestMove() {
-  throw new Error('Go AI not implemented — MCTS required')
+export async function getBestMove(board, player, difficulty = 'medium') {
+  const { getBestMove: mctsBest } = await import('./mcts.js')
+  return mctsBest(board, player, difficulty)
 }

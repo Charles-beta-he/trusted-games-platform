@@ -368,7 +368,7 @@ export default function GomokuPlayPage() {
       navigate(location.pathname, { replace: true, state: rest })
       if (cancelled) return
       if (!ok) {
-        alert('棋谱加载失败')
+        console.error('[GomokuPlayPage] Replay load failed')
         return
       }
       setAiMode(false)

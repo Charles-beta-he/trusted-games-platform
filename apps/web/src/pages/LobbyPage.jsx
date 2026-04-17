@@ -34,7 +34,7 @@ export default function LobbyPage() {
       if (!Array.isArray(record?.moves)) throw new Error('无效的 JSON 棋谱')
       navigate(`/play/${P2P_GAME_ID}`, { state: { gomokuImport: record } })
     } catch (e) {
-      alert('导入失败: ' + (e.message || String(e)))
+      console.error('[LobbyPage] Import failed:', e.message)
     }
   }
 
