@@ -1,7 +1,7 @@
 import { useTheme } from '../contexts/ThemeContext.jsx'
 
 export default function Header({ moveCount, gameId, onBackToLobby }) {
-  const { theme, setTheme, themes } = useTheme()
+  const { theme, setTheme, themes, animationsEnabled, toggleAnimations } = useTheme()
 
   return (
     <header
@@ -50,7 +50,7 @@ export default function Header({ moveCount, gameId, onBackToLobby }) {
         第 <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{moveCount}</span> 手
       </div>
 
-      {/* Right: theme switcher + game id */}
+      {/* Right: theme switcher + animation toggle + game id */}
       <div className="flex items-center gap-3">
         {/* Theme buttons */}
         <div className="flex items-center gap-1">
@@ -77,6 +77,21 @@ export default function Header({ moveCount, gameId, onBackToLobby }) {
             </button>
           ))}
         </div>
+
+        {/* Animation toggle */}
+        <button
+          onClick={toggleAnimations}
+          title={animationsEnabled ? '动效: 开启' : '动效: 关闭'}
+          className="font-mono text-[9px] tracking-widest px-2 py-1 transition-all"
+          style={{
+            border: '1px solid var(--border-color)',
+            color: animationsEnabled ? 'var(--accent-primary)' : 'var(--text-muted)',
+            background: 'transparent',
+            cursor: 'pointer',
+          }}
+        >
+          {animationsEnabled ? '✦' : '○'}
+        </button>
 
         {/* Game ID badge — truncated to 8 chars, full value in tooltip */}
         <div

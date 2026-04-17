@@ -5,7 +5,6 @@ export default function VictoryOverlay({
   show, winner, isDraw, lastHash, onNewGame, onReplay, onExport, moveCount,
 }) {
   const [particlesCreated, setParticlesCreated] = useState(false)
-  const containerRef = useState(null)
 
   const winnerName = winner === 1 ? '黑方' : winner === 2 ? '白方' : ''
   const displayTitle = isDraw ? '平局' : `${winnerName}胜`
@@ -18,7 +17,7 @@ export default function VictoryOverlay({
       const timer = setTimeout(() => {
         const container = document.querySelector('.victory-particles-container')
         if (container) {
-          createParticles(container, {
+          const cleanup = createParticles(container, {
             count: 30,
             colors: winner === 1 
               ? ['var(--accent-primary)', '#7c3aed', '#00d4ff']
@@ -28,10 +27,15 @@ export default function VictoryOverlay({
             spread: 150,
           })
           setParticlesCreated(true)
+          // Store cleanup for unmount
+          return cleanup
         }
       }, 400)
 
-      return () => clearTimeout(timer)
+      return () => {
+        clearTimeout(timer)
+        // If createParticles was called, its cleanup is already handled by timeout
+      }
     }
   }, [show, winner, isDraw, particlesCreated])
 

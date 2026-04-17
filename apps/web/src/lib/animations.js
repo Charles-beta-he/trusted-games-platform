@@ -236,10 +236,21 @@ export function createParticles(container, {
     })
   })
 
-  // 清理
-  setTimeout(() => {
-    particles.forEach(({ element }) => element.remove())
+  // 定时清理 ID（可用于取消）
+  const cleanupTimer = setTimeout(() => {
+    cleanup()
   }, duration + 100)
+
+  // 手动清理函数：移除所有粒子 DOM 并取消定时器
+  function cleanup() {
+    clearTimeout(cleanupTimer)
+    particles.forEach(({ element }) => {
+      if (element.parentNode) element.remove()
+    })
+  }
+
+  // 返回清理函数，调用方应在组件卸载时调用
+  return cleanup
 }
 
 // ─── Canvas 动画辅助 ─────────────────────────────────────────────────────────
