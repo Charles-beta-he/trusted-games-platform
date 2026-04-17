@@ -1,4 +1,5 @@
 import { BOARD_SIZE, CELL_SIZE, PADDING, CANVAS_PX, COLS } from '@tg/core/constants'
+import { canvasAnimations } from './animations.js'
 
 // Pre-generate once at module load — avoids visual jitter on every canvas redraw
 const WOOD_GRAIN = Array.from({ length: 30 }, () => {
@@ -130,20 +131,13 @@ function drawCoordinates(ctx, c) {
   ctx.globalAlpha = 1
 }
 
-function drawWinningLine(ctx, winningLine, c) {
+function drawWinningLine(ctx, winningLine, c, progress = 1) {
   const [r1, c1, r2, c2] = winningLine
-  ctx.save()
-  ctx.strokeStyle = c.accentDanger
-  ctx.globalAlpha = 0.6
-  ctx.lineWidth = 4
-  ctx.lineCap = 'round'
-  ctx.shadowColor = c.accentDanger
-  ctx.shadowBlur = 8
-  ctx.beginPath()
-  ctx.moveTo(PADDING + c1 * CELL_SIZE, PADDING + r1 * CELL_SIZE)
-  ctx.lineTo(PADDING + c2 * CELL_SIZE, PADDING + r2 * CELL_SIZE)
-  ctx.stroke()
-  ctx.restore()
+  const points = [
+    { x: PADDING + c1 * CELL_SIZE, y: PADDING + r1 * CELL_SIZE },
+    { x: PADDING + c2 * CELL_SIZE, y: PADDING + r2 * CELL_SIZE },
+  ]
+  canvasAnimations.drawWinningLine(ctx, points, progress, c.accentDanger)
 }
 
 function drawStone(ctx, r, col, player, isPreview = false, c, isSciFi) {
@@ -299,7 +293,97 @@ function drawPendingCell(ctx, pendingCell, currentPlayer, board, c, isSciFi) {
   ctx.restore()
 }
 
-export function drawBoard(ctx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking }) {
+/**
+ * 绘制悔棋消失动画中的棋子 - 缩放+淡出效果
+ * @param {number} progress - 0→1 进度，1=完全消失
+ */
+export function drawVanishingStone(ctx, r, col, player, progress, c, isSciFi) {
+  const x = PADDING + col * CELL_SIZE
+  const y = PADDING + r * CELL_SIZE
+  const radius = CELL_SIZE * 0.44
+  // easeIn: slow start then accelerate (reverse of drop-in)
+  const eased = progress * progress
+  const scale = 1 - eased * 0.6  // scale from 1.0 down to 0.4
+  const alpha = 1 - eased        // fade from 1 to 0
+
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.translate(x, y)
+  ctx.scale(scale, scale)
+
+  if (isSciFi) {
+    const isBlack = player === 1
+    const currentTheme = getCurrentTheme()
+    const isNeonCyber = currentTheme === 'neon-cyber'
+    const glowColor = isNeonCyber
+      ? (isBlack ? '#ff00ff' : '#00ffcc')
+      : (isBlack ? '#7c3aed' : '#00d4ff')
+    const baseColor = isBlack
+      ? (isNeonCyber ? '#1a0030' : '#0e1a3a')
+      : c.stoneWhite
+
+    ctx.shadowBlur = isNeonCyber ? 8 : 12
+    ctx.shadowColor = glowColor
+    ctx.beginPath()
+    ctx.arc(0, 0, radius, 0, Math.PI * 2)
+    ctx.fillStyle = baseColor
+    ctx.fill()
+
+    ctx.shadowBlur = 0
+    ctx.strokeStyle = glowColor
+    ctx.lineWidth = isBlack ? 1.5 : 1
+    ctx.globalAlpha = alpha * (isBlack ? 0.85 : 0.4)
+    ctx.stroke()
+    ctx.globalAlpha = alpha
+
+    const grad = ctx.createRadialGradient(-radius * 0.3, -radius * 0.3, 1, 0, 0, radius)
+    grad.addColorStop(0, isNeonCyber
+      ? (isBlack ? 'rgba(255,0,255,0.35)' : 'rgba(0,255,204,0.4)')
+      : (isBlack ? 'rgba(124,58,237,0.4)' : 'rgba(0,212,255,0.5)'))
+    grad.addColorStop(1, 'transparent')
+    ctx.fillStyle = grad
+    ctx.fill()
+  } else {
+    ctx.shadowColor = 'rgba(0,0,0,0.4)'
+    ctx.shadowBlur = 6
+    ctx.shadowOffsetX = 2
+    ctx.shadowOffsetY = 3
+
+    if (player === 1) {
+      const grad = ctx.createRadialGradient(-radius * 0.3, -radius * 0.35, 0, 0, 0, radius)
+      grad.addColorStop(0, '#5a5a5a')
+      grad.addColorStop(0.4, '#1a1a1a')
+      grad.addColorStop(1, '#050505')
+      ctx.fillStyle = grad
+    } else {
+      const grad = ctx.createRadialGradient(-radius * 0.3, -radius * 0.35, 0, 0, 0, radius)
+      grad.addColorStop(0, '#ffffff')
+      grad.addColorStop(0.5, '#e8e0d0')
+      grad.addColorStop(1, '#c0b8a8')
+      ctx.fillStyle = grad
+    }
+
+    ctx.beginPath()
+    ctx.arc(0, 0, radius, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.shadowColor = 'transparent'
+    const highlight = ctx.createRadialGradient(
+      -radius * 0.35, -radius * 0.35, 0,
+      -radius * 0.35, -radius * 0.35, radius * 0.6
+    )
+    highlight.addColorStop(0, player === 1 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.7)')
+    highlight.addColorStop(1, 'rgba(255,255,255,0)')
+    ctx.fillStyle = highlight
+    ctx.beginPath()
+    ctx.arc(0, 0, radius, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  ctx.restore()
+}
+
+export function drawBoard(ctx, dpr, { board, hoverCell, pendingCell, lastMove, winningLine, currentPlayer, gameOver, aiThinking, lastMoveAnimationProgress = null, winningLineProgress = null, undoAnimCell = null, undoAnimProgress = null }) {
   const c = getThemeColors()
   const currentTheme = getCurrentTheme()
   const isSciFi = currentTheme === 'sci-fi' || currentTheme === 'neon-cyber'
@@ -313,15 +397,37 @@ export function drawBoard(ctx, dpr, { board, hoverCell, pendingCell, lastMove, w
   drawStarPoints(ctx, c)
   drawCoordinates(ctx, c)
 
-  if (winningLine) drawWinningLine(ctx, winningLine, c)
+  if (winningLine) drawWinningLine(ctx, winningLine, c, winningLineProgress ?? 1)
+
+  const isAnimating = lastMoveAnimationProgress !== null && lastMove
+  const animR = isAnimating ? lastMove.r : -1
+  const animC = isAnimating ? lastMove.c : -1
 
   for (let r = 0; r < BOARD_SIZE; r++) {
     for (let col = 0; col < BOARD_SIZE; col++) {
-      if (board[r][col]) drawStone(ctx, r, col, board[r][col], false, c, isSciFi)
+      if (!board[r][col]) continue
+      // If this is the last move and we're animating, use canvasAnimations.drawStone
+      if (isAnimating && r === animR && col === animC) {
+        const x = PADDING + col * CELL_SIZE
+        const y = PADDING + r * CELL_SIZE
+        const radius = CELL_SIZE * 0.44
+        const color = board[r][col] === 1 ? 'black' : 'white'
+        const glowColor = isSciFi
+          ? (board[r][col] === 1 ? '#7c3aed' : '#00d4ff')
+          : null
+        canvasAnimations.drawStone(ctx, x, y, radius, color, lastMoveAnimationProgress, glowColor)
+      } else {
+        drawStone(ctx, r, col, board[r][col], false, c, isSciFi)
+      }
     }
   }
 
   if (lastMove) drawLastMoveIndicator(ctx, lastMove, board, c)
+
+  // 悔棋消失动画 - 绘制正在消失的棋子
+  if (undoAnimCell && undoAnimProgress !== null && undoAnimProgress < 1) {
+    drawVanishingStone(ctx, undoAnimCell.r, undoAnimCell.c, undoAnimCell.player, undoAnimProgress, c, isSciFi)
+  }
 
   // Pending cell (touch confirm) takes priority over hover
   if (pendingCell && !gameOver && !aiThinking) {

@@ -1,9 +1,45 @@
-# PUA Loop State
-task: "P10 优先级: web 测试覆盖 6% → 30%, 补 hooks + lib 测试"
-project: /Users/charles/Desktop/folder/gomoku-react
-max_iterations: 30
-completion_promise: LOOP_DONE
+# PUA Loop 状态文件
+
 active: true
-current_iteration: 14
-p10_strategy: .claude/p10-strategy.md
-p9_tasks: .claude/p9-tasks.md
+session_id: ""
+iteration: 0
+max_iterations: 30
+created: 2026-04-17T20:30:00+08:00
+
+## 任务描述
+
+使用 Loop + P9 模式完善 gomoku-react 项目动效系统。参考 Lusion.co 的动效方案，将已实现但未使用的动效基础设施应用到核心交互中。
+
+## PUA 行为协议
+
+- 三条红线必须遵守（闭环意识、事实驱动、穷尽一切）
+- 阿里味旁白
+- 禁止说"我无法解决"
+- 每次迭代自动执行：检查→验证→发现问题→修复→再验证
+
+## 关键问题（来自调研）
+
+### P0 - 核心交互缺失
+- 落子动画：animations.js 已实现 canvasAnimations.drawStone()，但 BoardCanvas 未调用
+- 落子是纯 Canvas 静态绘制，无任何动画反馈
+
+### P1 - 体验增强
+- 胜利线绘制动画已实现但未调用
+- 悔棋动画缺失
+- 模态框过渡效果可优化
+
+### P2 - 锦上添花
+- 主题切换平滑过渡
+- 按钮波纹效果
+- 列表交错入场
+
+## 完成条件
+
+1. 落子动画正常工作（缩放+弹跳效果）
+2. 胜利线绘制动画正常工作
+3. build/test 验证通过
+4. 同类问题已扫描
+
+## 迭代记录
+
+- 2026-04-17 20:30: Loop 启动，P9 调研完成

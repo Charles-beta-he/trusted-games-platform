@@ -29,7 +29,7 @@ export default function VictoryOverlay({
           })
           setParticlesCreated(true)
         }
-      }, 300)
+      }, 400)
 
       return () => clearTimeout(timer)
     }
@@ -58,6 +58,8 @@ export default function VictoryOverlay({
         className="font-calligraphy text-5xl text-ink tracking-[12px] relative"
         style={{ 
           animation: show ? 'victory-appear 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards' : 'none',
+          transform: 'scale(3)',
+          opacity: 0,
         }}
       >
         {displayTitle}
@@ -103,7 +105,7 @@ export default function VictoryOverlay({
       <div 
         className="font-mono text-[10px] text-ink-faint tracking-wide mt-2 px-3 py-1.5 border border-paper-dark bg-white/50"
         style={{
-          animation: show ? 'fade-scale-in 0.4s cubic-bezier(0.4,0,0.2,1) 0.4s both' : 'none',
+          animation: show ? 'fade-scale-in 0.4s cubic-bezier(0.4,0,0.2,1) 0.5s both' : 'none',
         }}
       >
         GAME HASH: {shortHash}
@@ -113,7 +115,7 @@ export default function VictoryOverlay({
       <div 
         className="font-mono text-[9px] text-ink-faint tracking-widest mt-2"
         style={{
-          animation: show ? 'slide-in-up 0.3s ease 0.5s both' : 'none',
+          animation: show ? 'slide-in-up 0.3s ease 0.6s both' : 'none',
         }}
       >
         {moveCount} MOVES
@@ -125,7 +127,7 @@ export default function VictoryOverlay({
           onClick={onNewGame}
           className="px-8 py-3 bg-ink text-paper font-serif-sc text-sm tracking-[4px] hover:bg-ink-light transition-colors hover-lift"
           style={{
-            animation: show ? 'slide-in-up 0.3s ease 0.5s both' : 'none',
+            animation: show ? 'slide-in-up 0.3s ease 0.7s both' : 'none',
           }}
         >
           再来一局
@@ -138,7 +140,7 @@ export default function VictoryOverlay({
               background: 'var(--bg-surface)',
               border: '1px solid var(--accent-primary)',
               color: 'var(--accent-primary)',
-              animation: show ? 'slide-in-up 0.3s ease 0.6s both' : 'none',
+              animation: show ? 'slide-in-up 0.3s ease 0.85s both' : 'none',
             }}
           >
             回放
@@ -153,7 +155,7 @@ export default function VictoryOverlay({
               background: 'var(--bg-surface)',
               border: '1px solid var(--border-color)',
               color: 'var(--text-secondary)',
-              animation: show ? 'slide-in-up 0.3s ease 0.7s both' : 'none',
+              animation: show ? 'slide-in-up 0.3s ease 1.0s both' : 'none',
             }}
           >
             导出棋谱
