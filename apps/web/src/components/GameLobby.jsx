@@ -156,8 +156,8 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         {/* Game card grid - 交错入场 */}
         <div
           ref={cardsRef}
-          className="grid gap-4 w-full"
-          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}
+          className="grid gap-3 sm:gap-4 w-full"
+          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}
         >
           {GAME_CATALOG.map((game, index) => {
             const isInstalled = game.status === 'installed'
@@ -165,7 +165,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               <div
                 key={game.id}
                 onClick={() => isInstalled && onSelectGame(game.id)}
-                className="relative flex flex-col gap-3 p-5 transition-all hover-lift gpu-accelerated"
+                className="relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-5 transition-all hover-lift gpu-accelerated"
                 style={{
                   backgroundColor: 'var(--bg-surface)',
                   border: '1px solid var(--border-color)',

@@ -258,11 +258,11 @@ function PanelHost({ webrtc, sig, onConfirm }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
 
         {/* ── Room Code panel (left) ── */}
         <div style={{
-          padding: 16,
+          padding: 10,
           background: sig?.isAvailable
             ? 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))'
             : 'var(--bg-surface)',
@@ -331,7 +331,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
 
         {/* ── QR panel (right) ── */}
         <div style={{
-          padding: 16,
+          padding: 10,
           background: 'var(--bg-surface)',
           border: '1px solid var(--border-color)',
           borderRadius: 6,
@@ -763,7 +763,7 @@ export default function ModeSelect({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '24px 16px',
+        padding: '16px 12px',
         gap: 20,
         overflowY: 'auto',
       }}>
@@ -803,7 +803,7 @@ export default function ModeSelect({
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 12,
+            gap: 8,
           }}>
             {visibleModes.map((mode) => {
               const isSelected = false
@@ -819,14 +819,14 @@ export default function ModeSelect({
                       : 'var(--bg-surface)',
                     border: `1px solid ${hovered === mode.id ? mode.color + '88' : 'var(--border-color)'}`,
                     borderRadius: 8,
-                    padding: '16px 14px',
+                    padding: '12px 10px',
                     cursor: 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     boxShadow: hovered === mode.id ? `0 0 12px ${mode.color}22` : 'none',
                   }}
                 >
-                  <div style={{ fontSize: 26, marginBottom: 8 }}>{mode.icon}</div>
+                  <div style={{ fontSize: 20, marginBottom: 6 }}>{mode.icon}</div>
                   <div style={{
                     fontSize: 12,
                     fontWeight: 'bold',
@@ -864,7 +864,7 @@ export default function ModeSelect({
             background: 'var(--bg-secondary)',
             border: `1px solid ${currentModeObj?.color || 'var(--border-color)'}`,
             borderRadius: 8,
-            padding: '24px 28px',
+            padding: '16px 16px',
             boxShadow: `0 0 24px ${currentModeObj?.color || 'transparent'}22`,
           }}>
             {/* Panel header */}
