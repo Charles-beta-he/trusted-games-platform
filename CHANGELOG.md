@@ -1,3 +1,9 @@
+## [1.4.6](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.5...v1.4.6) (2026-04-18)
+
+### 🐛 Bug Fixes
+
+* 修复 ESLint 错误和 React Hooks 问题 ([8e10dfd](https://github.com/Charles-beta-he/trusted-games-platform/commit/8e10dfdd23bab5ac02c471e9b14bab4458984e45))
+
 ## [1.4.5](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.4...v1.4.5) (2026-04-18)
 
 ### 🐛 Bug Fixes
