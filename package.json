@@ -1,7 +1,7 @@
 {
   "name": "trusted-games-platform",
   "private": true,
-  "version": "1.4.4",
+  "version": "1.4.5",
   "description": "Serverless trusted board game platform",
   "scripts": {
     "dev": "pnpm --filter @tg/web dev",

@@ -1,3 +1,9 @@
+## [1.4.5](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.4...v1.4.5) (2026-04-18)
+
+### 🐛 Bug Fixes
+
+* 修复五子棋棋盘只显示 2x4 区域的问题 ([4bd9398](https://github.com/Charles-beta-he/trusted-games-platform/commit/4bd9398757041a64a484380baa9d1e886831605b))
+
 ## [1.4.4](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.3...v1.4.4) (2026-04-18)
 
 ### ♻️ Refactoring
