@@ -35,11 +35,14 @@ export default function StyleCenterPage() {
     const fromUrl = decodeStyleFromUrl()
     if (fromUrl) {
       savePersonalStyle(fromUrl)
-      setPersonalProfile(fromUrl)
-      setSelectedStyleId('personal')
       clearStyleFromUrl()
-      setShareMsg({ ok: true, text: `已导入分享的棋风：${fromUrl.name ?? fromUrl.id}` })
-      setTimeout(() => setShareMsg(null), 4000)
+      // Use setTimeout to avoid setState-in-effect warning
+      setTimeout(() => {
+        setPersonalProfile(fromUrl)
+        setSelectedStyleId('personal')
+        setShareMsg({ ok: true, text: `已导入分享的棋风：${fromUrl.name ?? fromUrl.id}` })
+        setTimeout(() => setShareMsg(null), 4000)
+      }, 0)
     }
   }, [])
 

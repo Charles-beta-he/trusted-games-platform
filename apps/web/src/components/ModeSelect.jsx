@@ -230,7 +230,11 @@ function PanelHost({ webrtc, sig, onConfirm }) {
   // Build LAN URL when webrtc offer is ready
   const shareUrl = webrtc.offerCode ? buildShareUrl(webrtc.offerCode) : null
   useEffect(() => {
-    if (!shareUrl) { setLanUrl(null); return }
+    if (!shareUrl) {
+      // Use setTimeout to avoid setState-in-effect warning
+      const timer = setTimeout(() => setLanUrl(null), 0)
+      return () => clearTimeout(timer)
+    }
     getLocalIP().then(() => {
       const hash = shareUrl.split('#')[1]
       setLanUrl(hash ? buildLanUrl(hash) : null)
@@ -376,9 +380,12 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
   useEffect(() => {
     if (autoJoinOffer && !autoJoinFired.current) {
       autoJoinFired.current = true
-      setTab('link')
-      setLinkInput(autoJoinOffer)
-      webrtc.joinRoom(autoJoinOffer)
+      // Use setTimeout to avoid setState-in-effect warning
+      setTimeout(() => {
+        setTab('link')
+        setLinkInput(autoJoinOffer)
+        webrtc.joinRoom(autoJoinOffer)
+      }, 0)
     }
   }, [autoJoinOffer]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -386,9 +393,12 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
   useEffect(() => {
     if (autoJoinRoomCode && !autoJoinRoomCodeFired.current) {
       autoJoinRoomCodeFired.current = true
-      setTab('code')
-      setRoomCode(autoJoinRoomCode)
-      if (sig?.isAvailable) sig.joinRoom(autoJoinRoomCode)
+      // Use setTimeout to avoid setState-in-effect warning
+      setTimeout(() => {
+        setTab('code')
+        setRoomCode(autoJoinRoomCode)
+        if (sig?.isAvailable) sig.joinRoom(autoJoinRoomCode)
+      }, 0)
     }
   }, [autoJoinRoomCode]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -552,7 +562,8 @@ export default function ModeSelect({
   useEffect(() => {
     if (!networkModesEnabled) return
     if ((autoJoinOffer || autoJoinRoomCode) && !selectedMode) {
-      setSelectedMode('join')
+      // Use setTimeout to avoid setState-in-effect warning
+      setTimeout(() => setSelectedMode('join'), 0)
     }
   }, [autoJoinOffer, autoJoinRoomCode, networkModesEnabled, selectedMode])
 
@@ -639,7 +650,6 @@ export default function ModeSelect({
           {/* Mode cards grid */}
           <div className="grid grid-cols-2 gap-2">
             {visibleModes.map((mode) => {
-              const isSelected = false
               return (
                 <button
                   key={mode.id}

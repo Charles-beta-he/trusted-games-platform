@@ -36,7 +36,6 @@ export default function GomokuPlayPage() {
   const navigate = useNavigate()
   const { gameId: selectedGame = 'gomoku' } = useParams()
   const location = useLocation()
-
   const {
     platform,
     matchConn,
@@ -45,10 +44,13 @@ export default function GomokuPlayPage() {
     clearPlatformMatch,
   } = usePlatformGame()
 
-  const platformRoomModeRef = useRef(location.state?.platformRoomMode ?? null)
-  const fromPlatformP2PRef  = useRef(Boolean(location.state?.fromPlatformP2P))
   /** 天梯上报用：Context 优先，其次手动进房时带的 mode */
-  const ladderMode = platformMatchMode ?? platformRoomModeRef.current
+  // Use state instead of accessing ref during render to satisfy ESLint
+  const [platformRoomMode] = useState(location.state?.platformRoomMode ?? null)
+  const [fromPlatformP2P] = useState(Boolean(location.state?.fromPlatformP2P))
+  const ladderMode = useMemo(() => {
+    return platformMatchMode ?? platformRoomMode
+  }, [platformMatchMode, platformRoomMode])
 
   // ─── View state ────────────────────────────────────────────────────────────
   // 'mode' = ModeSelect, 'game' = active board
@@ -94,16 +96,16 @@ export default function GomokuPlayPage() {
     // Important: 对于 `autoJoinOffer/autoJoinRoomCode`，必须保留 `currentView='mode'`
     // 让 `ModeSelect -> PanelJoin` 的自动加入逻辑有机会执行（否则不会调用
     // `sig.joinRoom(...) / webrtc.joinRoom(...)`，从而出现“已进入对弈界面但连接未建立”的卡住状态）。
-    if (matchConn || fromPlatformP2PRef.current) {
+    if (matchConn || fromPlatformP2P) {
       setCurrentView('game')
     }
-  }, [matchConn])
+  }, [matchConn, fromPlatformP2P])
 
   useEffect(() => {
     return () => {
-      if (fromPlatformP2PRef.current) clearPlatformMatch()
+      if (fromPlatformP2P) clearPlatformMatch()
     }
-  }, [clearPlatformMatch])
+  }, [clearPlatformMatch, fromPlatformP2P])
 
   // ─── Game engine ───────────────────────────────────────────────────────────
   const game = useGameEngine()
@@ -133,14 +135,23 @@ export default function GomokuPlayPage() {
   }, [game.gameOver])
 
   // ─── Stable refs ───────────────────────────────────────────────────────────
-  const placeStoneRef    = useRef(game.placeStone);    placeStoneRef.current    = game.placeStone
-  const resignGameRef    = useRef(game.resignGame);    resignGameRef.current    = game.resignGame
-  const initWithRoomRef  = useRef(game.initWithRoom);  initWithRoomRef.current  = game.initWithRoom
+  const placeStoneRef    = useRef(game.placeStone)
+  const resignGameRef    = useRef(game.resignGame)
+  const initWithRoomRef  = useRef(game.initWithRoom)
   const handleNewGameRef = useRef(null)
-  const resetTimersRef   = useRef(resetTimers);        resetTimersRef.current   = resetTimers
-  const startTimerRef    = useRef(startTimer);         startTimerRef.current    = startTimer
+  const resetTimersRef   = useRef(resetTimers)
+  const startTimerRef    = useRef(startTimer)
   const undoMoveRef      = useRef(game.undoMove)
-  useEffect(() => { undoMoveRef.current = game.undoMove }, [game.undoMove])
+  
+  // Update refs in useEffect to avoid updating during render
+  useEffect(() => {
+    placeStoneRef.current = game.placeStone
+    resignGameRef.current = game.resignGame
+    initWithRoomRef.current = game.initWithRoom
+    resetTimersRef.current = resetTimers
+    startTimerRef.current = startTimer
+    undoMoveRef.current = game.undoMove
+  }, [game.placeStone, game.resignGame, game.initWithRoom, resetTimers, startTimer, game.undoMove])
 
   /** 必须在 p2pCallbacks 之前声明，供 onUndoAccept 读取当前连接 */
   const connRef = useRef(null)
@@ -191,7 +202,11 @@ export default function GomokuPlayPage() {
   // Active connection priority: matchConn (platform) > sig > webrtc
   const connIsConnected = (matchConn?.isConnected) || webrtc.isConnected || sig.isConnected
   const conn = matchConn?.isConnected ? matchConn : sig.isConnected ? sig : webrtc
-  connRef.current = conn
+  
+  // Update connRef in useEffect to avoid updating during render
+  useEffect(() => {
+    connRef.current = conn
+  }, [conn])
 
   useLayoutEffect(() => {
     registerP2PHandlers(p2pCallbacks)
@@ -264,7 +279,7 @@ export default function GomokuPlayPage() {
   // 如果是“由邀请码/自动进入”触发的 P2P 对局，但底层连接尚未建立，
   // 则不应允许本地双人落子（否则会出现黑白都可轮番走）。
   const expectsP2P =
-    !aiMode && (matchConn || autoJoinOffer || autoJoinRoomCode || fromPlatformP2PRef.current)
+    !aiMode && (matchConn || autoJoinOffer || autoJoinRoomCode || fromPlatformP2P)
 
   const p2pInteractionLocked =
     guestAwaitingRoomInit || (expectsP2P && !connIsConnected)
@@ -433,7 +448,10 @@ export default function GomokuPlayPage() {
     }
   }, [game.newGame, resetTimers, hostIsBlack])
 
-  handleNewGameRef.current = handleNewGame
+  // Update handleNewGameRef in useEffect to avoid updating during render
+  useEffect(() => {
+    handleNewGameRef.current = handleNewGame
+  }, [handleNewGame])
 
   const handleUndo = useCallback(() => {
     if (game.gameOver) return
