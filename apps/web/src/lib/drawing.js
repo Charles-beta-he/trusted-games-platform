@@ -226,7 +226,7 @@ function drawStone(ctx, r, col, player, isPreview = false, c, isSciFi) {
   ctx.restore()
 }
 
-function drawLastMoveIndicator(ctx, lastMove, board, c) {
+function drawLastMoveIndicator(ctx, lastMove, board, _c) {
   const { r, col: col_ } = lastMove
   // lastMove uses { r, c } keys
   const col = lastMove.c !== undefined ? lastMove.c : col_

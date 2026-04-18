@@ -7,7 +7,7 @@ import { memoryMonitor } from '../lib/performance/memoryMonitor.js'
  * 开发环境自动启动，监控 FPS 和内存
  */
 export function usePerformanceMonitor({
-  enabled = process.env.NODE_ENV === 'development',
+  enabled = import.meta.env.DEV,
   fpsThreshold = 30,
   logInterval = 10000,
 } = {}) {

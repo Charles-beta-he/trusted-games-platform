@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { buildShareUrl, buildRoomJoinUrl } from '../lib/shareUrl.js'
 import { getLocalIP, buildLanUrl } from '../lib/lanIp.js'
 import QRCanvas from './ui/QRCanvas.jsx'

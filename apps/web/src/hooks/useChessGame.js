@@ -67,10 +67,13 @@ export function useChessGame() {
   const sideRef = useRef(sideToMove)
   const gameOverRef = useRef(gameOver)
   const stateRef = useRef({ board, castlingRights, enPassantTarget })
-  boardRef.current = board
-  sideRef.current = sideToMove
-  gameOverRef.current = gameOver
-  stateRef.current = { board, castlingRights, enPassantTarget }
+
+  useEffect(() => {
+    boardRef.current = board
+    sideRef.current = sideToMove
+    gameOverRef.current = gameOver
+    stateRef.current = { board, castlingRights, enPassantTarget }
+  }, [board, sideToMove, gameOver, castlingRights, enPassantTarget])
 
   const clearSelection = useCallback(() => setSelected(null), [])
 

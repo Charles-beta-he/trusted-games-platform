@@ -19,9 +19,12 @@ export function useGoGame() {
   const boardRef = useRef(board)
   const playerRef = useRef(currentPlayer)
   const gameOverRef = useRef(gameOver)
-  boardRef.current = board
-  playerRef.current = currentPlayer
-  gameOverRef.current = gameOver
+
+  useEffect(() => {
+    boardRef.current = board
+    playerRef.current = currentPlayer
+    gameOverRef.current = gameOver
+  }, [board, currentPlayer, gameOver])
 
   const placeStone = useCallback((r, c) => {
     if (gameOverRef.current) return false

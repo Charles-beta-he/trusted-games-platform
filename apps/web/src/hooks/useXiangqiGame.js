@@ -51,9 +51,12 @@ export function useXiangqiGame() {
   const boardRef = useRef(board)
   const sideRef = useRef(sideToMove)
   const gameOverRef = useRef(gameOver)
-  boardRef.current = board
-  sideRef.current = sideToMove
-  gameOverRef.current = gameOver
+
+  useEffect(() => {
+    boardRef.current = board
+    sideRef.current = sideToMove
+    gameOverRef.current = gameOver
+  }, [board, sideToMove, gameOver])
 
   const clearSelection = useCallback(() => setSelected(null), [])
 

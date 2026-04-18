@@ -1,4 +1,5 @@
 import { BOARD_SIZE, SCORE, DIFFICULTY_CONFIG } from '@tg/core'
+import { resolveStyle } from './ai-styles.js'
 
 // ---------------------------------------------------------------------------
 // Zobrist hashing — 15×15×2 random 32-bit pairs (simulating 64-bit keys)
@@ -70,12 +71,12 @@ export async function computeBestMoveAsync(board, game, difficulty, aiParams) {
       // Fallback for Node.js testing
       const style = resolveStyle(aiParams?.style ?? 'balanced')
       const timeLimitMs = aiParams?.timeLimitMs ?? 2000
-      resolve(gomokuBest(board, difficulty, style, { ...aiParams, timeLimitMs }))
+      resolve(getBestMove(board, difficulty, style, { ...aiParams, timeLimitMs }))
     }
   })
 }
 
-export { resolveStyle } from './ai-styles.js'
+
 
 function hashKey(hash) {
   // Combine two 32-bit halves into a Number (safe up to 2^53)

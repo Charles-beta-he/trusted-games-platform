@@ -26,8 +26,11 @@ export function useAI({
   const reqIdRef = useRef(0)
   const boardRef = useRef(board)
   const onAIMoveRef = useRef(onAIMove)
-  boardRef.current = board
-  onAIMoveRef.current = onAIMove
+
+  useEffect(() => {
+    boardRef.current = board
+    onAIMoveRef.current = onAIMove
+  }, [board, onAIMove])
 
   const getWorker = useCallback(() => {
     if (!workerRef.current) {

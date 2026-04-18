@@ -55,7 +55,7 @@ export function useSignaling({
   const connectionPool = useRef(new Map()) // key: roomId, value: { ws, pc, channel, cleanup }
 
   // 清理旧连接
-  const cleanupOldConnections = useCallback(() => {
+  const _cleanupOldConnections = useCallback(() => {
     const now = Date.now()
     for (const [roomId, conn] of connectionPool.current.entries()) {
       if (now - conn.lastActivity > HEARTBEAT_INTERVAL * 2) {
@@ -163,7 +163,7 @@ export function useSignaling({
   }, [handleChannelMessage])
 
   // ── Open WebSocket to signaling server ───────────────────────────────────
-  const openWS = useCallback(() => new Promise((resolve, reject) => {
+  const openWS = useCallback((roomCode) => new Promise((resolve, reject) => {
     const ws = new WebSocket(SIGNALING_URL)
     wsRef.current = ws
     ws.onopen = () => {
@@ -186,8 +186,8 @@ export function useSignaling({
       // 清理连接池中的对应连接
       if (connectionPool.current.size > 0) {
         const currentRoom = connectionPool.current.keys().next().value
-        if (currentRoom === roomId) {
-          connectionPool.current.delete(roomId)
+        if (currentRoom === roomCode) {
+          connectionPool.current.delete(roomCode)
         }
       }
     }
@@ -201,7 +201,7 @@ export function useSignaling({
     setRole('host')
 
     try {
-      const ws  = await openWS()
+      const ws  = await openWS(roomCode)
       /** SDP envelope string — set after ICE; peer_joined may arrive earlier */
       let offerCode = null
       let pc = null
@@ -281,7 +281,7 @@ export function useSignaling({
     setRole('guest')
 
     try {
-      const ws = await openWS()
+      const ws = await openWS(roomCode)
       const pc = await createPeerConnection()
       pcRef.current = pc
 

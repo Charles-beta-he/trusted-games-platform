@@ -157,7 +157,7 @@ export async function generatePersonalStyle() {
     }
     savePersonalStyle(profile)
     return { profile, error: null }
-  } catch (e) {
+  } catch {
     return { profile: null, error: '读取对局数据失败' }
   }
 }

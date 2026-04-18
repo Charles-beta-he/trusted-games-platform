@@ -51,19 +51,21 @@ export default function BoardCanvas({
   const undoAnimCellRef = useRef(undoAnimCell)
   const undoAnimProgressRef = useRef(undoAnimProgress)
 
-  boardRef.current = board
-  hoverCellRef.current = hoverCell
-  pendingCellRef.current = pendingCell
-  lastMoveR.current = lastMove
-  currentPlayerRef.current = currentPlayer
-  gameOverRef.current = gameOver
-  isThinkingRef.current = isThinking
-  winningLineRef.current = winningLine
-  themeRef.current = theme
-  animProgressRef.current = animProgress
-  winLineProgressRef.current = winLineProgress
-  undoAnimCellRef.current = undoAnimCell
-  undoAnimProgressRef.current = undoAnimProgress
+  useEffect(() => {
+    boardRef.current = board
+    hoverCellRef.current = hoverCell
+    pendingCellRef.current = pendingCell
+    lastMoveR.current = lastMove
+    currentPlayerRef.current = currentPlayer
+    gameOverRef.current = gameOver
+    isThinkingRef.current = isThinking
+    winningLineRef.current = winningLine
+    themeRef.current = theme
+    animProgressRef.current = animProgress
+    winLineProgressRef.current = winLineProgress
+    undoAnimCellRef.current = undoAnimCell
+    undoAnimProgressRef.current = undoAnimProgress
+  }, [board, hoverCell, pendingCell, lastMove, currentPlayer, gameOver, isThinking, winningLine, theme, animProgress, winLineProgress, undoAnimCell, undoAnimProgress])
 
   // ── 动画互斥队列 ────────────────────────────────────────────────────────────
   const animQueueRef = useRef(Promise.resolve())

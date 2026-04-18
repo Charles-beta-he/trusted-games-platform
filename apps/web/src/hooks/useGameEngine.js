@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { BOARD_SIZE, TRUST_LEVELS } from '@tg/core/constants'
+import { BOARD_SIZE, TRUST_LEVELS, COLS } from '@tg/core/constants'
 import { generateId, generateGenesisHash, computeMoveHash } from '@tg/core/crypto'
 import { gomokuGame } from '@tg/core'
 import { emptyBoard, checkWin, checkDraw, computeTrustLevel, coordToRc } from '../lib/gameLogic.js'
@@ -38,10 +38,12 @@ export function useGameEngine() {
   // any risk of stale captures and avoids unnecessary callback re-creation on every turn.
   const currentPlayerRef = useRef(currentPlayer)
 
-  boardRef.current = board
-  moveHistoryRef.current = moveHistory
-  gameIdRef.current = gameId
-  currentPlayerRef.current = currentPlayer
+  useEffect(() => {
+    boardRef.current = board
+    moveHistoryRef.current = moveHistory
+    gameIdRef.current = gameId
+    currentPlayerRef.current = currentPlayer
+  }, [board, moveHistory, gameId, currentPlayer])
 
   const initGenesis = useCallback(async (id) => {
     const h = await generateGenesisHash(id)
