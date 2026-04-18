@@ -81,48 +81,20 @@ export default function ChessBoardArea({
 
           {/* Promotion dialog */}
           {pendingPromotion && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+            <div className="absolute inset-0 flex items-center justify-center z-20 rounded" style={{
               background: 'color-mix(in srgb, var(--bg-primary) 70%, transparent)',
-              zIndex: 20,
-              borderRadius: 4,
             }}>
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 12,
-                padding: '16px 20px',
-                background: 'var(--bg-surface)',
-                borderRadius: 8,
-                border: '1px solid var(--border-color)',
-              }}>
-                <span className="font-mono text-xs" style={{ color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+              <div className="flex flex-col items-center gap-3 py-4 px-5 bg-bg-surface rounded-lg border border-border-c">
+                <span className="font-mono text-xs text-text-muted tracking-[0.1em]">
                   PAWN PROMOTION
                 </span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   {PROMO_PIECES.map(({ piece, label, name }) => (
                     <button
                       key={piece}
                       type="button"
                       onClick={() => onPromotionSelect(piece)}
-                      style={{
-                        width: 52,
-                        height: 52,
-                        fontSize: 32,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'var(--bg-primary)',
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        color: 'var(--text-primary)',
-                      }}
+                      className="w-[52px] h-[52px] text-3xl flex items-center justify-center bg-bg-primary border border-border-c rounded-md cursor-pointer text-text-primary"
                       title={name}
                     >
                       {label}
@@ -135,37 +107,19 @@ export default function ChessBoardArea({
 
           {/* Game over overlay */}
           {gameOver && !pendingPromotion && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 rounded" style={{
               background: 'color-mix(in srgb, var(--bg-primary) 88%, transparent)',
               backdropFilter: 'blur(4px)',
-              zIndex: 10,
-              borderRadius: 4,
               animation: 'fadeIn 0.4s ease',
             }}>
-              <div style={{
-                fontSize: 36,
-                fontWeight: 'bold',
+              <div className="text-[36px] font-bold tracking-[0.25em] mb-2" style={{
                 fontFamily: 'var(--font-display, "Kaiti SC", serif)',
-                letterSpacing: '0.25em',
                 color: winnerSide === 1 ? '#fff' : 'var(--text-primary)',
-                marginBottom: 8,
                 textShadow: '0 0 24px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
               }}>
                 {endReason === 'stalemate' ? '和棋' : winnerSide === 1 ? '白方胜' : '黑方胜'}
               </div>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-primary)',
-                letterSpacing: '0.2em',
-                marginBottom: 20,
-              }}>
+              <div className="text-[11px] text-text-muted font-mono tracking-[0.2em] mb-5">
                 {endReason === 'checkmate' ? 'CHECKMATE' : endReason === 'resign' ? 'RESIGN' : endReason === 'stalemate' ? 'STALEMATE' : 'GAME OVER'}
               </div>
             </div>

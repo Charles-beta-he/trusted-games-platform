@@ -31,19 +31,11 @@ export default function CopyButton({ text, label, className }) {
   return (
     <button
       onClick={copy}
+      className="w-full mt-1.5 py-2 px-3 rounded font-mono text-xs tracking-wider cursor-pointer transition-all duration-200"
       style={{
-        width: '100%',
-        marginTop: 6,
-        padding: '7px 12px',
         background: copied ? 'transparent' : 'var(--bg-surface)',
         border: `1px solid ${copied ? 'var(--accent-success, #2d6a4f)' : 'var(--border-color)'}`,
-        borderRadius: 4,
         color: copied ? 'var(--accent-success, #2d6a4f)' : 'var(--text-muted)',
-        fontFamily: 'var(--font-primary)',
-        fontSize: 11,
-        letterSpacing: '0.1em',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
       }}
     >
       {copied ? '✓ 已复制' : (label || '复制')}

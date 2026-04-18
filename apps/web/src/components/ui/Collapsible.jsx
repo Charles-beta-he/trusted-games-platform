@@ -6,25 +6,15 @@ export default function Collapsible({ title, icon = '⚙', children, defaultOpen
     <div>
       <button
         onClick={() => setOpen(v => !v)}
-        style={{
-          width: '100%',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'none', border: 'none',
-          borderTop: '1px solid var(--border-color)',
-          padding: '8px 0',
-          cursor: 'pointer',
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-primary)',
-          fontSize: 11, letterSpacing: 1,
-        }}
+        className="w-full flex items-center justify-between bg-transparent border-none border-t border-border-c py-2 cursor-pointer text-text-muted font-mono text-xs tracking-[1px]"
       >
         <span>{icon} {title}</span>
-        <span style={{ transition: 'transform 0.2s', transform: open ? 'rotate(180deg)' : 'none' }}>
+        <span className="transition-transform duration-200" style={{ transform: open ? 'rotate(180deg)' : 'none' }}>
           ▾
         </span>
       </button>
       {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+        <div className="flex flex-col gap-3 pt-2">
           {children}
         </div>
       )}

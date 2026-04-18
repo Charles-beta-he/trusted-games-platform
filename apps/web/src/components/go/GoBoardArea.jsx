@@ -67,26 +67,13 @@ export default function GoBoardArea({
 
           {/* Game over overlay */}
           {gameOver && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 rounded-sm" style={{
               background: 'color-mix(in srgb, var(--bg-primary) 88%, transparent)',
               backdropFilter: 'blur(4px)',
-              zIndex: 10,
-              borderRadius: 2,
               animation: 'fadeIn 0.4s ease',
             }}>
-              <div style={{
-                fontSize: 36,
-                fontWeight: 'bold',
+              <div className="text-[36px] font-bold text-text-primary tracking-[0.25em] mb-2" style={{
                 fontFamily: 'var(--font-display, "Kaiti SC", serif)',
-                letterSpacing: '0.25em',
-                color: 'var(--text-primary)',
-                marginBottom: 8,
                 textShadow: '0 0 24px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
               }}>
                 {endReason === 'two_pass'
@@ -95,22 +82,11 @@ export default function GoBoardArea({
                     ? (winnerSide === 1 ? '黑方胜' : '白方胜')
                     : '终局'}
               </div>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-primary)',
-                letterSpacing: '0.2em',
-                marginBottom: 4,
-              }}>
+              <div className="text-[11px] text-text-muted font-mono tracking-[0.2em] mb-1">
                 {endReason === 'resign' ? 'RESIGN' : endReason === 'two_pass' ? 'TWO PASSES' : endReason === 'pass' ? 'PASS' : 'GAME OVER'}
               </div>
               {score && (
-                <div style={{
-                  fontSize: 12,
-                  color: 'var(--text-muted)',
-                  fontFamily: 'monospace',
-                  letterSpacing: '0.1em',
-                }}>
+                <div className="text-xs text-text-muted font-mono tracking-[0.1em]">
                   B {Math.round(score.black)} - W {Math.round(score.white)}
                 </div>
               )}

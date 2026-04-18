@@ -68,39 +68,21 @@ export default function XiangqiBoardArea({
           />
           <AIThinkingIndicator show={Boolean(aiMode && isThinking)} />
           {gameOver && (
-            <div style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10 rounded" style={{
               background: 'color-mix(in srgb, var(--bg-primary) 88%, transparent)',
               backdropFilter: 'blur(4px)',
-              zIndex: 10,
-              borderRadius: 4,
               animation: 'fadeIn 0.4s ease',
             }}>
-              <div style={{
-                fontSize: 36,
-                fontWeight: 'bold',
+              <div className="text-[36px] font-bold tracking-[0.25em] mb-2" style={{
                 fontFamily: 'var(--font-display, "Kaiti SC", serif)',
-                letterSpacing: '0.25em',
                 color: winnerSide === 1 ? '#c41e3a' : 'var(--text-primary)',
-                marginBottom: 8,
                 textShadow: winnerSide === 1
                   ? '0 0 24px rgba(196,30,58,0.6)'
                   : '0 0 24px color-mix(in srgb, var(--accent-primary) 40%, transparent)',
               }}>
                 {endReason === 'stalemate' ? '和棋' : winnerSide === 1 ? '红方胜' : '黑方胜'}
               </div>
-              <div style={{
-                fontSize: 11,
-                color: 'var(--text-muted)',
-                fontFamily: 'var(--font-primary)',
-                letterSpacing: '0.2em',
-                marginBottom: 20,
-              }}>
+              <div className="text-[11px] text-text-muted font-mono tracking-[0.2em] mb-5">
                 {endReason === 'checkmate' ? 'CHECKMATE' : endReason === 'resign' ? 'RESIGN' : endReason === 'stalemate' ? 'STALEMATE' : 'GAME OVER'}
               </div>
             </div>
