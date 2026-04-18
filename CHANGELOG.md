@@ -1,3 +1,9 @@
+## [1.4.7](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.6...v1.4.7) (2026-04-18)
+
+### ♻️ Refactoring
+
+* 继续修复 ESLint 错误 (83→44, -47%) ([e9ba244](https://github.com/Charles-beta-he/trusted-games-platform/commit/e9ba2441ee46f2290ba564b126fb06450f3d590d))
+
 ## [1.4.6](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.5...v1.4.6) (2026-04-18)
 
 ### 🐛 Bug Fixes
