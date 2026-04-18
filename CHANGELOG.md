@@ -1,3 +1,9 @@
+## [1.4.4](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.3...v1.4.4) (2026-04-18)
+
+### ♻️ Refactoring
+
+* 迁移 board/ai/game 组件内联样式 ([02547a5](https://github.com/Charles-beta-he/trusted-games-platform/commit/02547a52dc92c7ce938fdced79f54cd876696480))
+
 ## [1.4.3](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.2...v1.4.3) (2026-04-18)
 
 ### ♻️ Refactoring
