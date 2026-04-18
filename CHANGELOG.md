@@ -1,3 +1,9 @@
+## [1.4.2](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.1...v1.4.2) (2026-04-18)
+
+### ♻️ Refactoring
+
+* 游戏页面内联样式迁移 ([4debbbf](https://github.com/Charles-beta-he/trusted-games-platform/commit/4debbbf1f8a32a93ab4005d648efd0231d789e23))
+
 ## [1.4.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.0...v1.4.1) (2026-04-18)
 
 ### ♻️ Refactoring
