@@ -89,11 +89,9 @@ export default function GameVictory({
         {/* 发光效果 */}
         {show && (
           <div 
-            className="absolute inset-0 font-calligraphy text-5xl tracking-[12px]"
+            className="absolute inset-0 font-calligraphy text-5xl tracking-[12px] text-theme-accent opacity-40"
             style={{
-              color: 'var(--accent-primary)',
               filter: 'blur(20px)',
-              opacity: 0.4,
               animation: 'glow-pulse 2s ease-in-out infinite',
             }}
           >
@@ -125,11 +123,9 @@ export default function GameVictory({
           {/* 棋子光环 */}
           {show && (
             <div 
-              className="absolute -inset-2 rounded-full animate-breathe"
+              className="absolute -inset-2 rounded-full animate-breathe border-2 opacity-60"
               style={{
-                background: 'transparent',
-                border: `2px solid ${winner === 1 ? 'var(--accent-secondary)' : 'var(--accent-primary)'}`,
-                opacity: 0.6,
+                borderColor: winner === 1 ? 'var(--accent-secondary)' : 'var(--accent-primary)',
               }}
             />
           )}
@@ -177,11 +173,8 @@ export default function GameVictory({
         {onReplay && moveCount > 0 && (
           <button
             onClick={onReplay}
-            className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors hover-glow"
+            className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors hover-glow bg-theme-surface border-theme-accent text-theme-accent"
             style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--accent-primary)',
-              color: 'var(--accent-primary)',
               animation: show ? 'slide-in-up 0.3s ease 0.85s both' : 'none',
             }}
           >
@@ -192,11 +185,8 @@ export default function GameVictory({
           <button
             type="button"
             onClick={onExport}
-            className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors hover-glow"
+            className="px-8 py-3 font-serif-sc text-sm tracking-[4px] transition-colors hover-glow bg-theme-surface border-theme text-theme-secondary"
             style={{
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-secondary)',
               animation: show ? 'slide-in-up 0.3s ease 1.0s both' : 'none',
             }}
           >

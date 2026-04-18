@@ -17,48 +17,23 @@ export default function ReplayBar({
 }) {
   if (!isReplaying) return null
 
-  const btnBase = {
-    cursor: 'pointer',
-    background: 'none',
-    border: 'none',
-    fontSize: 16,
-    color: 'var(--text-primary)',
-  }
-
-  const smallBtnBase = {
-    cursor: 'pointer',
-    background: 'none',
-    border: '1px solid var(--border-color)',
-    padding: '2px 6px',
-    fontFamily: 'var(--font-primary)',
-    fontSize: 10,
-    letterSpacing: '0.05em',
-    color: 'var(--text-muted)',
-  }
-
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 8,
-      padding: '10px 16px',
-      background: 'var(--bg-surface)',
-      borderTop: '1px solid var(--border-color)',
-      fontFamily: 'var(--font-primary)',
-      flexWrap: 'wrap',
-    }}>
+    <div className="flex items-center gap-2 px-4 py-2.5 bg-theme-surface border-t border-theme font-theme flex-wrap">
       {/* 首步 / 上一步 */}
-      <button onClick={onGoToStart} title="首步" style={btnBase}>⏮</button>
+      <button onClick={onGoToStart} title="首步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏮</button>
       <button
         onClick={onStepBack}
         title="上一步"
         disabled={replayIndex === 0}
-        style={{ ...btnBase, cursor: replayIndex === 0 ? 'not-allowed' : 'pointer', opacity: replayIndex === 0 ? 0.4 : 1 }}
+        className="cursor-pointer bg-transparent border-none text-xl text-theme-primary"
+        style={{ cursor: replayIndex === 0 ? 'not-allowed' : 'pointer', opacity: replayIndex === 0 ? 0.4 : 1 }}
       >◀</button>
 
       {/* 自动播放 / 暂停 */}
       <button
         onClick={onToggleAutoPlay}
         title={isAutoPlaying ? '暂停' : '自动播放'}
-        style={{ ...btnBase, fontSize: 15 }}
+        className="cursor-pointer bg-transparent border-none text-lg text-theme-primary"
       >
         {isAutoPlaying ? '⏸' : '▶▶'}
       </button>
@@ -67,7 +42,8 @@ export default function ReplayBar({
       <input
         type="range" min={0} max={totalMoves} value={replayIndex}
         onChange={(e) => onGoTo(Number(e.target.value))}
-        style={{ flex: 1, accentColor: 'var(--accent-primary)', minWidth: 80 }}
+        className="flex-1 min-w-[80px]"
+        style={{ accentColor: 'var(--accent-primary)' }}
       />
 
       {/* 下一步 / 末步 */}
@@ -75,15 +51,17 @@ export default function ReplayBar({
         onClick={onStepForward}
         title="下一步"
         disabled={replayIndex === totalMoves}
-        style={{ ...btnBase, cursor: replayIndex === totalMoves ? 'not-allowed' : 'pointer', opacity: replayIndex === totalMoves ? 0.4 : 1 }}
+        className="cursor-pointer bg-transparent border-none text-xl text-theme-primary"
+        style={{ cursor: replayIndex === totalMoves ? 'not-allowed' : 'pointer', opacity: replayIndex === totalMoves ? 0.4 : 1 }}
       >▶</button>
-      <button onClick={onGoToEnd} title="末步" style={btnBase}>⏭</button>
+      <button onClick={onGoToEnd} title="末步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏭</button>
 
       {/* 循环按钮 */}
       <button
         onClick={onToggleLooping}
         title="循环回放"
-        style={{ ...btnBase, fontSize: 14, color: isLooping ? 'var(--accent-primary)' : 'var(--text-muted)' }}
+        className="cursor-pointer bg-transparent border-none text-sm text-theme-primary"
+        style={{ color: isLooping ? 'var(--accent-primary)' : 'var(--text-muted)' }}
       >
         🔁
       </button>
@@ -93,8 +71,8 @@ export default function ReplayBar({
         <button
           key={speed}
           onClick={() => onSetSpeed(speed)}
+          className="cursor-pointer bg-transparent border px-1.5 py-0.5 font-theme text-[10px] tracking-wide text-theme-muted"
           style={{
-            ...smallBtnBase,
             color: playbackSpeed === speed ? 'var(--accent-primary)' : 'var(--text-muted)',
             borderColor: playbackSpeed === speed ? 'var(--accent-primary)' : 'var(--border-color)',
           }}
@@ -104,24 +82,14 @@ export default function ReplayBar({
       ))}
 
       {/* 步数显示 */}
-      <span style={{ color: 'var(--text-muted)', fontSize: 12, minWidth: 60, textAlign: 'right' }}>
+      <span className="text-theme-muted text-xs min-w-[60px] text-right">
         {replayIndex} / {totalMoves}
       </span>
 
       {/* 退出按钮 */}
       <button
         onClick={onExit}
-        style={{
-          color: 'var(--accent-danger)',
-          marginLeft: 8,
-          cursor: 'pointer',
-          background: 'none',
-          border: '1px solid var(--accent-danger)',
-          padding: '2px 8px',
-          fontFamily: 'var(--font-primary)',
-          fontSize: 11,
-          letterSpacing: '0.05em',
-        }}
+        className="ml-2 cursor-pointer bg-transparent border border-accent-danger text-accent-danger px-2 py-0.5 font-theme text-[11px] tracking-wide"
       >
         EXIT
       </button>

@@ -89,16 +89,8 @@ export default function StyleImporter({ onImported }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <div
-        style={{
-          fontSize: 10,
-          letterSpacing: '0.2em',
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-primary)',
-          textTransform: 'uppercase',
-        }}
-      >
+    <div className="flex flex-col gap-2">
+      <div className="text-[10px] tracking-[0.2em] text-theme-muted font-theme uppercase">
         导入对局数据
       </div>
 
@@ -108,36 +100,22 @@ export default function StyleImporter({ onImported }) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onClick={() => inputRef.current?.click()}
+        className="border border-dashed rounded-lg px-4 py-5 text-center cursor-pointer transition-all"
         style={{
-          border: `1px dashed ${dragging ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-          borderRadius: 6,
-          padding: '20px 16px',
-          textAlign: 'center',
+          borderColor: dragging ? 'var(--accent-primary)' : 'var(--border-color)',
           cursor: loading ? 'not-allowed' : 'pointer',
           background: dragging
             ? 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))'
             : 'var(--bg-surface)',
-          transition: 'all 0.15s',
         }}
       >
-        <div style={{ fontSize: 20, marginBottom: 6 }}>
+        <div className="text-xl mb-1.5">
           {loading ? '⏳' : '📂'}
         </div>
-        <div style={{
-          fontSize: 11,
-          color: 'var(--text-secondary)',
-          fontFamily: 'var(--font-primary)',
-          letterSpacing: '0.05em',
-        }}>
+        <div className="text-[11px] text-theme-secondary font-theme tracking-wide">
           {loading ? '分析中...' : '拖入或点击选择文件'}
         </div>
-        <div style={{
-          fontSize: 9,
-          color: 'var(--text-muted)',
-          fontFamily: 'var(--font-primary)',
-          marginTop: 4,
-          letterSpacing: '0.08em',
-        }}>
+        <div className="text-[9px] text-theme-muted font-theme mt-1 tracking-[0.08em]">
           支持 .psq · .rif · .json 格式
         </div>
       </div>
@@ -147,29 +125,17 @@ export default function StyleImporter({ onImported }) {
         type="file"
         accept=".psq,.rif,.json"
         onChange={handleFileChange}
-        style={{ display: 'none' }}
+        className="hidden"
       />
 
       {/* Format hints */}
-      <div style={{
-        display: 'flex',
-        gap: 6,
-        flexWrap: 'wrap',
-      }}>
+      <div className="flex gap-1.5 flex-wrap">
         {[
           { ext: '.psq', desc: 'Gomocup 棋谱' },
           { ext: '.rif', desc: 'RIF 棋谱' },
           { ext: '.json', desc: '棋谱 / 棋风文件' },
         ].map(({ ext, desc }) => (
-          <div key={ext} style={{
-            fontSize: 9,
-            padding: '2px 7px',
-            border: '1px solid var(--border-color)',
-            borderRadius: 3,
-            color: 'var(--text-muted)',
-            fontFamily: 'monospace',
-            letterSpacing: '0.05em',
-          }}>
+          <div key={ext} className="text-[9px] px-1.5 py-0.5 border border-theme rounded text-theme-muted font-mono tracking-wide">
             {ext} — {desc}
           </div>
         ))}
@@ -177,18 +143,16 @@ export default function StyleImporter({ onImported }) {
 
       {/* Status message */}
       {status && (
-        <div style={{
-          fontSize: 10,
-          padding: '6px 10px',
-          borderRadius: 4,
-          fontFamily: 'var(--font-primary)',
-          letterSpacing: '0.05em',
-          color: status.ok ? 'var(--accent-success)' : 'var(--accent-danger)',
-          background: status.ok
-            ? 'color-mix(in srgb, var(--accent-success) 10%, transparent)'
-            : 'color-mix(in srgb, var(--accent-danger) 10%, transparent)',
-          border: `1px solid ${status.ok ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
-        }}>
+        <div 
+          className="text-[10px] px-2.5 py-1.5 rounded font-theme tracking-wide"
+          style={{
+            color: status.ok ? 'var(--accent-success)' : 'var(--accent-danger)',
+            background: status.ok
+              ? 'color-mix(in srgb, var(--accent-success) 10%, transparent)'
+              : 'color-mix(in srgb, var(--accent-danger) 10%, transparent)',
+            border: `1px solid ${status.ok ? 'var(--accent-success)' : 'var(--accent-danger)'}`,
+          }}
+        >
           {status.text}
         </div>
       )}
