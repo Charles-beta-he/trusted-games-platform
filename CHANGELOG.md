@@ -1,3 +1,9 @@
+## [1.4.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.0...v1.4.1) (2026-04-18)
+
+### ♻️ Refactoring
+
+* 继续内联样式迁移 (PlatformView/P2PModal) ([24ed709](https://github.com/Charles-beta-he/trusted-games-platform/commit/24ed709a3ac7b17cfced2085a6dfe41102f2d5ae))
+
 ## [1.4.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.3.0...v1.4.0) (2026-04-18)
 
 ### ✨ Features
