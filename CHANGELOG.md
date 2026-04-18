@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.3.0...v1.4.0) (2026-04-18)
+
+### ✨ Features
+
+* 性能监控基础 P3 ([7fe729b](https://github.com/Charles-beta-he/trusted-games-platform/commit/7fe729b7e40de5a3dd3de169121d42e3e1701c1e))
+
 ## [1.3.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.2.1...v1.3.0) (2026-04-18)
 
 ### ✨ Features
