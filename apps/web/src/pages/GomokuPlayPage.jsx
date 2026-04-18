@@ -503,8 +503,7 @@ export default function GomokuPlayPage() {
   // ─── Game view ─────────────────────────────────────────────────────────────
   return (
     <div
-      className="flex flex-col"
-      style={{ minHeight: '100svh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+      className="flex flex-col min-h-[100svh] bg-theme-primary text-theme-primary"
     >
       <Header
         moveCount={game.moveHistory.length}
@@ -526,20 +525,14 @@ export default function GomokuPlayPage() {
             lineHeight: 1.45,
           }}
         >
-          <span aria-hidden="true" style={{ flexShrink: 0 }}>
+          <span aria-hidden="true" className="shrink-0">
             {p2pComplianceBanner.kind === 'ranked_ok' ? '✓' : '⚠️'}
           </span>
           <div className="flex-1 min-w-0">{p2pComplianceBanner.message}</div>
           <button
             type="button"
             onClick={() => setP2pComplianceBanner(null)}
-            className="shrink-0 text-xs opacity-80 hover:opacity-100"
-            style={{
-              border: '1px solid var(--border-color)',
-              borderRadius: 4,
-              padding: '2px 8px',
-              background: 'var(--bg-primary)',
-            }}
+            className="shrink-0 text-xs opacity-80 hover:opacity-100 border border-theme rounded px-2 py-0.5 bg-theme-primary"
           >
             关闭
           </button>
@@ -548,9 +541,8 @@ export default function GomokuPlayPage() {
 
       {/* ── Mobile player cards ─────────────────────────────────────── */}
       <div
-        className="md:hidden flex gap-2 px-3 py-2 flex-shrink-0"
+        className="md:hidden flex gap-2 px-3 py-2 flex-shrink-0 border-b border-theme"
         style={{
-          borderBottom: '1px solid var(--border-color)',
           paddingLeft: 'max(12px, env(safe-area-inset-left))',
           paddingRight: 'max(12px, env(safe-area-inset-right))',
         }}
@@ -588,10 +580,9 @@ export default function GomokuPlayPage() {
 
       {selectedGame === 'gomoku' && !connIsConnected && (
         <div
-          className="md:hidden flex items-center gap-2 px-3 py-2 flex-shrink-0 border-b"
-          style={{ borderColor: 'var(--border-color)', background: 'var(--bg-secondary)' }}
+          className="md:hidden flex items-center gap-2 px-3 py-2 flex-shrink-0 border-b border-theme bg-theme-secondary"
         >
-          <span className="text-[10px] shrink-0" style={{ color: 'var(--text-muted)' }}>规则</span>
+          <span className="text-[10px] shrink-0 text-theme-muted">规则</span>
           <select
             value={game.rulePreset}
             onChange={(e) => {
@@ -599,12 +590,7 @@ export default function GomokuPlayPage() {
               setGomokuRuleHint(null)
             }}
             disabled={game.moveHistory.length > 0 || replay.isReplaying}
-            className="flex-1 min-w-0 rounded px-2 py-1.5 text-xs"
-            style={{
-              border: '1px solid var(--border-color)',
-              background: 'var(--bg-surface)',
-              color: 'var(--text-primary)',
-            }}
+            className="flex-1 min-w-0 rounded px-2 py-1.5 text-xs border border-theme bg-theme-surface text-theme-primary"
           >
             {Object.values(gomokuGame.RULES).map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
@@ -613,10 +599,10 @@ export default function GomokuPlayPage() {
         </div>
       )}
 
-      <div className="flex flex-1" style={{ minHeight: 0 }}>
+      <div className="flex flex-1 min-h-0">
 
         {/* ── Left Sidebar (desktop) ──────────────────────────────── */}
-        <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 overflow-y-auto" style={{ borderRight: '1px solid var(--border-color)' }}>
+        <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 overflow-y-auto border-r border-theme">
           <div className="p-5 flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <PlayerCard
@@ -661,7 +647,7 @@ export default function GomokuPlayPage() {
 
             {selectedGame === 'gomoku' && !connIsConnected && (
               <label className="flex flex-col gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-[10px] uppercase tracking-wider text-theme-muted">
                   五子棋规则
                 </span>
                 <select
@@ -671,19 +657,14 @@ export default function GomokuPlayPage() {
                     setGomokuRuleHint(null)
                   }}
                   disabled={game.moveHistory.length > 0 || replay.isReplaying}
-                  className="rounded px-2 py-1.5 text-xs"
-                  style={{
-                    border: '1px solid var(--border-color)',
-                    background: 'var(--bg-surface)',
-                    color: 'var(--text-primary)',
-                  }}
+                  className="rounded px-2 py-1.5 text-xs border border-theme bg-theme-surface text-theme-primary"
                 >
                   {Object.values(gomokuGame.RULES).map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
                   ))}
                 </select>
                 {game.moveHistory.length > 0 && (
-                  <span className="text-[9px] leading-tight" style={{ color: 'var(--text-muted)' }}>
+                  <span className="text-[9px] leading-tight text-theme-muted">
                     新局开始后可切换规则
                   </span>
                 )}
@@ -705,9 +686,9 @@ export default function GomokuPlayPage() {
                   background: conn.isEncrypted ? 'var(--accent-success, #2d6a4f)' : 'var(--accent-primary)',
                   flexShrink: 0,
                 }} />
-                <div style={{ fontFamily: 'monospace', fontSize: 9, letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
+                <div className="font-mono text-[9px] tracking-[0.1em] text-theme-muted">
                   {conn.isEncrypted ? '🔐 E2E ENCRYPTED' : 'P2P CONNECTED'}
-                  <div style={{ marginTop: 1, opacity: 0.7 }}>
+                  <div className="mt-[1px] opacity-70">
                     {sig.isConnected ? 'ROOM CODE' : 'DIRECT · SDP'}
                     {webrtc.connType === 'lan'     && ' · 🏠 LAN'}
                     {webrtc.connType === 'internet' && ' · 🌐 INET'}
@@ -779,13 +760,12 @@ export default function GomokuPlayPage() {
 
         {/* ── Right Sidebar (desktop) ─────────────────────────────── */}
         <aside
-          className="hidden lg:flex lg:flex-col w-56 flex-shrink-0"
-          style={{ borderLeft: '1px solid var(--border-color)', overflow: 'hidden' }}
+          className="hidden lg:flex lg:flex-col w-56 flex-shrink-0 border-l border-theme overflow-hidden"
         >
           <div className="p-5 flex-shrink-0">
             <TrustBadge level={game.trustLevel} moveCount={game.moveHistory.length} />
           </div>
-          <div style={{ flex: 1, overflow: 'auto', minHeight: 0, padding: '0 20px 20px' }}>
+          <div className="flex-1 overflow-auto min-h-0 px-5 pb-5">
             <MoveHistory
               moveHistory={game.moveHistory}
               genesisHash={game.genesisHash}
@@ -798,11 +778,8 @@ export default function GomokuPlayPage() {
 
       {/* ── Mobile bottom bar ───────────────────────────────────────── */}
       <div
-        className="md:hidden flex gap-1 px-2 flex-shrink-0"
+        className="md:hidden flex gap-1 px-2 flex-shrink-0 border-t border-theme bg-theme-secondary pt-2"
         style={{
-          borderTop: '1px solid var(--border-color)',
-          backgroundColor: 'var(--bg-secondary)',
-          paddingTop: 8,
           paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
         }}
       >
@@ -816,16 +793,9 @@ export default function GomokuPlayPage() {
             key={label}
             onClick={onClick}
             disabled={disabled}
+            className="flex-1 py-2.5 px-1 font-theme text-xs tracking-[0.05em] border border-theme rounded bg-theme-surface"
             style={{
-              flex: 1,
-              padding: '10px 4px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 4,
               color: disabled ? 'var(--text-muted)' : 'var(--text-primary)',
-              fontFamily: 'var(--font-primary)',
-              fontSize: 12,
-              letterSpacing: '0.05em',
               cursor: disabled ? 'not-allowed' : 'pointer',
             }}
           >
@@ -837,111 +807,67 @@ export default function GomokuPlayPage() {
       <Footer gameId={game.gameId} networkMode={game.networkMode} isEncrypted={conn.isEncrypted} />
 
       {undoBanner === 'sent' && (
-        <div style={{
-          position: 'fixed',
-          bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          padding: '12px 20px',
-          borderRadius: 8,
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--accent-primary)',
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-primary)',
-          fontSize: 13,
-          maxWidth: 'min(420px, calc(100vw - 32px))',
-          textAlign: 'center',
-          boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-        }}>
+        <div
+          className="fixed -translate-x-1/2 z-[1001] px-5 py-3 rounded-lg bg-theme-surface border border-theme-accent text-theme-primary font-theme text-[13px] text-center shadow-lg"
+          style={{
+            bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
+            left: '50%',
+            maxWidth: 'min(420px, calc(100vw - 32px))',
+          }}
+        >
           已发送悔棋请求，等待对方同意…
         </div>
       )}
       {undoBanner === 'incoming' && (
-        <div style={{
-          position: 'fixed',
-          bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          padding: '14px 18px',
-          borderRadius: 8,
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--accent-primary)',
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-primary)',
-          fontSize: 13,
-          maxWidth: 'min(420px, calc(100vw - 32px))',
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 10,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.35)',
-        }}>
+        <div
+          className="fixed -translate-x-1/2 z-[1001] px-[18px] py-3.5 rounded-lg bg-theme-surface border border-theme-accent text-theme-primary font-theme text-[13px] flex flex-wrap items-center justify-center gap-2.5 shadow-lg"
+          style={{
+            bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
+            left: '50%',
+            maxWidth: 'min(420px, calc(100vw - 32px))',
+          }}
+        >
           <span>对方请求悔棋一步</span>
           <button
             type="button"
             onClick={handlePeerUndoAccept}
-            style={{
-              padding: '8px 16px',
-              background: 'var(--accent-primary)',
-              border: 'none',
-              borderRadius: 4,
-              color: '#000',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-            }}
+            className="px-4 py-2 bg-theme-accent border-none rounded text-black font-bold cursor-pointer"
           >
             同意
           </button>
           <button
             type="button"
             onClick={handlePeerUndoReject}
-            style={{
-              padding: '8px 16px',
-              background: 'transparent',
-              border: '1px solid var(--border-color)',
-              borderRadius: 4,
-              color: 'var(--text-muted)',
-              cursor: 'pointer',
-            }}
+            className="px-4 py-2 bg-transparent border border-theme rounded text-theme-muted cursor-pointer"
           >
             拒绝
           </button>
         </div>
       )}
       {undoBanner === 'rejected' && (
-        <div style={{
-          position: 'fixed',
-          bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          zIndex: 1001,
-          padding: '12px 20px',
-          borderRadius: 8,
-          background: 'color-mix(in srgb, var(--accent-danger, #8b3a3a) 15%, var(--bg-surface))',
-          border: '1px solid var(--accent-danger, #8b3a3a)',
-          color: 'var(--text-primary)',
-          fontFamily: 'var(--font-primary)',
-          fontSize: 13,
-          maxWidth: 'min(420px, calc(100vw - 32px))',
-          textAlign: 'center',
-        }}>
+        <div
+          className="fixed -translate-x-1/2 z-[1001] px-5 py-3 rounded-lg border text-theme-primary font-theme text-[13px] text-center"
+          style={{
+            bottom: 'max(80px, calc(env(safe-area-inset-bottom) + 64px))',
+            left: '50%',
+            maxWidth: 'min(420px, calc(100vw - 32px))',
+            background: 'color-mix(in srgb, var(--accent-danger, #8b3a3a) 15%, var(--bg-surface))',
+            borderColor: 'var(--accent-danger, #8b3a3a)',
+          }}
+        >
           对方拒绝了悔棋请求
         </div>
       )}
 
       {showDisconnectBanner && (
-        <div style={{
-          position: 'fixed',
-          top: 'max(60px, calc(env(safe-area-inset-top) + 12px))',
-          left: '50%', transform: 'translateX(-50%)',
-          background: 'var(--accent-danger, #8b3a3a)', color: '#fff',
-          padding: '10px 24px', borderRadius: 6, zIndex: 1000,
-          fontFamily: 'var(--font-primary, monospace)', fontSize: 13,
-          letterSpacing: '0.05em',
-        }}>
+        <div
+          className="fixed -translate-x-1/2 px-6 py-2.5 rounded-md z-[1000] font-theme text-[13px] tracking-[0.05em] text-white"
+          style={{
+            top: 'max(60px, calc(env(safe-area-inset-top) + 12px))',
+            left: '50%',
+            background: 'var(--accent-danger, #8b3a3a)',
+          }}
+        >
           ⚠ PEER DISCONNECTED — GAME PAUSED
         </div>
       )}

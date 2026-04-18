@@ -100,8 +100,7 @@ export default function GoPlayPage() {
 
   return (
     <div
-      className="flex flex-col"
-      style={{ minHeight: '100svh', backgroundColor: 'var(--bg-primary)', color: 'var(--text-primary)' }}
+      className="flex flex-col min-h-[100svh] bg-theme-primary text-theme-primary"
     >
       <Header
         moveCount={g.moveHistory.length}
@@ -110,9 +109,8 @@ export default function GoPlayPage() {
       />
 
       <div
-        className="md:hidden flex gap-2 px-3 py-2 flex-shrink-0"
+        className="md:hidden flex gap-2 px-3 py-2 flex-shrink-0 border-b border-theme"
         style={{
-          borderBottom: '1px solid var(--border-color)',
           paddingLeft: 'max(12px, env(safe-area-inset-left))',
           paddingRight: 'max(12px, env(safe-area-inset-right))',
         }}
@@ -137,8 +135,8 @@ export default function GoPlayPage() {
         </div>
       </div>
 
-      <div className="flex flex-1" style={{ minHeight: 0 }}>
-        <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 overflow-y-auto" style={{ borderRight: '1px solid var(--border-color)' }}>
+      <div className="flex flex-1 min-h-0">
+        <aside className="hidden md:flex md:flex-col w-56 flex-shrink-0 overflow-y-auto border-r border-theme">
           <div className="p-5 flex flex-col gap-5">
             <div className="flex flex-col gap-2">
               <PlayerCard
@@ -168,7 +166,7 @@ export default function GoPlayPage() {
               canUndo={g.moveHistory.length > 0}
               mode="all"
             />
-            <p className="text-[9px] leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-[9px] leading-relaxed text-theme-muted">
               围棋对局为本地 + 人机。支持提子规则，双方连续跳过终局计分（中国规则，贴目 6.5）。
             </p>
           </div>
@@ -216,11 +214,7 @@ export default function GoPlayPage() {
           aria-modal="true"
         >
           <div
-            className="max-w-sm w-full p-6 rounded-lg border text-center"
-            style={{
-              background: 'var(--bg-surface)',
-              borderColor: 'var(--border-color)',
-            }}
+            className="max-w-sm w-full p-6 rounded-lg border border-theme bg-theme-surface text-center"
           >
             <div className="font-calligraphy text-2xl tracking-widest mb-3">
               {g.endReason === 'two_pass'
@@ -229,11 +223,11 @@ export default function GoPlayPage() {
                   ? (g.winnerSide === 1 ? '黑方胜' : '白方胜')
                   : '终局'}
             </div>
-            <div className="text-xs mb-2" style={{ color: 'var(--text-muted)' }}>
+            <div className="text-xs mb-2 text-theme-muted">
               {g.endReason === 'resign' ? '认输结束' : g.endReason === 'two_pass' ? '双方跳过，计分终局' : ''}
             </div>
             {g.score && (
-              <div className="text-xs mb-4 font-mono" style={{ color: 'var(--text-muted)' }}>
+              <div className="text-xs mb-4 font-mono text-theme-muted">
                 黑 {Math.round(g.score.black)} - 白 {Math.round(g.score.white)}
               </div>
             )}
