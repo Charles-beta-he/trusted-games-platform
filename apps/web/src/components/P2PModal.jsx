@@ -15,23 +15,7 @@ function Label({ children }) {
 function CodeBox({ text }) {
   return (
     <div
-      className="select-all"
-      style={{
-        fontFamily: 'monospace',
-        fontSize: 11,
-        wordBreak: 'break-all',
-        lineHeight: 1.4,
-        whiteSpace: 'pre-wrap',
-        background: 'var(--bg-primary)',
-        color: 'var(--text-secondary)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 4,
-        padding: 8,
-        minHeight: 80,
-        maxHeight: 120,
-        overflowY: 'auto',
-        resize: 'none',
-      }}
+      className="select-all font-mono text-[11px] break-all leading-[1.4] whitespace-pre-wrap bg-bg-primary text-text-secondary border border-border-c rounded p-2 min-h-[80px] max-h-[120px] overflow-y-auto resize-none"
     >
       {text}
     </div>
@@ -41,28 +25,23 @@ function CodeBox({ text }) {
 
 function StepIndicator({ steps, currentStep }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 20 }}>
+    <div className="flex items-center gap-1 mb-5">
       {steps.map((label, i) => (
         <React.Fragment key={i}>
           <div
             title={label}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-all duration-300"
             style={{
-              width: 28, height: 28, borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 12, fontWeight: 'bold',
               background: i <= currentStep ? 'var(--accent-primary, #f0a500)' : 'var(--bg-surface, #f5f0e8)',
               color: i <= currentStep ? '#000' : 'var(--text-muted, #999)',
               border: `1px solid ${i <= currentStep ? 'var(--accent-primary, #f0a500)' : 'var(--border-color, #ddd)'}`,
-              transition: 'all 0.3s',
-              flexShrink: 0,
             }}
           >{i + 1}</div>
           {i < steps.length - 1 && (
-            <div style={{
-              flex: 1, height: 1,
-              background: i < currentStep ? 'var(--accent-primary, #f0a500)' : 'var(--border-color, #ddd)',
-              transition: 'background 0.3s',
-            }} />
+            <div
+              className="flex-1 h-px transition-colors duration-300"
+              style={{ background: i < currentStep ? 'var(--accent-primary, #f0a500)' : 'var(--border-color, #ddd)' }}
+            />
           )}
         </React.Fragment>
       ))}
@@ -156,17 +135,17 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
   // ── Connected screen ──────────────────────────────────────────────────────
   if (anyConnected) {
     return (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-        <div style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: 8, padding: 40, maxWidth: 384, width: '100%', textAlign: 'center', fontFamily: 'var(--font-primary)', color: 'var(--text-primary)' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🔗</div>
-          <div className="font-mono tracking-widest" style={{ color: 'var(--accent-success, #2d6a4f)', fontWeight: 'bold', fontSize: 18 }}>
+      <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4">
+        <div className="bg-bg-secondary border border-border-c rounded-lg p-10 max-w-sm w-full text-center text-text-primary">
+          <div className="text-[48px] mb-4">🔗</div>
+          <div className="font-mono tracking-widest text-lg font-bold" style={{ color: 'var(--accent-success, #2d6a4f)' }}>
             CONNECTION ESTABLISHED
           </div>
-          <div className="font-mono mt-1" style={{ color: 'var(--text-muted)', fontSize: 11 }}>
+          <div className="font-mono mt-1 text-[11px] text-text-muted">
             {sig?.isConnected ? 'ROOM CODE · SIGNALING' : 'SERVERLESS · MANUAL SDP'}
           </div>
           {anyEncrypted && (
-            <div className="font-mono mt-2" style={{ color: 'var(--text-muted, #999)', fontSize: 12 }}>
+            <div className="font-mono mt-2 text-xs" style={{ color: 'var(--text-muted, #999)' }}>
               🔐 E2E ENCRYPTED · ECDH P-256 + AES-GCM-256
             </div>
           )}
@@ -190,20 +169,9 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
   }
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4">
       <div
-        style={{
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 8,
-          padding: 32,
-          width: '90%',
-          maxWidth: 520,
-          maxHeight: '90vh',
-          overflowY: 'auto',
-          fontFamily: 'var(--font-primary)',
-          color: 'var(--text-primary)',
-        }}
+        className="bg-bg-secondary border border-border-c rounded-lg p-8 w-[90%] max-w-[520px] max-h-[90vh] overflow-y-auto text-text-primary"
       >
         {/* Header */}
         <div className="flex justify-between items-start mb-6">
@@ -254,66 +222,38 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
           <>
             {/* ── Room Code quick connect (signaling server) ─────────── */}
             {sig.isAvailable && (
-              <div style={{
-                border: '1px solid var(--accent-primary, #f0a500)',
-                borderRadius: 6,
-                padding: '14px 16px',
-                marginBottom: 16,
-                background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 5%, var(--bg-surface))',
-              }}>
-                <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary, #f0a500)', marginBottom: 10 }}>
+              <div
+                className="rounded-md px-4 py-3.5 mb-4"
+                style={{ border: '1px solid var(--accent-primary, #f0a500)', background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 5%, var(--bg-surface))' }}
+              >
+                <div className="font-mono text-[11px] font-bold tracking-[0.15em] mb-2.5" style={{ color: 'var(--accent-primary, #f0a500)' }}>
                   ⚡ 快速连接 · ROOM CODE
                 </div>
                 {!sigMode ? (
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => { setSigMode(true); sig.createRoom() }}
-                      style={{
-                        padding: '10px 8px',
-                        background: 'var(--bg-primary)',
-                        border: '1px solid var(--accent-primary, #f0a500)',
-                        borderRadius: 4,
-                        color: 'var(--text-primary)',
-                        fontFamily: 'var(--font-primary)',
-                        fontSize: 12,
-                        cursor: 'pointer',
-                      }}
+                      className="py-2.5 px-2 bg-bg-primary border border-[var(--accent-primary,#f0a500)] rounded text-text-primary text-xs cursor-pointer"
                     >
-                      <div style={{ fontWeight: 'bold' }}>创建房间</div>
-                      <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>生成 6 位房间码</div>
+                      <div className="font-bold">创建房间</div>
+                      <div className="text-[10px] text-text-muted mt-0.5">生成 6 位房间码</div>
                     </button>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div className="flex flex-col gap-1">
                       <input
                         value={roomCodeInput}
                         onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase().slice(0, 6))}
                         placeholder="输入房间码"
                         maxLength={6}
-                        style={{
-                          padding: '8px',
-                          background: 'var(--bg-primary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 4,
-                          color: 'var(--text-primary)',
-                          fontFamily: 'monospace',
-                          fontSize: 16,
-                          letterSpacing: '0.3em',
-                          textAlign: 'center',
-                          textTransform: 'uppercase',
-                        }}
+                        className="p-2 bg-bg-primary border border-border-c rounded text-text-primary font-mono text-base tracking-[0.3em] text-center uppercase"
                       />
                       <button
                         onClick={() => { setSigMode(true); sig.joinRoom(roomCodeInput) }}
                         disabled={roomCodeInput.length < 6}
+                        className="py-1.5 border border-border-c rounded font-mono text-[11px] tracking-[0.1em]"
                         style={{
-                          padding: '6px',
                           background: roomCodeInput.length >= 6 ? 'var(--accent-primary, #f0a500)' : 'var(--bg-surface)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 4,
                           color: roomCodeInput.length >= 6 ? '#000' : 'var(--text-muted)',
-                          fontFamily: 'var(--font-primary)',
-                          fontSize: 11,
                           cursor: roomCodeInput.length >= 6 ? 'pointer' : 'not-allowed',
-                          letterSpacing: '0.1em',
                         }}
                       >
                         加入 →
@@ -324,53 +264,45 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                   /* Signaling mode active — show room code or status */
                   <div>
                     {sig.step === 'creating' && (
-                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)' }}>正在生成房间码...</div>
+                      <div className="font-mono text-xs text-text-muted">正在生成房间码...</div>
                     )}
                     {sig.step === 'waiting' && sig.roomCode && (
                       <div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
+                        <div className="font-mono text-[11px] text-text-muted mb-1.5">
                           将房间码或下方链接发给对方
                         </div>
-                        <div style={{
-                          fontFamily: 'monospace',
-                          fontSize: 32,
-                          fontWeight: 'bold',
-                          letterSpacing: '0.4em',
-                          color: 'var(--accent-primary, #f0a500)',
-                          textAlign: 'center',
-                          padding: '12px 0',
-                        }}>
+                        <div className="font-mono text-[32px] font-bold tracking-[0.4em] text-center py-3" style={{ color: 'var(--accent-primary, #f0a500)' }}>
                           {sig.roomCode}
                         </div>
                         <CopyButton text={sig.roomCode} label="复制房间码" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
-                        <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div className="mt-3.5 flex flex-col items-center">
                           <Label>扫码加入（自动连接）</Label>
                           <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={160} centered borderRadius={6} />
                           <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
                         </div>
-                        <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+                        <div className="mt-2 font-mono text-[10px] text-text-muted text-center">
                           等待对方加入...
                         </div>
                       </div>
                     )}
                     {sig.step === 'joining' && (
-                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+                      <div className="font-mono text-xs text-text-muted text-center py-2">
                         正在连接...
                       </div>
                     )}
                     {sig.step === 'connected' && (
-                      <div style={{ fontFamily: 'monospace', fontSize: 12, color: 'var(--accent-success, #2d6a4f)', textAlign: 'center' }}>
+                      <div className="font-mono text-xs text-center" style={{ color: 'var(--accent-success, #2d6a4f)' }}>
                         ✓ 已连接
                       </div>
                     )}
                     {sig.error && (
-                      <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--accent-danger, #8b3a3a)' }}>
+                      <div className="font-mono text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
                         ⚠ {sig.error}
                       </div>
                     )}
                     <button
                       onClick={() => { sig.disconnect(); setSigMode(false); setRoomCodeInput('') }}
-                      style={{ marginTop: 8, fontSize: 10, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+                      className="mt-2 text-[10px] text-text-muted bg-none border-none cursor-pointer"
                     >
                       ← 取消
                     </button>
@@ -408,7 +340,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
             <div className="flex items-center gap-2 font-mono text-[10px] text-trust-l1 tracking-widest">
               <span>HOST · {step === 'creating' ? '生成中...' : step === 'waiting_for_answer' ? '等待应答' : step.toUpperCase()}</span>
               {countdown !== null && (
-                <span style={{ color: 'var(--text-muted, #999)', fontSize: 12 }}>⏱ {countdown}s</span>
+                <span className="text-text-muted text-xs" style={{ color: 'var(--text-muted, #999)' }}>⏱ {countdown}s</span>
               )}
             </div>
 
@@ -429,16 +361,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                 {shareUrl && (
                   <div>
                     <Label>分享链接 — Guest 打开此链接可自动加入</Label>
-                    <div style={{
-                      background: 'var(--bg-primary, #050a14)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: 4,
-                      padding: '6px 10px',
-                      fontSize: 11,
-                      color: 'var(--text-secondary, #aaa)',
-                      wordBreak: 'break-all',
-                      fontFamily: 'monospace',
-                    }}>
+                    <div className="bg-bg-primary border border-border-c rounded px-2.5 py-1.5 text-[11px] break-all font-mono" style={{ color: 'var(--text-secondary, #aaa)' }}>
                       {shareUrl.length > 80 ? shareUrl.slice(0, 80) + '...' : shareUrl}
                     </div>
                     <CopyButton text={shareUrl} label="复制链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
@@ -447,45 +370,34 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
 
                 {/* LAN section — same WiFi / hotspot quick join */}
                 {lanUrl && (
-                  <div style={{
-                    border: '1px solid var(--accent-primary, #f0a500)',
-                    borderRadius: 6,
-                    padding: '12px 16px',
-                    background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 6%, var(--bg-surface))',
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-                      <span style={{ fontSize: 14 }}>📡</span>
+                  <div
+                    className="rounded-md px-4 py-3"
+                    style={{ border: '1px solid var(--accent-primary, #f0a500)', background: 'color-mix(in srgb, var(--accent-primary, #f0a500) 6%, var(--bg-surface))' }}
+                  >
+                    <div className="flex items-center gap-1.5 mb-2.5">
+                      <span className="text-sm">📡</span>
                       <div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary, #f0a500)' }}>
+                        <div className="font-mono text-[11px] font-bold tracking-[0.15em]" style={{ color: 'var(--accent-primary, #f0a500)' }}>
                           同一 WiFi / 热点快捷加入
                         </div>
-                        <div style={{ fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', marginTop: 1 }}>
+                        <div className="font-mono text-[10px] text-text-muted mt-px">
                           LAN · SAME NETWORK INSTANT JOIN
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8, alignItems: 'start' }}>
+                    <div className="grid gap-2 items-start" style={{ gridTemplateColumns: '1fr auto' }}>
                       <div>
                         <QRCanvas value={lanUrl} size={140} centered borderRadius={6} />
-                        <div style={{ marginTop: 6, fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', textAlign: 'center' }}>
+                        <div className="mt-1.5 font-mono text-[9px] text-text-muted text-center">
                           同一 WiFi 设备扫码即可加入
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                        <div style={{
-                          fontFamily: 'monospace',
-                          fontSize: 10,
-                          wordBreak: 'break-all',
-                          color: 'var(--text-secondary)',
-                          background: 'var(--bg-primary)',
-                          border: '1px solid var(--border-color)',
-                          borderRadius: 3,
-                          padding: '4px 6px',
-                        }}>
+                      <div className="flex flex-col gap-1.5 min-w-0">
+                        <div className="font-mono text-[10px] break-all text-text-secondary bg-bg-primary border border-border-c rounded-sm px-1.5 py-1">
                           {lanUrl.split('#')[0]}
                         </div>
                         <CopyButton text={lanUrl} label="复制局域网链接" className="w-full mt-1.5 px-3 py-2 border font-mono text-[11px] transition-colors" />
-                        <div style={{ fontFamily: 'monospace', fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                        <div className="font-mono text-[9px] text-text-muted leading-relaxed">
                           仅限本地网络有效<br />可分享给同一热点的设备
                         </div>
                       </div>
@@ -495,10 +407,10 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
 
                 {/* QR Code section — internet share */}
                 {shareUrl && (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div className="flex flex-col items-center">
                     <Label>互联网分享 · INTERNET SHARE</Label>
                     <QRCanvas value={shareUrl} size={180} centered borderRadius={6} />
-                    <div style={{ marginTop: 8, fontFamily: 'monospace', fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+                    <div className="mt-2 font-mono text-[10px] text-text-muted text-center">
                       任意网络均可使用（需对方能访问相同域名）
                     </div>
                   </div>
@@ -508,7 +420,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                 <div>
                   <button
                     onClick={() => setShowRawSDP(v => !v)}
-                    style={{ fontSize: 11, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    className="text-[11px] text-text-muted bg-none border-none cursor-pointer p-0"
                   >
                     {showRawSDP ? '▾' : '▸'} 手动方式（SDP 码）
                   </button>
@@ -550,7 +462,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
             <div className="flex items-center gap-2 font-mono text-[10px] text-trust-l3 tracking-widest">
               <span>GUEST · {step === 'joining' && !guestAnswerReady ? '处理中...' : guestAnswerReady ? '等待主机确认' : 'READY'}</span>
               {countdown !== null && (
-                <span style={{ color: 'var(--text-muted, #999)', fontSize: 12 }}>⏱ {countdown}s</span>
+                <span className="text-text-muted text-xs" style={{ color: 'var(--text-muted, #999)' }}>⏱ {countdown}s</span>
               )}
             </div>
 

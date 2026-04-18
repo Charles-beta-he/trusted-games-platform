@@ -6,8 +6,10 @@ export default {
       colors: {
         // CSS variable references for theme system
         'bg-primary':  'var(--bg-primary)',
+        'bg-secondary': 'var(--bg-secondary)',
         'bg-surface':  'var(--bg-surface)',
         'accent':      'var(--accent-primary)',
+        'text-secondary': 'var(--text-secondary)',
         'text-primary': 'var(--text-primary)',
         'text-muted':  'var(--text-muted)',
         'border-c':    'var(--border-color)',

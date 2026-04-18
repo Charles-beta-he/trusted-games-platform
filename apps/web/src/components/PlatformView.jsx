@@ -36,21 +36,17 @@ function formatTimeSince(isoString) {
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 function SkeletonRow({ cols = 3 }) {
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: `36px 1fr ${Array(cols - 2).fill('72px').join(' ')}`,
-      padding: '12px 16px',
-      alignItems: 'center',
-      gap: 8,
-      animation: 'pulse 1.4s ease-in-out infinite',
-    }}>
-      <div style={{ width: 24, height: 10, background: 'var(--border-color)', borderRadius: 2 }} />
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--border-color)', flexShrink: 0 }} />
-        <div style={{ width: 90, height: 10, background: 'var(--border-color)', borderRadius: 2 }} />
+    <div
+      className={`grid items-center gap-2 px-4 py-3`}
+      style={{ gridTemplateColumns: `36px 1fr ${Array(cols - 2).fill('72px').join(' ')}` }}
+    >
+      <div className="w-6 h-2.5 bg-border-c rounded-sm animate-pulse" />
+      <div className="flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded-full bg-border-c shrink-0 animate-pulse" />
+        <div className="w-[90px] h-2.5 bg-border-c rounded-sm animate-pulse" />
       </div>
       {Array(Math.max(cols - 2, 1)).fill(0).map((_, i) => (
-        <div key={i} style={{ width: 40, height: 10, background: 'var(--border-color)', borderRadius: 2, marginLeft: 'auto' }} />
+        <div key={i} className="w-10 h-2.5 bg-border-c rounded-sm ml-auto animate-pulse" />
       ))}
     </div>
   )
@@ -64,32 +60,31 @@ function MatchTab({ platform, onMatchReady }) {
   // Match found overlay
   if (queueState === 'matched' && matchInfo) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0' }}>
-        <div style={{
-          ...card({ padding: '40px 32px', textAlign: 'center' }),
-          borderColor: 'var(--accent-primary)',
-          background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))',
-        }}>
-          <div style={{ fontSize: 13, letterSpacing: '0.3em', color: 'var(--accent-primary)', marginBottom: 20 }}>
+      <div className="flex flex-col gap-6 py-8">
+        <div
+          className="rounded-lg border border-accent bg-bg-surface p-10 text-center"
+          style={{ background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))' }}
+        >
+          <div className="text-[13px] tracking-[0.3em] text-accent mb-5">
             ✦ MATCH FOUND ✦
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6, letterSpacing: '0.1em' }}>
+          <div className="text-[11px] text-text-muted mb-1.5 tracking-[0.1em]">
             对手
           </div>
-          <div style={{ fontSize: 22, fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: 4 }}>
+          <div className="text-[22px] font-bold text-text-primary mb-1">
             {matchInfo.opponentNickname}
           </div>
           {matchInfo.opponentElo != null && (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 24 }}>
+            <div className="text-xs text-text-muted mb-6">
               ELO {matchInfo.opponentElo} · {getRankForElo(matchInfo.opponentElo).title}
             </div>
           )}
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 28, letterSpacing: '0.15em' }}>
+          <div className="text-[10px] text-text-muted mb-7 tracking-[0.15em]">
             {matchInfo.mode === 'ranked' ? '段位赛 · RANKED' : '休闲赛 · CASUAL'}
             &nbsp;·&nbsp;
             {matchInfo.youAre === 'host' ? '执黑先行' : '执白后行'}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 20, letterSpacing: '0.1em' }}>
+          <div className="text-[10px] text-text-muted mb-5 tracking-[0.1em]">
             正在建立加密连接…
           </div>
           <button
@@ -104,25 +99,19 @@ function MatchTab({ platform, onMatchReady }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '32px 0' }}>
+    <div className="flex flex-col gap-5 py-8">
       {/* Status banner when not logged in */}
       {!user && (
-        <div style={{
-          padding: '12px 18px',
-          background: 'color-mix(in srgb, var(--accent-primary) 8%, var(--bg-surface))',
-          border: '1px solid var(--accent-primary)',
-          borderRadius: 6,
-          fontSize: 12,
-          color: 'var(--accent-primary)',
-          letterSpacing: '0.1em',
-          textAlign: 'center',
-        }}>
+        <div
+          className="px-[18px] py-3 rounded-md text-[12px] text-accent tracking-[0.1em] text-center"
+          style={{ background: 'color-mix(in srgb, var(--accent-primary) 8%, var(--bg-surface))', border: '1px solid var(--accent-primary)' }}
+        >
           请先前往「PROFILE」设置昵称以开始匹配
         </div>
       )}
 
       {/* Ranked + Casual cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div className="grid grid-cols-2 gap-4">
         {[
           {
             mode: 'ranked',
@@ -169,23 +158,22 @@ function MatchTab({ platform, onMatchReady }) {
                 }),
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 12 }}>{m.icon}</div>
-              <div style={{
-                fontSize: 13, fontWeight: 'bold', letterSpacing: '0.15em',
-                color: isQueuing ? m.accentColor : 'var(--text-primary)',
-                marginBottom: 4,
-              }}>
+              <div className="text-[32px] mb-3">{m.icon}</div>
+              <div
+                className="text-[13px] font-bold tracking-[0.15em] mb-1"
+                style={{ color: isQueuing ? m.accentColor : 'var(--text-primary)' }}
+              >
                 {m.title}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10 }}>{m.titleCn}</div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', whiteSpace: 'pre-line', lineHeight: 1.7, marginBottom: 16 }}>
+              <div className="text-[11px] text-text-secondary mb-2.5">{m.titleCn}</div>
+              <div className="text-[10px] text-text-muted whitespace-pre-line leading-[1.7] mb-4">
                 {m.desc}
               </div>
 
               {isQueuing ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div className="flex flex-col items-center gap-2">
                   {/* Pulsing dots */}
-                  <div style={{ display: 'flex', gap: 5 }}>
+                  <div className="flex gap-1.5">
                     {[0, 1, 2].map(i => (
                       <div
                         key={i}
@@ -197,7 +185,7 @@ function MatchTab({ platform, onMatchReady }) {
                       />
                     ))}
                   </div>
-                  <div style={{ fontSize: 10, color: m.accentColor, letterSpacing: '0.1em' }}>
+                  <div className="text-[10px] tracking-[0.1em]" style={{ color: m.accentColor }}>
                     正在匹配…
                   </div>
                   <button
@@ -229,7 +217,7 @@ function MatchTab({ platform, onMatchReady }) {
 
       {/* Queue tip */}
       {canQueue && queueState === 'idle' && (
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.1em' }}>
+        <div className="text-[10px] text-text-muted text-center tracking-[0.1em]">
           平均匹配时间 &lt; 30 秒
         </div>
       )}
@@ -278,16 +266,16 @@ function ProfileTab({ platform }) {
   if (!user) {
     // Registration form
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0' }}>
-        <div style={card({ padding: '40px 32px', textAlign: 'center' })}>
-          <div style={{ fontSize: 48, marginBottom: 20 }}>👤</div>
-          <div style={{ fontSize: 15, fontWeight: 'bold', letterSpacing: '0.2em', color: 'var(--text-primary)', marginBottom: 8 }}>
+      <div className="flex flex-col gap-6 py-8">
+        <div className="border border-border-c rounded-lg bg-bg-surface p-10 text-center">
+          <div className="text-[48px] mb-5">👤</div>
+          <div className="text-[15px] font-bold tracking-[0.2em] text-text-primary mb-2">
             CREATE PROFILE
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 28, lineHeight: 1.8 }}>
+          <div className="text-[11px] text-text-muted mb-7 leading-[1.8]">
             设置昵称以开始匹配、追踪战绩
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 280, margin: '0 auto' }}>
+          <div className="flex flex-col gap-3 max-w-[280px] mx-auto">
             <input
               type="text"
               placeholder="输入昵称 (2–16 字符)"
@@ -295,21 +283,10 @@ function ProfileTab({ platform }) {
               onChange={e => setNicknameInput(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               maxLength={16}
-              style={{
-                fontFamily: 'var(--font-primary)',
-                fontSize: 13,
-                padding: '10px 14px',
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 4,
-                color: 'var(--text-primary)',
-                letterSpacing: '0.05em',
-                textAlign: 'center',
-                outline: 'none',
-              }}
+              className="text-[13px] px-3.5 py-2.5 bg-bg-primary border border-border-c rounded text-text-primary tracking-[0.05em] text-center outline-none"
             />
             {error && (
-              <div style={{ fontSize: 10, color: 'var(--accent-danger, #f87171)', textAlign: 'center' }}>
+              <div className="text-[10px] text-center" style={{ color: 'var(--accent-danger, #f87171)' }}>
                 {error}
               </div>
             )}
@@ -336,27 +313,22 @@ function ProfileTab({ platform }) {
   const winRate = totalGames > 0 ? Math.round((user.wins / totalGames) * 100) : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20, padding: '32px 0' }}>
+    <div className="flex flex-col gap-5 py-8">
       {/* Avatar + name + rank */}
-      <div style={card({
-        padding: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 20,
-      })}>
-        <div style={{
-          width: 72, height: 72, borderRadius: '50%',
-          background: `color-mix(in srgb, ${rankTier.color} 20%, var(--bg-primary))`,
-          border: `2px solid ${rankTier.color}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 28, fontWeight: 'bold', color: rankTier.color,
-          flexShrink: 0, letterSpacing: 0,
-        }}>
+      <div className="border border-border-c rounded-lg bg-bg-surface p-6 flex items-center gap-5">
+        <div
+          className="w-[72px] h-[72px] rounded-full flex items-center justify-center text-[28px] font-bold shrink-0"
+          style={{
+            background: `color-mix(in srgb, ${rankTier.color} 20%, var(--bg-primary))`,
+            border: `2px solid ${rankTier.color}`,
+            color: rankTier.color,
+          }}
+        >
           {(user.nickname ?? '?')[0].toUpperCase()}
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="flex-1 min-w-0">
           {editingNickname ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
+            <div className="flex gap-2 items-center mb-2">
               <input
                 type="text"
                 value={editInput}
@@ -364,49 +336,37 @@ function ProfileTab({ platform }) {
                 onKeyDown={e => { if (e.key === 'Enter') handleEditNickname(); if (e.key === 'Escape') setEditingNickname(false) }}
                 maxLength={16}
                 autoFocus
-                style={{
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 14,
-                  padding: '4px 8px',
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--accent-primary)',
-                  borderRadius: 3,
-                  color: 'var(--text-primary)',
-                  flex: 1,
-                  outline: 'none',
-                }}
+                className="text-sm px-2 py-1 bg-bg-primary border border-accent rounded text-text-primary flex-1 outline-none"
               />
               <button onClick={handleEditNickname} style={btnPrimary({ padding: '4px 10px', fontSize: 10 })}>确定</button>
               <button onClick={() => setEditingNickname(false)} style={btn({ padding: '4px 10px', fontSize: 10 })}>取消</button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 17, fontWeight: 'bold', color: 'var(--text-primary)' }}>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[17px] font-bold text-text-primary">
                 {user.nickname}
               </span>
               <button
                 onClick={() => { setEditInput(user.nickname); setEditingNickname(true) }}
                 title="编辑昵称"
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-muted)', fontSize: 12, padding: '2px 4px',
-                }}
+                className="bg-none border-none cursor-pointer text-text-muted text-xs p-0.5 px-1"
               >
                 ✎
               </button>
             </div>
           )}
-          {error && <div style={{ fontSize: 10, color: 'var(--accent-danger, #f87171)', marginBottom: 4 }}>{error}</div>}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{
-              fontSize: 9, letterSpacing: '0.15em', fontWeight: 'bold',
-              color: rankTier.color,
-              border: `1px solid ${rankTier.color}`,
-              padding: '2px 6px', borderRadius: 2,
-            }}>
+          {error && <div className="text-[10px] mb-1" style={{ color: 'var(--accent-danger, #f87171)' }}>{error}</div>}
+          <div className="flex items-center gap-2">
+            <span
+              className="text-[9px] tracking-[0.15em] font-bold px-1.5 py-0.5 rounded-sm"
+              style={{
+                color: rankTier.color,
+                border: `1px solid ${rankTier.color}`,
+              }}
+            >
               {rankTier.title} · {rankTier.titleEn}
             </span>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+            <span className="text-[10px] text-text-muted">
               {isOnline ? '● 在线' : '○ 离线'}
             </span>
           </div>
@@ -414,29 +374,28 @@ function ProfileTab({ platform }) {
       </div>
 
       {/* ELO score */}
-      <div style={card({
-        padding: '20px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        background: `color-mix(in srgb, ${rankTier.color} 6%, var(--bg-surface))`,
-        borderColor: `${rankTier.color}44`,
-      })}>
+      <div
+        className="border rounded-lg bg-bg-surface px-6 py-5 flex items-center justify-between"
+        style={{
+          borderColor: `${rankTier.color}44`,
+          background: `color-mix(in srgb, ${rankTier.color} 6%, var(--bg-surface))`,
+        }}
+      >
         <div>
-          <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--text-muted)', marginBottom: 4 }}>ELO RATING</div>
-          <div style={{ fontSize: 28, fontWeight: 'bold', color: rankTier.color }}>
+          <div className="text-[10px] tracking-[0.2em] text-text-muted mb-1">ELO RATING</div>
+          <div className="text-[28px] font-bold" style={{ color: rankTier.color }}>
             {user.elo ?? 1200}
           </div>
         </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: 10, letterSpacing: '0.15em', color: 'var(--text-muted)', marginBottom: 4 }}>当前段位</div>
-          <div style={{ fontSize: 18, fontWeight: 'bold', color: rankTier.color }}>{rankTier.title}</div>
-          <div style={{ fontSize: 9, color: 'var(--text-muted)' }}>{rankTier.titleEn}</div>
+        <div className="text-right">
+          <div className="text-[10px] tracking-[0.15em] text-text-muted mb-1">当前段位</div>
+          <div className="text-lg font-bold" style={{ color: rankTier.color }}>{rankTier.title}</div>
+          <div className="text-[9px] text-text-muted">{rankTier.titleEn}</div>
         </div>
       </div>
 
       {/* Stats grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+      <div className="grid grid-cols-4 gap-2.5">
         {[
           { label: '胜', value: user.wins ?? 0, color: 'var(--accent-success, #4ade80)' },
           { label: '负', value: user.losses ?? 0, color: 'var(--accent-danger, #f87171)' },
@@ -445,12 +404,12 @@ function ProfileTab({ platform }) {
         ].map(s => (
           <div
             key={s.label}
-            style={card({ padding: '18px 8px', textAlign: 'center' })}
+            className="border border-border-c rounded-lg bg-bg-surface px-2 py-4 text-center"
           >
-            <div style={{ fontSize: 20, fontWeight: 'bold', color: s.color, marginBottom: 4 }}>
+            <div className="text-xl font-bold mb-1" style={{ color: s.color }}>
               {s.value}
             </div>
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.15em' }}>
+            <div className="text-[9px] text-text-muted tracking-[0.15em]">
               {s.label}
             </div>
           </div>
@@ -462,34 +421,26 @@ function ProfileTab({ platform }) {
         const rankedGames = GAME_CATALOG.filter(g => g.ranked && g.eloKey)
         if (rankedGames.length === 0) return null
         return (
-          <div style={card()}>
-            <div style={{ fontSize: 9, letterSpacing: '0.2em', color: 'var(--text-muted)', marginBottom: 12 }}>
+          <div className="border border-border-c rounded-lg bg-bg-surface">
+            <div className="text-[9px] tracking-[0.2em] text-text-muted mb-3 p-6 pb-0">
               段位 · 分游戏评分
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="flex flex-col gap-2 p-6 pt-0">
               {rankedGames.map(g => {
                 const elo = user[g.eloKey] ?? (g.eloKey === 'elo' ? user.elo : null) ?? 1200
                 const tier = getRankForElo(elo)
                 return (
-                  <div key={g.id} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '10px 14px',
-                    border: '1px solid var(--border-color)',
-                    borderRadius: 4,
-                    background: 'var(--bg-primary)',
-                  }}>
-                    <span style={{ fontSize: 20 }}>{g.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 11, fontWeight: 'bold', letterSpacing: '0.1em' }}>{g.name}</div>
-                      <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>{g.nameEn}</div>
+                  <div key={g.id} className="flex items-center gap-3 px-3.5 py-2.5 border border-border-c rounded bg-bg-primary">
+                    <span className="text-xl">{g.icon}</span>
+                    <div className="flex-1">
+                      <div className="text-[11px] font-bold tracking-[0.1em]">{g.name}</div>
+                      <div className="text-[9px] text-text-muted mt-0.5">{g.nameEn}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 16, fontWeight: 'bold', color: tier.color }}>
+                    <div className="text-right">
+                      <div className="text-base font-bold" style={{ color: tier.color }}>
                         {elo}
                       </div>
-                      <div style={{ fontSize: 9, color: tier.color, letterSpacing: '0.1em' }}>
+                      <div className="text-[9px] tracking-[0.1em]" style={{ color: tier.color }}>
                         {tier.title}
                       </div>
                     </div>
@@ -504,30 +455,16 @@ function ProfileTab({ platform }) {
       {/* Style Center entry */}
       <button
         onClick={() => navigate('/styles')}
-        style={btn({
-          width: '100%',
-          padding: '14px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        })}
-        onMouseEnter={e => {
-          e.currentTarget.style.borderColor = 'var(--accent-primary)'
-          e.currentTarget.style.color = 'var(--accent-primary)'
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.borderColor = 'var(--border-color)'
-          e.currentTarget.style.color = 'var(--text-primary)'
-        }}
+        className="border border-border-c rounded bg-bg-surface text-text-primary text-[11px] tracking-[0.12em] cursor-pointer w-full px-5 py-3.5 flex items-center justify-between transition-all duration-150 hover:border-accent hover:text-accent"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 20 }}>🎭</span>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 'bold', letterSpacing: '0.15em' }}>STYLE CENTER</div>
-            <div style={{ fontSize: 9, color: 'var(--text-muted)', marginTop: 2 }}>棋风中心 · 生成 / 导入 / 分享</div>
+        <div className="flex items-center gap-3">
+          <span className="text-xl">🎭</span>
+          <div className="text-left">
+            <div className="text-[11px] font-bold tracking-[0.15em]">STYLE CENTER</div>
+            <div className="text-[9px] text-text-muted mt-0.5">棋风中心 · 生成 / 导入 / 分享</div>
           </div>
         </div>
-        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>→</span>
+        <span className="text-xs text-text-muted">→</span>
       </button>
     </div>
   )
@@ -568,18 +505,18 @@ function RoomsTab({ platform, activeTab }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '32px 0' }}>
+    <div className="flex flex-col gap-4 py-8">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="flex justify-between items-center">
         <div>
-          <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--text-primary)' }}>
+          <div className="text-[13px] font-bold tracking-[0.15em] text-text-primary">
             公开房间
           </div>
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+          <div className="text-[11px] text-text-muted mt-0.5">
             {roomsLoading ? '刷新中…' : `${rooms.length} 个房间在线`}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div className="flex gap-2">
           <button onClick={refreshRooms} style={btn({ padding: '7px 12px' })} title="刷新">
             ↻
           </button>
@@ -602,16 +539,13 @@ function RoomsTab({ platform, activeTab }) {
 
       {/* Create room panel */}
       {showCreate && (
-        <div style={card({ padding: '20px' })}>
+        <div className="border border-border-c rounded-lg bg-bg-surface p-5">
           {createdCode ? (
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8, letterSpacing: '0.1em' }}>
+            <div className="text-center">
+              <div className="text-[11px] text-text-muted mb-2 tracking-[0.1em]">
                 房间创建成功 — 分享房间码
               </div>
-              <div style={{
-                fontSize: 24, fontWeight: 'bold', letterSpacing: '0.3em',
-                color: 'var(--accent-primary)', marginBottom: 16,
-              }}>
+              <div className="text-2xl font-bold tracking-[0.3em] text-accent mb-4">
                 {createdCode}
               </div>
               <button onClick={() => { setCreatedCode(null); setShowCreate(false); setRoomTitle('') }} style={btn()}>
@@ -619,7 +553,7 @@ function RoomsTab({ platform, activeTab }) {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="房间名称（可选）"
@@ -627,17 +561,7 @@ function RoomsTab({ platform, activeTab }) {
                 onChange={e => setRoomTitle(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
                 maxLength={32}
-                style={{
-                  flex: 1,
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 12,
-                  padding: '8px 12px',
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: 4,
-                  color: 'var(--text-primary)',
-                  outline: 'none',
-                }}
+                className="flex-1 text-xs px-3 py-2 bg-bg-primary border border-border-c rounded text-text-primary outline-none"
               />
               <button
                 onClick={handleCreate}
@@ -653,60 +577,43 @@ function RoomsTab({ platform, activeTab }) {
 
       {/* Room list */}
       {rooms.length === 0 && !roomsLoading ? (
-        <div style={{
-          ...card({ padding: '60px 32px' }),
-          textAlign: 'center',
-          borderStyle: 'dashed',
-        }}>
-          <div style={{ fontSize: 40, marginBottom: 16, opacity: 0.4 }}>🏠</div>
-          <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.8 }}>
+        <div className="border border-dashed border-border-c rounded-lg bg-bg-surface px-8 py-[60px] text-center">
+          <div className="text-[40px] mb-4 opacity-40">🏠</div>
+          <div className="text-xs text-text-muted leading-[1.8]">
             暂无公开房间<br />
-            <span style={{ fontSize: 10, letterSpacing: '0.1em' }}>创建房间邀请好友对局</span>
+            <span className="text-[10px] tracking-[0.1em]">创建房间邀请好友对局</span>
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {roomsLoading && rooms.length === 0 && [1, 2, 3].map(i => (
-            <div key={i} style={{ ...card({ padding: '16px 16px', opacity: 0.3 }), display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--border-color)' }} />
+            <div key={i} className="border border-border-c rounded-lg bg-bg-surface opacity-30 px-4 py-4 flex items-center justify-between">
+              <div className="flex gap-3.5 items-center">
+                <div className="w-8 h-8 rounded-full bg-border-c" />
                 <div>
-                  <div style={{ width: 120, height: 10, background: 'var(--border-color)', borderRadius: 2, marginBottom: 6 }} />
-                  <div style={{ width: 80, height: 8, background: 'var(--border-color)', borderRadius: 2 }} />
+                  <div className="w-[120px] h-2.5 bg-border-c rounded-sm mb-1.5" />
+                  <div className="w-20 h-2 bg-border-c rounded-sm" />
                 </div>
               </div>
-              <div style={{ width: 52, height: 28, background: 'var(--border-color)', borderRadius: 4 }} />
+              <div className="w-[52px] h-7 bg-border-c rounded" />
             </div>
           ))}
           {rooms.map(room => (
             <div
               key={room.code}
-              style={{
-                ...card({ padding: '16px 16px' }),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 12,
-              }}
+              className="border border-border-c rounded-lg bg-bg-surface px-4 py-4 flex items-center justify-between gap-3"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                <div style={{
-                  width: 36, height: 36, borderRadius: '50%',
-                  background: 'var(--bg-primary)',
-                  border: '1px solid var(--border-color)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 'bold', color: 'var(--text-secondary)',
-                  flexShrink: 0,
-                }}>
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-bg-primary border border-border-c flex items-center justify-center text-sm font-bold text-text-secondary shrink-0">
                   {(room.hostNickname ?? '?')[0].toUpperCase()}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 'bold', color: 'var(--text-primary)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-text-primary mb-0.5 truncate">
                     {room.title || `${room.hostNickname} 的房间`}
                   </div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                  <div className="text-[10px] text-text-muted">
                     {room.hostNickname} · {formatTimeSince(room.createdAt)}
-                    {room.waiting && <span style={{ color: 'var(--accent-primary)', marginLeft: 6 }}>等待中</span>}
+                    {room.waiting && <span className="text-accent ml-1.5">等待中</span>}
                   </div>
                 </div>
               </div>
@@ -743,27 +650,25 @@ function RankTab({ platform, activeTab }) {
   const rankColors = ['#facc15', '#94a3b8', '#b45309'] // gold, silver, bronze
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, padding: '32px 0' }}>
+    <div className="flex flex-col gap-6 py-8">
       {/* Rank tier cards */}
       <div>
-        <div style={{ fontSize: 11, letterSpacing: '0.3em', color: 'var(--text-muted)', marginBottom: 14 }}>
+        <div className="text-[11px] tracking-[0.3em] text-text-muted mb-3.5">
           段位体系 · RANK SYSTEM
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+        <div className="grid grid-cols-3 gap-1.5">
           {RANK_DISPLAY.map(r => (
             <div
               key={r.titleEn}
+              className="rounded-md px-1.5 py-3 text-center"
               style={{
                 border: `1px solid ${r.color}44`,
-                borderRadius: 6,
-                padding: '12px 6px',
-                textAlign: 'center',
                 background: `color-mix(in srgb, ${r.color} 5%, var(--bg-surface))`,
               }}
             >
-              <div style={{ fontSize: 18, fontWeight: 'bold', color: r.color, marginBottom: 6 }}>{r.title}</div>
-              <div style={{ fontSize: 9, letterSpacing: '0.1em', color: 'var(--text-muted)' }}>{r.titleEn}</div>
-              <div style={{ fontSize: 8, color: 'var(--text-muted)', marginTop: 4 }}>{r.range}</div>
+              <div className="text-lg font-bold mb-1.5" style={{ color: r.color }}>{r.title}</div>
+              <div className="text-[9px] tracking-[0.1em] text-text-muted">{r.titleEn}</div>
+              <div className="text-[8px] text-text-muted mt-1">{r.range}</div>
             </div>
           ))}
         </div>
@@ -771,8 +676,8 @@ function RankTab({ platform, activeTab }) {
 
       {/* Leaderboard table */}
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <div style={{ fontSize: 11, letterSpacing: '0.3em', color: 'var(--text-muted)' }}>
+        <div className="flex justify-between items-center mb-3.5">
+          <div className="text-[11px] tracking-[0.3em] text-text-muted">
             全球排行榜 · GLOBAL LEADERBOARD
           </div>
           <button onClick={fetchLeaderboard} style={btn({ padding: '4px 10px', fontSize: 10 })}>
@@ -780,32 +685,26 @@ function RankTab({ platform, activeTab }) {
           </button>
         </div>
 
-        <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
+        <div className="border border-border-c rounded-lg overflow-hidden">
           {/* Header */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '36px 1fr 72px',
-            padding: '10px 16px',
-            borderBottom: '1px solid var(--border-color)',
-            fontSize: 9,
-            letterSpacing: '0.2em',
-            color: 'var(--text-muted)',
-            background: 'var(--bg-secondary)',
-          }}>
+          <div
+            className="grid px-4 py-2.5 border-b border-border-c text-[9px] tracking-[0.2em] text-text-muted bg-bg-secondary"
+            style={{ gridTemplateColumns: '36px 1fr 72px' }}
+          >
             <span>#</span>
             <span>玩家</span>
-            <span style={{ textAlign: 'right' }}>积分</span>
+            <span className="text-right">积分</span>
           </div>
 
           {leaderboardLoading && leaderboard.length === 0
             ? [1, 2, 3].map(i => (
-              <div key={i} style={{ borderBottom: '1px solid var(--border-color)' }}>
+              <div key={i} className="border-b border-border-c">
                 <SkeletonRow cols={3} />
               </div>
             ))
             : leaderboard.length === 0
               ? (
-                <div style={{ padding: '40px 16px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+                <div className="px-4 py-10 text-center text-[11px] text-text-muted tracking-[0.1em]">
                   暂无排行数据
                 </div>
               )
@@ -817,50 +716,44 @@ function RankTab({ platform, activeTab }) {
                 return (
                   <div
                     key={entry.rank ?? idx}
+                    className="grid px-4 py-3 border-b border-border-c items-center transition-colors duration-150"
                     style={{
-                      display: 'grid',
                       gridTemplateColumns: '36px 1fr 72px',
-                      padding: '12px 16px',
-                      borderBottom: '1px solid var(--border-color)',
-                      alignItems: 'center',
                       background: isCurrentUser
                         ? 'color-mix(in srgb, var(--accent-primary) 8%, var(--bg-surface))'
                         : 'transparent',
-                      transition: 'background 0.15s',
                     }}
                   >
-                    <span style={{
-                      fontSize: 14, fontWeight: 'bold',
-                      color: rankColor,
-                    }}>
+                    <span className="text-sm font-bold" style={{ color: rankColor }}>
                       {entry.rank ?? idx + 1}
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: `color-mix(in srgb, ${tier.color} 15%, var(--bg-primary))`,
-                        border: `1px solid ${tier.color}55`,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 11, fontWeight: 'bold', color: tier.color, flexShrink: 0,
-                      }}>
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+                        style={{
+                          background: `color-mix(in srgb, ${tier.color} 15%, var(--bg-primary))`,
+                          border: `1px solid ${tier.color}55`,
+                          color: tier.color,
+                        }}
+                      >
                         {(entry.nickname ?? '?')[0].toUpperCase()}
                       </div>
                       <div>
-                        <div style={{
-                          fontSize: 12, color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-primary)',
-                          fontWeight: isCurrentUser ? 'bold' : 'normal',
-                        }}>
+                        <div
+                          className="text-xs"
+                          style={{ color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-primary)', fontWeight: isCurrentUser ? 'bold' : 'normal' }}
+                        >
                           {entry.nickname}
                           {isCurrentUser && (
-                            <span style={{ fontSize: 9, marginLeft: 6, color: 'var(--accent-primary)' }}>YOU</span>
+                            <span className="text-[9px] ml-1.5 text-accent">YOU</span>
                           )}
                         </div>
-                        <div style={{ fontSize: 9, color: tier.color, letterSpacing: '0.05em', marginTop: 2 }}>
+                        <div className="text-[9px] tracking-[0.05em] mt-0.5" style={{ color: tier.color }}>
                           {tier.title} · {entry.winRate != null ? `${entry.winRate}% 胜率` : ''}
                         </div>
                       </div>
                     </div>
-                    <span style={{ fontSize: 12, fontWeight: 'bold', color: 'var(--text-primary)', textAlign: 'right' }}>
+                    <span className="text-xs font-bold text-text-primary text-right">
                       {entry.elo ?? '—'}
                     </span>
                   </div>
@@ -913,70 +806,39 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
   const { isOnline, onlineCount, isAvailable } = platform ?? {}
 
   return (
-    <div style={{
-      height: '100svh',
-      background: 'var(--bg-primary)',
-      fontFamily: 'var(--font-primary)',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden',
-    }}>
+    <div className="h-[100svh] bg-bg-primary flex flex-col overflow-hidden">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <header style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'var(--bg-secondary)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border-c bg-bg-secondary sticky top-0 z-[100]">
+        <div className="flex items-center gap-5">
           <button
             onClick={onBack}
-            style={{
-              background: 'none',
-              border: '1px solid var(--border-color)',
-              color: 'var(--text-muted)',
-              padding: '6px 14px',
-              borderRadius: 4,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-primary)',
-              fontSize: 12,
-              letterSpacing: '0.1em',
-            }}
+            className="bg-none border border-border-c text-text-muted px-3.5 py-1.5 rounded cursor-pointer text-xs tracking-[0.1em]"
           >
             ← BACK
           </button>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: '0.25em', color: 'var(--accent-primary)' }}>
+          <div className="min-w-0">
+            <div className="text-[13px] font-bold tracking-[0.25em] text-accent">
               ONLINE PLATFORM
             </div>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.2em', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="text-[10px] text-text-muted tracking-[0.2em] mt-px truncate">
               在线对弈平台 · H5
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+        <div className="flex items-center gap-3 shrink-0">
           {/* Online indicator */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 10,
-            color: isOnline ? 'var(--text-secondary)' : 'var(--text-muted)',
-            letterSpacing: '0.1em',
-            whiteSpace: 'nowrap',
-          }}>
-            <div style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: isOnline ? '#4ade80' : 'var(--border-color)',
-              boxShadow: isOnline ? '0 0 6px #4ade80' : 'none',
-              transition: 'all 0.3s',
-            }} />
+          <div
+            className="flex items-center gap-1.5 text-[10px] tracking-[0.1em] whitespace-nowrap"
+            style={{ color: isOnline ? 'var(--text-secondary)' : 'var(--text-muted)' }}
+          >
+            <div
+              className="w-1.5 h-1.5 rounded-full transition-all duration-300"
+              style={{
+                background: isOnline ? '#4ade80' : 'var(--border-color)',
+                boxShadow: isOnline ? '0 0 6px #4ade80' : 'none',
+              }}
+            />
             {isOnline
               ? `${onlineCount > 0 ? onlineCount + ' 在线' : '已连接'}`
               : (isAvailable ? 'OFFLINE' : 'UNAVAIL')
@@ -984,27 +846,21 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
           </div>
 
           {/* Theme switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+          <div className="flex items-center gap-0.5 shrink-0">
             <span
               onClick={prevTheme}
-              style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer"
             >‹</span>
-            <div className="scroll-x-hidden" style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 160 }}>
+            <div className="scroll-x-hidden flex gap-1 overflow-x-auto max-w-[160px]" style={{ WebkitOverflowScrolling: 'touch' }}>
               {themes.map(t => (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
+                  className="shrink-0 px-2 py-1 rounded cursor-pointer text-[9px] tracking-[0.1em] transition-colors"
                   style={{
-                    flexShrink: 0,
                     background: theme === t.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
                     border: `1px solid ${theme === t.id ? 'var(--accent-primary)' : 'var(--border-color)'}`,
                     color: theme === t.id ? '#000' : 'var(--text-muted)',
-                    padding: '4px 8px',
-                    borderRadius: 3,
-                    cursor: 'pointer',
-                    fontSize: 9,
-                    fontFamily: 'var(--font-primary)',
-                    letterSpacing: '0.1em',
                   }}
                 >
                   {t.label}
@@ -1013,7 +869,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
             </div>
             <span
               onClick={nextTheme}
-              style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer"
             >›</span>
           </div>
         </div>
@@ -1021,47 +877,26 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
 
       {/* ── Tab nav (desktop only) ───────────────────────────────────────────── */}
       <div
-        className="hidden md:flex"
-        style={{
-          borderBottom: '1px solid var(--border-color)',
-          backgroundColor: 'var(--bg-secondary)',
-          padding: '0 32px',
-        }}
+        className="hidden md:flex border-b border-border-c bg-bg-secondary px-8"
       >
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            className="px-5 py-3 bg-none border-none cursor-pointer text-[11px] tracking-[0.2em] transition-all duration-150 -mb-px"
             style={{
-              padding: '12px 20px',
-              background: 'none',
-              border: 'none',
               borderBottom: activeTab === tab.id ? '2px solid var(--accent-primary)' : '2px solid transparent',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-primary)',
-              fontSize: 11,
-              letterSpacing: '0.2em',
               color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-muted)',
-              transition: 'all 0.15s',
-              marginBottom: -1,
             }}
           >
             <div>{tab.label}</div>
-            <div style={{ fontSize: 9, marginTop: 1, opacity: 0.7 }}>{tab.labelCn}</div>
+            <div className="text-[9px] mt-px opacity-70">{tab.labelCn}</div>
           </button>
         ))}
       </div>
 
       {/* ── Content ──────────────────────────────────────────────────────────── */}
-      <main style={{
-        flex: 1,
-        maxWidth: 760,
-        width: '100%',
-        margin: '0 auto',
-        padding: '0 24px 120px',
-        overflowY: 'auto',
-        minHeight: 0,
-      }}>
+      <main className="flex-1 max-w-[760px] w-full mx-auto px-6 pb-[120px] overflow-y-auto min-h-0">
         {activeTab === 'match' && (
           <MatchTab platform={platform} onMatchReady={onMatchReady} />
         )}
@@ -1078,55 +913,29 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
 
       {/* ── Mobile Bottom Tab Bar ─────────────────────────────────────────────── */}
       <nav
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 200,
-          backgroundColor: 'var(--bg-secondary)',
-          borderTop: '1px solid var(--border-color)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-        }}
-        className="flex md:hidden"
+        className="fixed bottom-0 left-0 right-0 z-[200] bg-bg-secondary border-t border-border-c flex md:hidden"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            className="flex-1 flex flex-col items-center justify-center px-1 py-2.5 bg-none border-none cursor-pointer gap-[3px] transition-all duration-150"
             style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '10px 4px',
-              background: 'none',
-              border: 'none',
               borderTop: activeTab === tab.id ? '2px solid var(--accent-primary)' : '2px solid transparent',
-              cursor: 'pointer',
-              fontFamily: 'var(--font-primary)',
               color: activeTab === tab.id ? 'var(--accent-primary)' : 'var(--text-muted)',
-              transition: 'all 0.15s',
-              gap: 3,
             }}
           >
-            <span style={{ fontSize: 18 }}>
+            <span className="text-lg">
               {tab.id === 'match' ? '⚔️' : tab.id === 'rooms' ? '🏠' : tab.id === 'rank' ? '🏆' : '👤'}
             </span>
-            <span style={{ fontSize: 9, letterSpacing: '0.1em' }}>{tab.labelCn}</span>
+            <span className="text-[9px] tracking-[0.1em]">{tab.labelCn}</span>
           </button>
         ))}
       </nav>
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <footer className="hidden md:flex" style={{
-        borderTop: '1px solid var(--border-color)',
-        backgroundColor: 'var(--bg-secondary)',
-        padding: '12px 32px',
-        justifyContent: 'center',
-        gap: 24,
-      }}>
+      <footer className="hidden md:flex border-t border-border-c bg-bg-secondary px-8 py-3 justify-center gap-6">
         {[
           { label: '在线匹配', active: isOnline },
           { label: '公开房间', active: isOnline },
@@ -1135,15 +944,8 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
         ].map(item => (
           <div
             key={item.label}
-            style={{
-              fontSize: 10,
-              color: item.active ? 'var(--text-muted)' : 'var(--text-muted)',
-              letterSpacing: '0.15em',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              opacity: item.active ? 0.7 : 0.35,
-            }}
+            className="text-[10px] text-text-muted tracking-[0.15em] flex items-center gap-1.5"
+            style={{ opacity: item.active ? 0.7 : 0.35 }}
           >
             <span style={{ color: item.active ? 'var(--accent-primary)' : 'var(--border-color)' }}>◆</span>
             {item.label}
