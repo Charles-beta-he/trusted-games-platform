@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.2.1...v1.3.0) (2026-04-18)
+
+### ✨ Features
+
+* 游戏组件抽象 P1 ([9b1764f](https://github.com/Charles-beta-he/trusted-games-platform/commit/9b1764f0e4e995482878d3f4eace555e10695c9e))
+
 ## [1.2.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.2.0...v1.2.1) (2026-04-18)
 
 ### ♻️ Refactoring
