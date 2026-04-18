@@ -367,6 +367,9 @@
   .bg-theme-primary     { background-color: var(--bg-primary); }
   .bg-theme-surface     { background-color: var(--bg-surface); }
   .border-theme         { border-color: var(--border-color); }
+  .border-theme-accent  { border-color: var(--accent-primary); }
+  .bg-theme-secondary   { background-color: var(--bg-secondary); }
+  .text-theme-success   { color: var(--accent-success); }
   .font-theme           { font-family: var(--font-primary); }
   .font-theme-display   { font-family: var(--font-display); }
 

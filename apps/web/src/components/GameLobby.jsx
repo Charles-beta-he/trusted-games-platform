@@ -36,15 +36,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
   return (
     <div
-      className="flex flex-col"
-      style={{
-        minHeight: '100svh',
-        backgroundColor: 'var(--bg-primary)',
-        color: 'var(--text-primary)',
-        fontFamily: 'var(--font-primary)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      className="flex flex-col min-h-[100svh] bg-theme-primary text-theme-primary font-theme relative overflow-hidden"
     >
       {/* Sci-fi grid overlay */}
       <div
@@ -64,40 +56,37 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header
-        className="relative z-10 flex justify-between items-center px-8 py-4"
-        style={{ borderBottom: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}
+        className="relative z-10 flex justify-between items-center px-8 py-4 border-b border-theme bg-theme-secondary"
       >
         <div className="flex items-center gap-4">
           <div
-            className="font-mono tracking-[8px] text-2xl"
-            style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-display)', letterSpacing: '0.3em' }}
+            className="font-mono text-2xl text-theme-accent font-theme-display"
+            style={{ letterSpacing: '0.3em' }}
           >
             TRUSTED GAMES
           </div>
           <div
-            className="font-mono text-[10px] tracking-widest hidden md:block"
-            style={{ color: 'var(--text-muted)' }}
+            className="font-mono text-[10px] tracking-widest hidden md:block text-theme-muted"
           >
             v2026 · SECURE ARENA
           </div>
         </div>
 
         {/* Theme switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+        <div className="flex items-center gap-0.5 shrink-0">
           <span
             onClick={prevTheme}
-            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
           >‹</span>
-          <div className="scroll-x-hidden" style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
+          <div className="scroll-x-hidden flex gap-1 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
             {themes.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
                 title={`${t.label} — ${t.desc}`}
-                className="font-mono text-[11px] tracking-widest transition-all"
+                className="font-mono text-[11px] tracking-widest transition-all shrink-0 cursor-pointer"
                 style={{
                   padding: '7px 10px',
-                  flexShrink: 0,
                   border: theme === t.id
                     ? '1px solid var(--accent-primary)'
                     : '1px solid var(--border-color)',
@@ -107,7 +96,6 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                   background: theme === t.id
                     ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)'
                     : 'transparent',
-                  cursor: 'pointer',
                 }}
               >
                 {t.label}
@@ -116,7 +104,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           </div>
           <span
             onClick={nextTheme}
-            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
           >›</span>
         </div>
       </header>
@@ -130,20 +118,17 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
           className={`text-center mb-12 transition-all duration-700 ${titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
         >
           <div
-            className="font-mono font-bold tracking-[0.25em] mb-2"
+            className="font-mono font-bold tracking-[0.25em] mb-2 text-theme-primary font-theme-display"
             style={{
               fontSize: 'clamp(2rem, 5vw, 4rem)',
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-display)',
               textShadow: '0 0 20px var(--accent-primary), 0 0 40px color-mix(in srgb, var(--accent-primary) 30%, transparent)',
             }}
           >
             GAME LOBBY
           </div>
           <div
-            className="font-mono text-[11px] tracking-[0.4em] uppercase"
+            className="font-mono text-[11px] tracking-[0.4em] uppercase text-theme-muted"
             style={{ 
-              color: 'var(--text-muted)',
               opacity: titleVisible ? 1 : 0,
               transform: titleVisible ? 'translateY(0)' : 'translateY(10px)',
               transition: 'opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s',
@@ -165,10 +150,8 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               <div
                 key={game.id}
                 onClick={() => isInstalled && onSelectGame(game.id)}
-                className="relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-5 transition-all hover-lift gpu-accelerated"
+                className="relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-5 transition-all hover-lift gpu-accelerated bg-theme-surface border border-theme"
                 style={{
-                  backgroundColor: 'var(--bg-surface)',
-                  border: '1px solid var(--border-color)',
                   cursor: isInstalled ? 'pointer' : 'not-allowed',
                   opacity: isInstalled ? 1 : 0.5,
                   ...getCardStyle(index),
@@ -190,10 +173,9 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                 {/* Coming soon overlay */}
                 {!isInstalled && (
                   <div
-                    className="absolute inset-0 flex items-center justify-center font-mono text-[10px] tracking-[0.3em] z-10"
+                    className="absolute inset-0 flex items-center justify-center font-mono text-[10px] tracking-[0.3em] z-10 text-theme-muted"
                     style={{
                       backgroundColor: 'color-mix(in srgb, var(--bg-primary) 60%, transparent)',
-                      color: 'var(--text-muted)',
                       backdropFilter: 'blur(2px)',
                     }}
                   >
@@ -207,14 +189,12 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                 {/* Names */}
                 <div>
                   <div
-                    className="font-mono font-bold text-sm tracking-wider"
-                    style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-display)' }}
+                    className="font-mono font-bold text-sm tracking-wider text-theme-primary font-theme-display"
                   >
                     {game.nameEn.toUpperCase()}
                   </div>
                   <div
-                    className="font-mono text-xs mt-0.5"
-                    style={{ color: 'var(--text-secondary)' }}
+                    className="font-mono text-xs mt-0.5 text-theme-secondary"
                   >
                     {game.name}
                   </div>
@@ -222,14 +202,13 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
                 {/* Description */}
                 <div
-                  className="font-mono text-[11px] leading-relaxed"
-                  style={{ color: 'var(--text-muted)' }}
+                  className="font-mono text-[11px] leading-relaxed text-theme-muted"
                 >
                   {game.description}
                 </div>
 
                 {/* Footer row */}
-                <div className="flex items-center justify-between mt-auto pt-2" style={{ borderTop: '1px solid var(--border-color)' }}>
+                <div className="flex items-center justify-between mt-auto pt-2 border-t border-theme">
                   <div
                     className="font-mono text-[9px] tracking-widest"
                     style={{ color: isInstalled ? 'var(--accent-success)' : 'var(--text-muted)' }}
@@ -237,8 +216,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                     {isInstalled ? '● READY' : '○ LOCKED'}
                   </div>
                   <div
-                    className="font-mono text-[9px]"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="font-mono text-[9px] text-theme-muted"
                   >
                     {game.boardSize.width}×{game.boardSize.height}
                   </div>
@@ -262,20 +240,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         >
           <button
             onClick={onOpenPlatform}
-            className="w-full hover-lift"
-            style={{
-              padding: '16px 24px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-primary)',
-              color: 'var(--text-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              transition: 'all 0.2s',
-            }}
+            className="w-full hover-lift px-6 py-4 bg-theme-surface border border-theme rounded-lg cursor-pointer font-theme text-theme-primary flex items-center justify-between transition-all"
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'var(--accent-primary)'
               e.currentTarget.style.boxShadow = '0 0 16px color-mix(in srgb, var(--accent-primary) 20%, transparent)'
@@ -285,18 +250,18 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
-              <span style={{ fontSize: 28, flexShrink: 0 }}>🌐</span>
-              <div style={{ textAlign: 'left', minWidth: 0, flexShrink: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--accent-primary)' }}>
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="text-2xl shrink-0">🌐</span>
+              <div className="text-left min-w-0 shrink">
+                <div className="text-[13px] font-bold tracking-wider text-theme-accent">
                   ONLINE PLATFORM
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div className="text-[11px] text-theme-muted mt-0.5">
                   在线对弈平台 · 匹配对手 · 排行榜
                 </div>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+            <div className="text-xs text-theme-muted tracking-wide">
               进入 →
             </div>
           </button>
@@ -315,20 +280,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         >
           <button
             onClick={() => navigate('/styles')}
-            className="w-full hover-lift"
-            style={{
-              padding: '14px 24px',
-              background: 'var(--bg-surface)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 8,
-              cursor: 'pointer',
-              fontFamily: 'var(--font-primary)',
-              color: 'var(--text-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              transition: 'all 0.2s',
-            }}
+            className="w-full hover-lift px-6 py-3.5 bg-theme-surface border border-theme rounded-lg cursor-pointer font-theme text-theme-primary flex items-center justify-between transition-all"
             onMouseEnter={e => {
               e.currentTarget.style.borderColor = 'var(--accent-primary)'
               e.currentTarget.style.boxShadow = '0 0 16px color-mix(in srgb, var(--accent-primary) 20%, transparent)'
@@ -338,18 +290,18 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
-              <span style={{ fontSize: 24, flexShrink: 0 }}>🎭</span>
-              <div style={{ textAlign: 'left', minWidth: 0 }}>
-                <div style={{ fontSize: 12, fontWeight: 'bold', letterSpacing: '0.15em', color: 'var(--text-primary)' }}>
+            <div className="flex items-center gap-4 min-w-0">
+              <span className="text-2xl shrink-0">🎭</span>
+              <div className="text-left min-w-0">
+                <div className="text-xs font-bold tracking-wider text-theme-primary">
                   STYLE CENTER
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div className="text-[11px] text-theme-muted mt-0.5">
                   棋风中心 · 生成 / 导入 / 分享个人棋风
                 </div>
               </div>
             </div>
-            <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>
+            <div className="text-xs text-theme-muted tracking-wide">
               进入 →
             </div>
           </button>
@@ -377,48 +329,23 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             }}
           >
             <div>
-              <div style={{
-                fontFamily: 'monospace',
-                fontSize: 10,
-                letterSpacing: '0.2em',
-                color: 'var(--accent-primary)',
-                marginBottom: 4,
-              }}>
+              <div className="font-mono text-[10px] tracking-wider text-theme-accent mb-1">
                 📡 局域网地址 · LAN ADDRESS
               </div>
-              <div style={{
-                fontFamily: 'monospace',
-                fontSize: 15,
-                fontWeight: 'bold',
-                color: 'var(--text-primary)',
-                letterSpacing: '0.05em',
-              }}>
+              <div className="font-mono text-[15px] font-bold text-theme-primary tracking-wide">
                 {lanOrigin}
               </div>
-              <div style={{
-                fontFamily: 'monospace',
-                fontSize: 9,
-                color: 'var(--text-muted)',
-                marginTop: 3,
-                letterSpacing: '0.1em',
-              }}>
+              <div className="font-mono text-[9px] text-theme-muted mt-0.5 tracking-wide">
                 同一 WiFi / 热点设备打开此地址即可加入
               </div>
             </div>
             <button
               onClick={copyLanUrl}
-              className="transition-smooth"
+              className="transition-smooth shrink-0 px-4 py-2.5 rounded cursor-pointer font-mono text-[11px] tracking-wide"
               style={{
-                flexShrink: 0,
-                padding: '10px 16px',
                 background: ipCopied ? 'var(--accent-success, #2d6a4f)' : 'var(--bg-primary)',
                 border: `1px solid ${ipCopied ? 'var(--accent-success, #2d6a4f)' : 'var(--accent-primary)'}`,
-                borderRadius: 4,
                 color: ipCopied ? '#fff' : 'var(--accent-primary)',
-                fontFamily: 'monospace',
-                fontSize: 11,
-                cursor: 'pointer',
-                letterSpacing: '0.1em',
               }}
             >
               {ipCopied ? '✓ 已复制' : '复制'}
@@ -428,30 +355,17 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
         {/* Quick join room - 带入场动画 */}
         <div
+          className="mt-4 p-5 px-6 border border-dashed border-theme rounded-lg text-center bg-theme-surface max-w-[480px] w-full"
           style={{
-            marginTop: 16,
-            padding: '20px 24px',
-            border: '1px dashed var(--border-color)',
-            borderRadius: 8,
-            textAlign: 'center',
-            background: 'var(--bg-surface)',
-            maxWidth: 480,
-            width: '100%',
             opacity: quickJoinVisible ? 1 : 0,
             transform: quickJoinVisible ? 'translateY(0)' : 'translateY(15px)',
             transition: 'opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
           }}
         >
-          <div style={{
-            fontSize: 11,
-            color: 'var(--text-muted)',
-            letterSpacing: '0.2em',
-            marginBottom: 12,
-            fontFamily: 'var(--font-primary)',
-          }}>
+          <div className="text-[11px] text-theme-muted tracking-widest mb-3 font-theme">
             QUICK JOIN — 已有邀请码？
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <div className="flex flex-wrap gap-2">
             <input
               type="text"
               placeholder="粘贴邀请链接或房间码..."
@@ -462,45 +376,29 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                   onQuickJoin(joinInput.trim())
                 }
               }}
-              style={{
-                flex: '1 1 200px',
-                padding: '8px 12px',
-                background: 'var(--bg-primary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: 4,
-                color: 'var(--text-primary)',
-                fontFamily: 'var(--font-primary)',
-                fontSize: 12,
-                outline: 'none',
-              }}
+              className="flex-[1_1_200px] px-3 py-2 bg-theme-primary border border-theme rounded text-theme-primary font-theme text-xs outline-none"
             />
             <button
               onClick={() => {
                 if (joinInput.trim() && onQuickJoin) onQuickJoin(joinInput.trim())
               }}
+              className="px-4 py-2.5 rounded cursor-pointer font-theme text-xs font-bold tracking-wide"
               style={{
-                padding: '10px 16px',
                 background: 'var(--accent-primary)',
                 color: '#000',
                 border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                fontFamily: 'var(--font-primary)',
-                fontSize: 12,
-                fontWeight: 'bold',
-                letterSpacing: '0.05em',
               }}
             >
               JOIN →
             </button>
           </div>
           {onImportGomoku && (
-            <div style={{ marginTop: 14 }}>
+            <div className="mt-3.5">
               <input
                 ref={importInputRef}
                 type="file"
                 accept="application/json,.json"
-                style={{ display: 'none' }}
+                className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0]
                   if (f) onImportGomoku(f)
@@ -510,18 +408,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               <button
                 type="button"
                 onClick={() => importInputRef.current?.click()}
-                style={{
-                  width: '100%',
-                  padding: '10px 16px',
-                  background: 'transparent',
-                  border: '1px dashed var(--border-color)',
-                  borderRadius: 4,
-                  color: 'var(--text-muted)',
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 11,
-                  letterSpacing: '0.12em',
-                  cursor: 'pointer',
-                }}
+                className="w-full px-4 py-2.5 bg-transparent border border-dashed border-theme rounded text-theme-muted font-theme text-[11px] tracking-wider cursor-pointer"
               >
                 导入五子棋棋谱（JSON）· 进入回放
               </button>
@@ -532,8 +419,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer
-        className="relative z-10 flex justify-center items-center gap-6 px-8 py-4"
-        style={{ borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}
+        className="relative z-10 flex justify-center items-center gap-6 px-8 py-4 border-t border-theme bg-theme-secondary"
       >
         {[
           { label: '无服务端', hidden: false },
@@ -542,10 +428,9 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         ].map(({ label, hidden }) => (
           <div
             key={label}
-            className={`font-mono text-[10px] tracking-[0.2em] flex items-center gap-1.5${hidden ? ' hidden sm:flex' : ''}`}
-            style={{ color: 'var(--text-muted)' }}
+            className={`font-mono text-[10px] tracking-[0.2em] flex items-center gap-1.5 text-theme-muted${hidden ? ' hidden sm:flex' : ''}`}
           >
-            <span style={{ color: 'var(--accent-success)' }}>◆</span>
+            <span className="text-theme-success">◆</span>
             {label}
           </div>
         ))}

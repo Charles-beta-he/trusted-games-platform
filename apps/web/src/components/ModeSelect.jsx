@@ -11,16 +11,13 @@ import useThemeCycle from '../hooks/useThemeCycle.js'
 
 function Spinner() {
   return (
-    <div style={{ display: 'flex', gap: 4, justifyContent: 'center', padding: '8px 0' }}>
+    <div className="flex gap-1 justify-center py-2">
       {[0, 1, 2].map((i) => (
         <div
           key={i}
+          className="w-1.5 h-1.5 rounded-full opacity-70"
           style={{
-            width: 6,
-            height: 6,
-            borderRadius: '50%',
             background: 'var(--accent-primary)',
-            opacity: 0.7,
             animation: 'msPulse 1.2s ease-in-out infinite',
             animationDelay: `${i * 0.2}s`,
           }}
@@ -91,31 +88,23 @@ function ParamSelect({ param, value, onChange }) {
   const cols = param.options.length <= 3 ? param.options.length : 2
   return (
     <div>
-      <div style={labelStyle}>{param.label}</div>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8, marginTop: 8 }}>
+      <div className="text-[10px] tracking-[0.3em] text-theme-muted uppercase">{param.label}</div>
+      <div className="grid gap-2 mt-2" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
         {param.options.map((opt) => {
           const active = value === opt.id
           return (
             <button
               key={opt.id}
               onClick={() => onChange(opt.id)}
-              style={{
-                padding: '10px 8px',
-                background: active ? 'var(--accent-primary)' : 'var(--bg-surface)',
-                border: `1px solid ${active ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                borderRadius: 4,
-                color: active ? '#000' : 'var(--text-primary)',
-                fontFamily: 'var(--font-primary)',
-                fontSize: 13,
-                fontWeight: active ? 'bold' : 'normal',
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                textAlign: 'center',
-              }}
+              className={`p-2.5 rounded text-center cursor-pointer transition-all font-theme text-[13px] ${
+                active
+                  ? 'bg-theme-accent text-black font-bold'
+                  : 'bg-theme-surface border border-theme text-theme-primary'
+              }`}
             >
-              {opt.icon && <div style={{ fontSize: 16, marginBottom: 3 }}>{opt.icon}</div>}
+              {opt.icon && <div className="text-base mb-0.5">{opt.icon}</div>}
               <div>{opt.label}</div>
-              <div style={{ fontSize: 9, letterSpacing: '0.08em', marginTop: 2, opacity: 0.7 }}>{opt.desc}</div>
+              <div className="text-[9px] tracking-[0.08em] mt-0.5 opacity-70">{opt.desc}</div>
             </button>
           )
         })}
@@ -139,32 +128,24 @@ function PanelAI({ onConfirm, gameId }) {
   const setParam = (id, val) => setParamValues((prev) => ({ ...prev, [id]: val }))
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+    <div className="flex flex-col gap-6">
       <div>
-        <div style={labelStyle}>选择难度 · DIFFICULTY</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 8 }}>
+        <div className="text-[10px] tracking-[0.3em] text-theme-muted uppercase">选择难度 · DIFFICULTY</div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
           {DIFFICULTIES.map((d) => {
             const algoLabel = engineDifficulties[d.id]?.label ?? d.desc
             return (
               <button
                 key={d.id}
                 onClick={() => setDifficulty(d.id)}
-                style={{
-                  padding: '12px 8px',
-                  background: difficulty === d.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
-                  border: `1px solid ${difficulty === d.id ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                  borderRadius: 4,
-                  color: difficulty === d.id ? '#000' : 'var(--text-primary)',
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 14,
-                  fontWeight: difficulty === d.id ? 'bold' : 'normal',
-                  cursor: 'pointer',
-                  transition: 'all 0.15s',
-                  textAlign: 'center',
-                }}
+                className={`px-2 py-3 rounded text-center cursor-pointer transition-all font-theme text-sm ${
+                  difficulty === d.id
+                    ? 'bg-theme-accent text-black font-bold'
+                    : 'bg-theme-surface border border-theme text-theme-primary'
+                }`}
               >
                 <div>{d.label}</div>
-                <div style={{ fontSize: 9, letterSpacing: '0.1em', marginTop: 2, opacity: 0.7 }}>{algoLabel}</div>
+                <div className="text-[9px] tracking-[0.1em] mt-0.5 opacity-70">{algoLabel}</div>
               </button>
             )
           })}
@@ -183,14 +164,14 @@ function PanelAI({ onConfirm, gameId }) {
       )}
 
       {aiDescription && (
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.06em', lineHeight: 1.6 }}>
+        <div className="text-[11px] text-theme-muted tracking-[0.06em] leading-relaxed">
           {aiDescription}
         </div>
       )}
 
       <button
         onClick={() => onConfirm('ai', { difficulty, aiParams: paramValues })}
-        style={startBtnStyle}
+        className="w-full px-6 py-3 rounded text-black font-theme text-[13px] font-bold tracking-[0.15em] cursor-pointer transition-opacity bg-theme-accent border border-theme-accent"
       >
         START GAME →
       </button>
@@ -201,11 +182,11 @@ function PanelAI({ onConfirm, gameId }) {
 function PanelLocal({ onConfirm, gameId }) {
   const localDescription = getGameById(gameId)?.localDescription ?? '两名玩家在同一设备上轮流行棋。'
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', letterSpacing: '0.1em', lineHeight: 1.7 }}>
+    <div className="flex flex-col gap-4">
+      <div className="text-xs text-theme-muted tracking-[0.1em] leading-loose">
         {localDescription}
       </div>
-      <button onClick={() => onConfirm('local')} style={startBtnStyle}>
+      <button onClick={() => onConfirm('local')} className="w-full px-6 py-3 rounded text-black font-theme text-[13px] font-bold tracking-[0.15em] cursor-pointer transition-opacity bg-theme-accent border border-theme-accent">
         START GAME →
       </button>
     </div>
@@ -257,32 +238,27 @@ function PanelHost({ webrtc, sig, onConfirm }) {
   }, [shareUrl])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+    <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-2 gap-2">
 
         {/* ── Room Code panel (left) ── */}
-        <div style={{
-          padding: 10,
-          background: sig?.isAvailable
-            ? 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))'
-            : 'var(--bg-surface)',
-          border: `1px solid ${sig?.isAvailable ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-          borderRadius: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-        }}>
-          <div style={{
-            fontSize: 10,
-            letterSpacing: '0.2em',
-            color: sig?.isAvailable ? 'var(--accent-primary)' : 'var(--text-muted)',
-            fontWeight: 'bold',
-          }}>
+        <div className={`p-2.5 rounded-md flex flex-col gap-2.5 border ${
+          sig?.isAvailable ? 'border-theme-accent' : 'bg-theme-surface border-theme'
+        }`}
+          style={{
+            background: sig?.isAvailable
+              ? 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))'
+              : undefined,
+          }}
+        >
+          <div className={`text-[10px] tracking-[0.2em] font-bold ${
+            sig?.isAvailable ? 'text-theme-accent' : 'text-theme-muted'
+          }`}>
             ROOM CODE
           </div>
 
           {!sig?.isAvailable && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+            <div className="text-[11px] text-theme-muted leading-snug">
               信令服务不可用
             </div>
           )}
@@ -290,7 +266,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
           {sig?.isAvailable && sig.step === 'creating' && (
             <>
               <Spinner />
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center' }}>
+              <div className="text-[10px] text-theme-muted text-center">
                 生成房间码中...
               </div>
             </>
@@ -298,65 +274,42 @@ function PanelHost({ webrtc, sig, onConfirm }) {
 
           {sig?.isAvailable && sig.step === 'waiting' && sig.roomCode && (
             <>
-              <div style={{
-                fontFamily: 'var(--font-primary)',
-                fontSize: 32,
-                fontWeight: 'bold',
-                letterSpacing: '0.4em',
-                color: 'var(--accent-primary)',
-                textAlign: 'center',
-                padding: '8px 0',
-              }}>
+              <div className="font-theme text-[32px] font-bold tracking-[0.4em] text-theme-accent text-center py-2">
                 {sig.roomCode}
               </div>
               <CopyButton text={sig.roomCode} label="复制房间码" />
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
+              <div className="text-[10px] text-theme-muted text-center tracking-[0.05em]">
                 6位房间码 · 对方输入即可加入
               </div>
             </>
           )}
 
           {sig?.isAvailable && sig.step === 'joining' && (
-            <div style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '8px 0' }}>
+            <div className="text-[11px] text-theme-muted text-center py-2">
               正在连接...
             </div>
           )}
 
           {sig?.error && (
-            <div style={{ fontSize: 10, color: 'var(--accent-danger, #8b3a3a)', lineHeight: 1.5 }}>
+            <div className="text-[10px] leading-snug" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
               ⚠ {sig.error}
             </div>
           )}
         </div>
 
         {/* ── QR panel (right) ── */}
-        <div style={{
-          padding: 10,
-          background: 'var(--bg-surface)',
-          border: '1px solid var(--border-color)',
-          borderRadius: 6,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 10,
-          alignItems: 'center',
-        }}>
-          <div style={{
-            fontSize: 10,
-            letterSpacing: '0.2em',
-            color: 'var(--text-muted)',
-            fontWeight: 'bold',
-            alignSelf: 'flex-start',
-          }}>
+        <div className="p-2.5 bg-theme-surface border border-theme rounded-md flex flex-col gap-2.5 items-center">
+          <div className="text-[10px] tracking-[0.2em] text-theme-muted font-bold self-start">
             二维码 / QR
           </div>
 
           {/* 优先用房间码生成 QR（6字符，可扫）；其次用局域网链接 */}
           {sig?.isAvailable && sig.step === 'waiting' && sig.roomCode && (
             <>
-              <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+              <div className="w-[120px] h-[120px] shrink-0">
                 <QRCanvas value={buildRoomJoinUrl(sig.roomCode)} size={120} />
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
+              <div className="text-[10px] text-theme-muted text-center tracking-[0.05em]">
                 扫码加入房间（自动连接）
               </div>
               <CopyButton text={buildRoomJoinUrl(sig.roomCode)} label="复制加入链接" />
@@ -365,17 +318,14 @@ function PanelHost({ webrtc, sig, onConfirm }) {
 
           {(!sig?.isAvailable || sig.step !== 'waiting') && webrtc.step === 'waiting_for_answer' && lanUrl && (
             <>
-              <div style={{ width: 120, height: 120, flexShrink: 0 }}>
+              <div className="w-[120px] h-[120px] shrink-0">
                 <QRCanvas value={lanUrl} size={120} />
               </div>
-              <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', letterSpacing: '0.05em' }}>
+              <div className="text-[10px] text-theme-muted text-center tracking-[0.05em]">
                 扫码加入 · 同网络设备
               </div>
               {lanUrl && (
-                <div style={{
-                  fontSize: 9, color: 'var(--accent-primary)',
-                  fontFamily: 'monospace', textAlign: 'center', wordBreak: 'break-all',
-                }}>
+                <div className="text-[9px] text-theme-accent font-mono text-center break-all">
                   {lanUrl.split('#')[0]}
                 </div>
               )}
@@ -385,13 +335,13 @@ function PanelHost({ webrtc, sig, onConfirm }) {
 
           {(!sig?.isAvailable || sig.step !== 'waiting') &&
            webrtc.step !== 'waiting_for_answer' && (
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', padding: '12px 0' }}>
+            <div className="text-[10px] text-theme-muted text-center py-3">
               {webrtc.step === 'creating' ? '生成中...' : '等待生成...'}
             </div>
           )}
 
           {webrtc.error && (
-            <div style={{ fontSize: 10, color: 'var(--accent-danger, #8b3a3a)', lineHeight: 1.5 }}>
+            <div className="text-[10px] leading-snug" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
               ⚠ {webrtc.error}
             </div>
           )}
@@ -399,13 +349,15 @@ function PanelHost({ webrtc, sig, onConfirm }) {
       </div>
 
       {/* Status hint */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{
-          width: 6, height: 6, borderRadius: '50%',
-          background: 'var(--accent-primary)',
-          animation: 'msPulse 1.4s ease-in-out infinite',
-        }} />
-        <span style={{ fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+      <div className="flex items-center gap-2">
+        <div
+          className="w-1.5 h-1.5 rounded-full"
+          style={{
+            background: 'var(--accent-primary)',
+            animation: 'msPulse 1.4s ease-in-out infinite',
+          }}
+        />
+        <span className="text-[11px] text-theme-muted tracking-[0.05em]">
           等待对方加入...
         </span>
       </div>
@@ -474,10 +426,10 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
     sig?.step === 'joining'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+    <div className="flex flex-col gap-4">
 
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 0, border: '1px solid var(--border-color)', borderRadius: 4, overflow: 'hidden' }}>
+      <div className="flex border border-theme rounded overflow-hidden">
         {[
           { id: 'code', label: '房间码' },
           { id: 'link', label: '邀请链接' },
@@ -485,19 +437,11 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{
-              flex: 1,
-              padding: '8px 12px',
-              background: tab === t.id ? 'var(--accent-primary)' : 'transparent',
-              border: 'none',
-              color: tab === t.id ? '#000' : 'var(--text-muted)',
-              fontFamily: 'var(--font-primary)',
-              fontSize: 11,
-              letterSpacing: '0.1em',
-              cursor: 'pointer',
-              fontWeight: tab === t.id ? 'bold' : 'normal',
-              transition: 'all 0.15s',
-            }}
+            className={`flex-1 px-3 py-2 font-theme text-[11px] tracking-[0.1em] cursor-pointer transition-all ${
+              tab === t.id
+                ? 'bg-theme-accent text-black font-bold'
+                : 'bg-transparent text-theme-muted'
+            }`}
           >
             {t.label}
           </button>
@@ -506,16 +450,15 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
 
       {/* Room Code tab */}
       {tab === 'code' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="flex flex-col gap-2.5">
           {!sig?.isAvailable && (
-            <div style={{
-              padding: '8px 12px',
-              background: 'color-mix(in srgb, var(--accent-danger, #8b3a3a) 8%, var(--bg-surface))',
-              border: '1px solid var(--accent-danger, #8b3a3a)',
-              borderRadius: 4,
-              fontSize: 11,
-              color: 'var(--accent-danger, #8b3a3a)',
-            }}>
+            <div className="px-3 py-2 rounded text-[11px]"
+              style={{
+                background: 'color-mix(in srgb, var(--accent-danger, #8b3a3a) 8%, var(--bg-surface))',
+                border: '1px solid var(--accent-danger, #8b3a3a)',
+                color: 'var(--accent-danger, #8b3a3a)',
+              }}
+            >
               ⚠ 信令服务不可用，请使用邀请链接加入
             </div>
           )}
@@ -525,111 +468,61 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
             placeholder="输入 6 位房间码"
             maxLength={6}
             disabled={!sig?.isAvailable || isConnecting}
-            style={{
-              padding: '14px 16px',
-              background: 'var(--bg-primary)',
-              border: `1px solid ${roomCode.length === 6 ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-              borderRadius: 4,
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-primary)',
-              fontSize: 22,
-              letterSpacing: '0.5em',
-              textAlign: 'center',
-              textTransform: 'uppercase',
-              outline: 'none',
-              transition: 'border-color 0.15s',
-              opacity: !sig?.isAvailable ? 0.5 : 1,
-            }}
+            className={`px-4 py-3.5 rounded font-theme text-[22px] tracking-[0.5em] uppercase outline-none transition-colors bg-theme-primary text-theme-primary ${
+              roomCode.length === 6 ? 'border-theme-accent' : 'border-theme'
+            } ${!sig?.isAvailable ? 'opacity-50' : ''}`}
+            style={{ border: `1px solid ${roomCode.length === 6 ? 'var(--accent-primary)' : 'var(--border-color)'}` }}
           />
           <button
             onClick={handleJoinCode}
             disabled={roomCode.length < 6 || !sig?.isAvailable || isConnecting}
-            style={{
-              ...startBtnStyle,
-              opacity: (roomCode.length < 6 || !sig?.isAvailable || isConnecting) ? 0.4 : 1,
-              cursor: (roomCode.length < 6 || !sig?.isAvailable || isConnecting) ? 'not-allowed' : 'pointer',
-            }}
+            className={`w-full px-6 py-3 rounded font-theme text-[13px] font-bold tracking-[0.15em] transition-opacity bg-theme-accent border border-theme-accent text-black ${
+              (roomCode.length < 6 || !sig?.isAvailable || isConnecting) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           >
             {isConnecting ? '连接中...' : '加入 →'}
           </button>
           {sig?.error && (
-            <div style={{ fontSize: 11, color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {sig.error}</div>
+            <div className="text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {sig.error}</div>
           )}
         </div>
       )}
 
       {/* Invite link tab */}
       {tab === 'link' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="flex flex-col gap-2.5">
           <textarea
             value={linkInput}
             onChange={(e) => setLinkInput(e.target.value)}
             placeholder="粘贴邀请链接或邀请码..."
             disabled={isConnecting}
             rows={3}
-            style={{
-              padding: '10px 12px',
-              background: 'var(--bg-primary)',
-              border: '1px solid var(--border-color)',
-              borderRadius: 4,
-              color: 'var(--text-secondary)',
-              fontFamily: 'monospace',
-              fontSize: 11,
-              resize: 'none',
-              outline: 'none',
-              lineHeight: 1.5,
-            }}
+            className="px-3 py-2.5 bg-theme-primary border border-theme rounded text-theme-secondary font-mono text-[11px] resize-none outline-none leading-relaxed"
           />
           <button
             onClick={handleJoinLink}
             disabled={!linkInput.trim() || isConnecting}
-            style={{
-              ...startBtnStyle,
-              opacity: (!linkInput.trim() || isConnecting) ? 0.4 : 1,
-              cursor: (!linkInput.trim() || isConnecting) ? 'not-allowed' : 'pointer',
-            }}
+            className={`w-full px-6 py-3 rounded font-theme text-[13px] font-bold tracking-[0.15em] transition-opacity bg-theme-accent border border-theme-accent text-black ${
+              (!linkInput.trim() || isConnecting) ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'
+            }`}
           >
             {isConnecting ? '连接中...' : '加入 →'}
           </button>
           {webrtc.error && (
-            <div style={{ fontSize: 11, color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {webrtc.error}</div>
+            <div className="text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {webrtc.error}</div>
           )}
         </div>
       )}
 
       {/* Connecting status */}
       {isConnecting && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="flex items-center gap-2">
           <Spinner />
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>正在建立连接...</span>
+          <span className="text-[11px] text-theme-muted">正在建立连接...</span>
         </div>
       )}
     </div>
   )
-}
-
-// ─── Shared styles ────────────────────────────────────────────────────────────
-
-const startBtnStyle = {
-  width: '100%',
-  padding: '12px 24px',
-  background: 'var(--accent-primary)',
-  border: '1px solid var(--accent-primary)',
-  borderRadius: 4,
-  color: '#000',
-  fontFamily: 'var(--font-primary)',
-  fontSize: 13,
-  fontWeight: 'bold',
-  letterSpacing: '0.15em',
-  cursor: 'pointer',
-  transition: 'opacity 0.15s',
-}
-
-const labelStyle = {
-  fontSize: 10,
-  letterSpacing: '0.3em',
-  color: 'var(--text-muted)',
-  textTransform: 'uppercase',
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -676,43 +569,18 @@ export default function ModeSelect({
   const currentModeObj = MODES.find((m) => m.id === selectedMode)
 
   return (
-    <div style={{
-      minHeight: '100svh',
-      background: 'var(--bg-primary)',
-      fontFamily: 'var(--font-primary)',
-      display: 'flex',
-      flexDirection: 'column',
-    }}>
+    <div className="min-h-[100svh] bg-theme-primary font-theme flex flex-col">
 
       {/* ── Top nav bar ─────────────────────────────────────────────────── */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'var(--bg-secondary)',
-        flexShrink: 0,
-      }}>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
         <button
           onClick={onBack}
-          style={{
-            background: 'none',
-            border: '1px solid var(--border-color)',
-            color: 'var(--text-muted)',
-            padding: '8px 14px',
-            borderRadius: 4,
-            cursor: 'pointer',
-            fontFamily: 'var(--font-primary)',
-            fontSize: 12,
-            letterSpacing: '0.1em',
-            transition: 'border-color 0.15s, color 0.15s',
-          }}
+          className="bg-transparent border border-theme text-theme-muted px-3.5 py-2 rounded cursor-pointer font-theme text-xs tracking-[0.1em] transition-colors hover:text-theme-primary hover:border-theme-accent"
         >
           ← BACK
         </button>
 
-        <div style={{ color: 'var(--text-muted)', fontSize: 11, letterSpacing: '0.25em', textAlign: 'center' }}>
+        <div className="text-theme-muted text-[11px] tracking-[0.25em] text-center">
           {gameId?.toUpperCase()}
           {currentModeObj && (
             <span style={{ color: currentModeObj.color, marginLeft: 8 }}>
@@ -723,28 +591,21 @@ export default function ModeSelect({
         </div>
 
         {/* Theme switcher */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+        <div className="flex items-center gap-0.5 shrink-0">
           <span
             onClick={prevTheme}
-            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
           >‹</span>
-          <div className="scroll-x-hidden" style={{ display: 'flex', gap: 4, overflowX: 'auto', WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
+          <div className="scroll-x-hidden flex gap-1 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
             {themes.map((t) => (
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
-                style={{
-                  flexShrink: 0,
-                  background: theme === t.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
-                  border: `1px solid ${theme === t.id ? 'var(--accent-primary)' : 'var(--border-color)'}`,
-                  color: theme === t.id ? '#000' : 'var(--text-muted)',
-                  padding: '8px 14px',
-                  borderRadius: 3,
-                  cursor: 'pointer',
-                  fontSize: 10,
-                  fontFamily: 'var(--font-primary)',
-                  letterSpacing: '0.1em',
-                }}
+                className={`shrink-0 px-3.5 py-2 rounded-sm cursor-pointer text-[10px] font-theme tracking-[0.1em] ${
+                  theme === t.id
+                    ? 'bg-theme-accent text-black'
+                    : 'bg-theme-surface border border-theme text-theme-muted'
+                }`}
               >
                 {t.label}
               </button>
@@ -752,59 +613,31 @@ export default function ModeSelect({
           </div>
           <span
             onClick={nextTheme}
-            style={{ fontSize: 14, color: 'var(--accent-primary)', userSelect: 'none', padding: '4px 6px', cursor: 'pointer' }}
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
           >›</span>
         </div>
       </div>
 
       {/* ── Main body ───────────────────────────────────────────────────── */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '16px 12px',
-        gap: 20,
-        overflowY: 'auto',
-      }}>
+      <div className="flex-1 flex flex-col items-center px-3 py-4 gap-5 overflow-y-auto">
 
         {/* Phase 1: mode cards — hidden once a mode is selected */}
         {!selectedMode && (
-        <div style={{
-          width: '100%',
-          maxWidth: 680,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
+        <div className="w-full max-w-[680px] flex flex-col gap-4">
           {/* Title */}
-          <div style={{ textAlign: 'center' }}>
-            <div style={{
-              fontSize: 11,
-              letterSpacing: '0.4em',
-              color: 'var(--text-muted)',
-              marginBottom: 6,
-              textTransform: 'uppercase',
-            }}>
+          <div className="text-center">
+            <div className="text-[11px] tracking-[0.4em] text-theme-muted mb-1.5 uppercase">
               CHOOSE YOUR BATTLE
             </div>
-            <div style={{
-              fontSize: 26,
-              fontWeight: 'bold',
-              color: 'var(--text-primary)',
-              fontFamily: 'var(--font-display, var(--font-primary))',
-              textShadow: '0 0 20px var(--accent-primary)',
-            }}>
+            <div className="text-[26px] font-bold text-theme-primary font-theme-display"
+              style={{ textShadow: '0 0 20px var(--accent-primary)' }}
+            >
               游戏模式
             </div>
           </div>
 
           {/* Mode cards grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 8,
-          }}>
+          <div className="grid grid-cols-2 gap-2">
             {visibleModes.map((mode) => {
               const isSelected = false
               return (
@@ -813,40 +646,26 @@ export default function ModeSelect({
                   onClick={() => handleSelectMode(mode.id)}
                   onMouseEnter={() => setHovered(mode.id)}
                   onMouseLeave={() => setHovered(null)}
+                  className="rounded-lg p-3 cursor-pointer text-left transition-all"
                   style={{
                     background: hovered === mode.id
                       ? `linear-gradient(135deg, var(--bg-surface), ${mode.color}18)`
                       : 'var(--bg-surface)',
                     border: `1px solid ${hovered === mode.id ? mode.color + '88' : 'var(--border-color)'}`,
-                    borderRadius: 8,
-                    padding: '12px 10px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'all 0.2s',
                     boxShadow: hovered === mode.id ? `0 0 12px ${mode.color}22` : 'none',
                   }}
                 >
-                  <div style={{ fontSize: 20, marginBottom: 6 }}>{mode.icon}</div>
-                  <div style={{
-                    fontSize: 12,
-                    fontWeight: 'bold',
-                    letterSpacing: '0.15em',
-                    color: hovered === mode.id ? mode.color : 'var(--text-primary)',
-                    marginBottom: 2,
-                    fontFamily: 'var(--font-display, var(--font-primary))',
-                    transition: 'color 0.15s',
-                  }}>
+                  <div className="text-xl mb-1.5">{mode.icon}</div>
+                  <div
+                    className="text-xs font-bold tracking-[0.15em] mb-0.5 font-theme-display transition-colors"
+                    style={{ color: hovered === mode.id ? mode.color : 'var(--text-primary)' }}
+                  >
                     {mode.title}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
+                  <div className="text-[11px] text-theme-secondary mb-1">
                     {mode.titleCn}
                   </div>
-                  <div style={{
-                    fontSize: 11,
-                    color: 'var(--text-muted)',
-                    whiteSpace: 'pre-line',
-                    lineHeight: 1.6,
-                  }}>
+                  <div className="text-[11px] text-theme-muted whitespace-pre-line leading-relaxed">
                     {mode.desc}
                   </div>
                 </button>
@@ -858,53 +677,30 @@ export default function ModeSelect({
 
         {/* Phase 2: configuration panel — replaces mode grid */}
         {selectedMode && (
-          <div style={{
-            width: '100%',
-            maxWidth: 680,
-            background: 'var(--bg-secondary)',
-            border: `1px solid ${currentModeObj?.color || 'var(--border-color)'}`,
-            borderRadius: 8,
-            padding: '16px 16px',
-            boxShadow: `0 0 24px ${currentModeObj?.color || 'transparent'}22`,
-          }}>
+          <div className="w-full max-w-[680px] bg-theme-secondary rounded-lg p-4"
+            style={{
+              border: `1px solid ${currentModeObj?.color || 'var(--border-color)'}`,
+              boxShadow: `0 0 24px ${currentModeObj?.color || 'transparent'}22`,
+            }}
+          >
             {/* Panel header */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: 20,
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 20 }}>{currentModeObj?.icon}</span>
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xl">{currentModeObj?.icon}</span>
                 <div>
-                  <div style={{
-                    fontSize: 13,
-                    fontWeight: 'bold',
-                    letterSpacing: '0.15em',
-                    color: currentModeObj?.color || 'var(--text-primary)',
-                  }}>
+                  <div className="text-[13px] font-bold tracking-[0.15em]"
+                    style={{ color: currentModeObj?.color || 'var(--text-primary)' }}
+                  >
                     {currentModeObj?.title}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                  <div className="text-[11px] text-theme-muted mt-px">
                     {currentModeObj?.titleCn}
                   </div>
                 </div>
               </div>
               <button
                 onClick={handleBack}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  fontFamily: 'var(--font-primary)',
-                  fontSize: 11,
-                  letterSpacing: '0.1em',
-                  padding: '4px 8px',
-                  transition: 'color 0.15s',
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+                className="bg-transparent border-none text-theme-muted cursor-pointer font-theme text-[11px] tracking-[0.1em] px-2 py-1 transition-colors hover:text-theme-primary"
               >
                 ← 重选模式
               </button>
@@ -937,16 +733,9 @@ export default function ModeSelect({
         )}
 
         {/* Footer tagline */}
-        <div style={{
-          fontSize: 10,
-          color: 'var(--text-muted)',
-          textAlign: 'center',
-          letterSpacing: '0.15em',
-          paddingBottom: 8,
-          overflowX: 'auto',
-          WebkitOverflowScrolling: 'touch',
-          whiteSpace: 'nowrap',
-        }}>
+        <div className="text-[10px] text-theme-muted text-center tracking-[0.15em] pb-2 overflow-x-auto whitespace-nowrap"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           NO SERVER · LOCAL FIRST · E2E · HASH CHAIN
         </div>
       </div>
