@@ -149,12 +149,17 @@ export default function BoardCanvas({
   const lastDrawTimeRef = useRef(0)
   const drawThrottleMs = 16 // ~60fps
 
-  // 初始化 OffscreenCanvas（只创建一次）
+  // 初始化 OffscreenCanvas（只创建一次）+ 设置主 canvas 尺寸
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
     const dpr = dprRef.current
-    const offscreen = new OffscreenCanvas(CANVAS_PX * dpr, CANVAS_PX * dpr)
+    const px = Math.round(CANVAS_PX * dpr)
+    // 设置主 canvas 像素尺寸
+    canvas.width = px
+    canvas.height = px
+    // 创建 offscreen
+    const offscreen = new OffscreenCanvas(px, px)
     offscreenRef.current = offscreen
   }, [])
 
