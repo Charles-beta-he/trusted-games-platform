@@ -1,3 +1,9 @@
+## [1.2.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.2.0...v1.2.1) (2026-04-18)
+
+### ♻️ Refactoring
+
+* 内联样式迁移 P0 (GameLobby/Header/ModeSelect) ([44066c8](https://github.com/Charles-beta-he/trusted-games-platform/commit/44066c829f6f4a5abf1d355d803686fb461935e1))
+
 ## [1.2.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.1.0...v1.2.0) (2026-04-17)
 
 ### ✨ Features
