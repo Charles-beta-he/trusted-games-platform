@@ -1,3 +1,9 @@
+## [1.6.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.5.0...v1.6.0) (2026-04-19)
+
+### ✨ Features
+
+* **discover:** 精选内容 + 筛选 + 列表视图 + 点赞收藏 ([139906b](https://github.com/Charles-beta-he/trusted-games-platform/commit/139906b7f034d68040f4cdf6d2b2fe69e6c232b2))
+
 ## [1.5.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.10...v1.5.0) (2026-04-19)
 
 ### ✨ Features
