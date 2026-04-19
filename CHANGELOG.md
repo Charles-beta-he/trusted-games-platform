@@ -1,3 +1,9 @@
+## [1.4.8](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.7...v1.4.8) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **a11y:** add focus-visible styles, ARIA roles, keyboard navigation ([4356fef](https://github.com/Charles-beta-he/trusted-games-platform/commit/4356fefdb7efa0edd84f3758953ab0fb7f6915a0))
+
 ## [1.4.7](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.6...v1.4.7) (2026-04-18)
 
 ### ♻️ Refactoring
