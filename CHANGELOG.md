@@ -1,3 +1,9 @@
+## [1.4.9](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.8...v1.4.9) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **a11y:** add skip-to-content links, aria-live, semantic landmarks ([e840700](https://github.com/Charles-beta-he/trusted-games-platform/commit/e840700d578beff11f1d619d320f21764734d399))
+
 ## [1.4.8](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.7...v1.4.8) (2026-04-19)
 
 ### 🐛 Bug Fixes
