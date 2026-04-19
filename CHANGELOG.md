@@ -1,3 +1,9 @@
+## [1.4.10](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.9...v1.4.10) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **a11y:** UIMax R4 — 表单 label 关联 + aria-label 补全 ([a1af3d2](https://github.com/Charles-beta-he/trusted-games-platform/commit/a1af3d2c66f8ec4e80aaeb62ae7ca6bf2dee0c94))
+
 ## [1.4.9](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.8...v1.4.9) (2026-04-19)
 
 ### 🐛 Bug Fixes
