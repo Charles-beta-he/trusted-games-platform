@@ -829,6 +829,8 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
         <div className="flex items-center gap-3 shrink-0">
           {/* Online indicator */}
           <div
+            role="status"
+            aria-live="polite"
             className="flex items-center gap-1.5 text-[10px] tracking-[0.1em] whitespace-nowrap"
             style={{ color: isOnline ? 'var(--text-secondary)' : 'var(--text-muted)' }}
           >

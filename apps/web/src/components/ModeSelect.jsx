@@ -585,6 +585,13 @@ export default function ModeSelect({
 
   return (
     <div className="min-h-[100svh] bg-theme-primary font-theme flex flex-col">
+      {/* Skip to content link for keyboard users */}
+      <a
+        href="#mode-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[999] focus:px-4 focus:py-2 focus:bg-theme-accent focus:text-black focus:rounded focus:font-mono focus:text-sm"
+      >
+        Skip to content
+      </a>
 
       {/* ── Top nav bar ─────────────────────────────────────────────────── */}
       <nav role="navigation" aria-label="Game mode navigation" className="flex items-center justify-between px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
@@ -636,7 +643,7 @@ export default function ModeSelect({
       </nav>
 
       {/* ── Main body ───────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col items-center px-3 py-4 gap-5 overflow-y-auto">
+      <main id="mode-content" className="flex-1 flex flex-col items-center px-3 py-4 gap-5 overflow-y-auto">
 
         {/* Phase 1: mode cards — hidden once a mode is selected */}
         {!selectedMode && (
@@ -755,7 +762,7 @@ export default function ModeSelect({
         >
           NO SERVER · LOCAL FIRST · E2E · HASH CHAIN
         </div>
-      </div>
+      </main>
     </div>
   )
 }
