@@ -17,7 +17,7 @@
 [data-theme="sci-fi"] {
   --ink-rgb: 224 244 255;
   --ink-light-rgb: 122 184 217;
-  --ink-faint-rgb: 58 106 138;
+  --ink-faint-rgb: 69 126 164;
   --paper-rgb: 5 10 20;
   --paper-warm-rgb: 10 22 40;
   --paper-dark-rgb: 26 58 107;
@@ -29,7 +29,7 @@
   --border-glow: #00d4ff;
   --text-primary: #e0f4ff;
   --text-secondary: #7ab8d9;
-  --text-muted: #3a6a8a;
+  --text-muted: #457ea4;
   --accent-primary: #00d4ff;
   --accent-secondary: #7c3aed;
   --accent-success: #00ff88;
@@ -79,7 +79,7 @@
 [data-theme="neon-cyber"] {
   --ink-rgb: 255 204 255;
   --ink-light-rgb: 204 102 255;
-  --ink-faint-rgb: 102 0 170;
+  --ink-faint-rgb: 189 0 255;
   --paper-rgb: 10 0 21;
   --paper-warm-rgb: 16 0 32;
   --paper-dark-rgb: 61 0 112;
@@ -91,7 +91,7 @@
   --border-glow: #ff00ff;
   --text-primary: #ffccff;
   --text-secondary: #cc66ff;
-  --text-muted: #6600aa;
+  --text-muted: #bd00ff;
   --accent-primary: #ff00ff;
   --accent-secondary: #00ffcc;
   --accent-success: #00ffcc;
@@ -122,7 +122,7 @@
   --border-glow: transparent;
   --text-primary: #f0f0f0;
   --text-secondary: #aaaaaa;
-  --text-muted: #555555;
+  --text-muted: #7c7c7c;
   --accent-primary: #ffffff;
   --accent-secondary: #888888;
   --accent-success: #55ff88;
