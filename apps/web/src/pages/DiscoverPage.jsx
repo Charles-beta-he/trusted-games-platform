@@ -56,7 +56,7 @@ function FloatingActions({ onClose, onLike, onBookmark }) {
         aria-label="跳过"
         className="pointer-events-auto w-12 h-12 rounded-full bg-theme-surface border border-theme flex items-center justify-center shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95"
       >
-        <span className="text-lg" style={{ color: 'var(--accent-danger, #ff4757)' }}>✕</span>
+        <span className="text-lg text-danger">✕</span>
       </button>
 
       {/* 点赞 — 主操作 */}
@@ -64,7 +64,7 @@ function FloatingActions({ onClose, onLike, onBookmark }) {
         onClick={onLike}
         aria-label="点赞"
         className="pointer-events-auto w-14 h-14 rounded-full flex items-center justify-center shadow-xl cursor-pointer transition-transform hover:scale-110 active:scale-95"
-        style={{ background: 'var(--accent-danger, #ff4757)' }}
+        className="bg-danger"
       >
         <span className="text-2xl text-white">♥</span>
       </button>
@@ -87,10 +87,10 @@ function FloatingActions({ onClose, onLike, onBookmark }) {
 function EmptyState() {
   return (
     <div
-      className="rounded-lg flex items-center justify-center text-theme-muted font-theme text-sm"
+      className="rounded-lg flex items-center justify-center text-theme-muted font-theme text-sm border-2 border-danger"
       style={{
         height: 180,
-        border: '2px solid var(--accent-danger, #ff4757)',
+        
         background: 'var(--bg-surface)',
       }}
     >
@@ -105,10 +105,10 @@ function ErrorState({ onRetry }) {
   return (
     <>
       <div
-        className="rounded-lg flex items-center justify-center text-theme-muted font-theme text-sm"
+        className="rounded-lg flex items-center justify-center text-theme-muted font-theme text-sm border-2 border-danger"
         style={{
           height: 180,
-          border: '2px solid var(--accent-danger, #ff4757)',
+          
           background: 'var(--bg-surface)',
         }}
       >
@@ -231,10 +231,10 @@ export default function DiscoverPage() {
               onClick={() => { setFilter(key); setShowAll(false) }}
               aria-pressed={filter === key}
               aria-label={`筛选: ${label}`}
-              className={`px-2.5 py-1 rounded text-[10px] font-theme tracking-wider cursor-pointer transition-all border ${
+              className={`px-2.5 py-1 rounded text-[10px] font-theme tracking-wider cursor-pointer transition-all border duration-200 ${
                 filter === key
-                  ? 'bg-theme-accent text-black border-theme-accent font-bold'
-                  : 'bg-theme-surface text-theme-muted border-theme hover:border-theme-accent'
+                  ? 'bg-theme-accent text-black border-theme-accent font-bold shadow-sm'
+                  : 'bg-theme-surface text-theme-muted border-theme hover:border-theme-accent hover:text-theme-secondary'
               }`}
             >
               {label}
@@ -269,7 +269,7 @@ export default function DiscoverPage() {
             {picks.map((pick) => (
               <div
                 key={pick.id}
-                className="flex items-center gap-3 p-3 rounded-lg bg-theme-surface border border-theme transition-all hover:border-theme-accent"
+                className="flex items-center gap-3 p-3 rounded-lg bg-theme-surface border border-theme transition-all duration-200 hover:border-theme-accent hover:bg-theme-secondary cursor-pointer"
               >
                 <div className="text-2xl shrink-0 w-8 text-center">{pick.icon}</div>
                 <div className="flex-1 min-w-0">
@@ -320,7 +320,7 @@ export default function DiscoverPage() {
 
         {!showAll && (status === 'idle' || status === 'empty') && <EmptyState />}
         {!showAll && status === 'loading' && (
-          <div className="rounded-lg flex items-center justify-center" style={{ height: 180, border: '2px solid var(--accent-danger, #ff4757)' }}>
+          <div className="rounded-lg flex items-center justify-center" className="border-2 border-danger">
             <div className="flex gap-1">
               {[0, 1, 2].map(i => (
                 <div

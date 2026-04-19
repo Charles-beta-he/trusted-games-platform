@@ -880,7 +880,7 @@ export default function GomokuPlayPage() {
 
       {showDisconnectBanner && (
         <div
-          className="fixed -translate-x-1/2 px-6 py-2.5 rounded-md z-[1000] font-theme text-[13px] tracking-[0.05em] text-white"
+          className="fixed -translate-x-1/2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-md z-[1000] font-theme text-[13px] tracking-[0.05em] text-white"
           style={{
             top: 'max(60px, calc(env(safe-area-inset-top) + 12px))',
             left: '50%',

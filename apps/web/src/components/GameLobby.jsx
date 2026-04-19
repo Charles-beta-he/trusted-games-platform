@@ -228,8 +228,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                 {/* Footer row */}
                 <div className="flex items-center justify-between mt-auto pt-2 border-t border-theme">
                   <div
-                    className="font-mono text-[9px] tracking-widest"
-                    style={{ color: isInstalled ? 'var(--accent-success)' : 'var(--text-muted)' }}
+                    className={`font-mono text-[9px] tracking-widest ${isInstalled ? 'text-theme-success' : 'text-theme-muted'}`}
                   >
                     {isInstalled ? '● READY' : '○ LOCKED'}
                   </div>

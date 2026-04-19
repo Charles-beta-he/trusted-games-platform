@@ -299,7 +299,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
           )}
 
           {sig?.error && (
-            <div className="text-[10px] leading-snug" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
+            <div className="text-[10px] leading-snug text-danger">
               ⚠ {sig.error}
             </div>
           )}
@@ -349,7 +349,7 @@ function PanelHost({ webrtc, sig, onConfirm }) {
           )}
 
           {webrtc.error && (
-            <div className="text-[10px] leading-snug" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
+            <div className="text-[10px] leading-snug text-danger">
               ⚠ {webrtc.error}
             </div>
           )}
@@ -500,7 +500,7 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
             {isConnecting ? '连接中...' : '加入 →'}
           </button>
           {sig?.error && (
-            <div className="text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {sig.error}</div>
+            <div className="text-[11px] text-danger">⚠ {sig.error}</div>
           )}
         </div>
       )}
@@ -526,7 +526,7 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
             {isConnecting ? '连接中...' : '加入 →'}
           </button>
           {webrtc.error && (
-            <div className="text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>⚠ {webrtc.error}</div>
+            <div className="text-[11px] text-danger">⚠ {webrtc.error}</div>
           )}
         </div>
       )}
@@ -674,7 +674,7 @@ export default function ModeSelect({
                   onClick={() => handleSelectMode(mode.id)}
                   onMouseEnter={() => setHovered(mode.id)}
                   onMouseLeave={() => setHovered(null)}
-                  className="rounded-lg p-3 cursor-pointer text-left transition-all"
+                  className="rounded-lg p-3 cursor-pointer text-left transition-all duration-200"
                   style={{
                     background: hovered === mode.id
                       ? `linear-gradient(135deg, var(--bg-surface), ${mode.color}18)`

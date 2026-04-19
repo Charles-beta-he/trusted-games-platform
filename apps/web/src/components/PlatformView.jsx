@@ -60,7 +60,7 @@ function MatchTab({ platform, onMatchReady }) {
   // Match found overlay
   if (queueState === 'matched' && matchInfo) {
     return (
-      <div className="flex flex-col gap-6 py-8">
+      <div className="flex flex-col gap-4 sm:gap-6 py-4 sm:py-8">
         <div
           className="rounded-lg border border-accent bg-bg-surface p-10 text-center"
           style={{ background: 'color-mix(in srgb, var(--accent-primary) 6%, var(--bg-surface))' }}
@@ -99,7 +99,7 @@ function MatchTab({ platform, onMatchReady }) {
   }
 
   return (
-    <div className="flex flex-col gap-5 py-8">
+    <div className="flex flex-col gap-4 sm:gap-5 py-4 sm:py-8">
       {/* Status banner when not logged in */}
       {!user && (
         <div
@@ -287,7 +287,7 @@ function ProfileTab({ platform }) {
               className="text-[13px] px-3.5 py-2.5 bg-bg-primary border border-border-c rounded text-text-primary tracking-[0.05em] text-center outline-none"
             />
             {error && (
-              <div className="text-[10px] text-center" style={{ color: 'var(--accent-danger, #f87171)' }}>
+              <div className="text-[10px] text-center text-danger">
                 {error}
               </div>
             )}
@@ -357,7 +357,7 @@ function ProfileTab({ platform }) {
               </button>
             </div>
           )}
-          {error && <div className="text-[10px] mb-1" style={{ color: 'var(--accent-danger, #f87171)' }}>{error}</div>}
+          {error && <div className="text-[10px] mb-1 text-danger">{error}</div>}
           <div className="flex items-center gap-2">
             <span
               className="text-[9px] tracking-[0.15em] font-bold px-1.5 py-0.5 rounded-sm"
@@ -377,7 +377,7 @@ function ProfileTab({ platform }) {
 
       {/* ELO score */}
       <div
-        className="border rounded-lg bg-bg-surface px-6 py-5 flex items-center justify-between"
+        className="border rounded-lg bg-bg-surface px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between"
         style={{
           borderColor: `${rankTier.color}44`,
           background: `color-mix(in srgb, ${rankTier.color} 6%, var(--bg-surface))`,
@@ -580,7 +580,7 @@ function RoomsTab({ platform, activeTab }) {
 
       {/* Room list */}
       {rooms.length === 0 && !roomsLoading ? (
-        <div className="border border-dashed border-border-c rounded-lg bg-bg-surface px-8 py-[60px] text-center">
+        <div className="border border-dashed border-border-c rounded-lg bg-bg-surface px-4 sm:px-8 py-8 sm:py-[60px] text-center">
           <div className="text-[40px] mb-4 opacity-40">🏠</div>
           <div className="text-xs text-text-muted leading-[1.8]">
             暂无公开房间<br />
@@ -887,7 +887,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
       <div
         role="tablist"
         aria-label="Platform sections"
-        className="hidden md:flex border-b border-border-c bg-bg-secondary px-8"
+        className="hidden md:flex border-b border-border-c bg-bg-secondary px-4 sm:px-8"
       >
         {TABS.map(tab => (
           <button
@@ -910,7 +910,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
       </div>
 
       {/* ── Content ──────────────────────────────────────────────────────────── */}
-      <main className="flex-1 max-w-[760px] w-full mx-auto px-6 pb-[120px] overflow-y-auto min-h-0">
+      <main className="flex-1 max-w-[760px] w-full mx-auto px-4 sm:px-6 pb-[100px] sm:pb-[120px] overflow-y-auto min-h-0">
         {activeTab === 'match' && (
           <div role="tabpanel" id="panel-match" aria-labelledby="tab-match">
             <MatchTab platform={platform} onMatchReady={onMatchReady} />
@@ -963,7 +963,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
       </nav>
 
       {/* ── Footer ───────────────────────────────────────────────────────────── */}
-      <footer className="hidden md:flex border-t border-border-c bg-bg-secondary px-8 py-3 justify-center gap-6">
+      <footer className="hidden md:flex border-t border-border-c bg-bg-secondary px-4 sm:px-8 py-3 justify-center gap-4 sm:gap-6">
         {[
           { label: '在线匹配', active: isOnline },
           { label: '公开房间', active: isOnline },

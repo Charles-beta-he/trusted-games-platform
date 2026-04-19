@@ -297,7 +297,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                       </div>
                     )}
                     {sig.error && (
-                      <div className="font-mono text-[11px]" style={{ color: 'var(--accent-danger, #8b3a3a)' }}>
+                      <div className="font-mono text-[11px] text-danger">
                         ⚠ {sig.error}
                       </div>
                     )}

@@ -91,7 +91,7 @@ export default function StyleCenterPage() {
   return (
     <div className="min-h-[100svh] bg-theme-primary text-theme-primary font-theme">
       {/* Header */}
-      <header className="border-b border-theme bg-theme-secondary px-6 py-4 flex items-center gap-4">
+      <header className="border-b border-theme bg-theme-secondary px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-4">
         <button
           onClick={() => navigate(-1)}
           className="bg-transparent border-none cursor-pointer text-theme-muted text-lg px-2 py-1 rounded leading-none"
