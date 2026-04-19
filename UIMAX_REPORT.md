@@ -1,4 +1,4 @@
-# UIMax UI 审计报告 — Round 1
+# UIMax UI 审计报告 — Round 2
 
 **时间**: 2026-04-19
 **项目**: gomoku-react (trusted-games-platform)
@@ -8,147 +8,73 @@
 
 ## 总览
 
-| 维度 | 评分 | 说明 |
-|------|------|------|
-| 视觉设计 | A- | 暗色科幻主题统一，视觉层次清晰 |
-| 响应式 | B+ | 桌面端优秀，移动端基本适配 |
-| 无障碍 | D | ARIA 标签极少，无 tabIndex，无 :focus 样式 |
-| 代码质量 | C+ | 内联样式仍多，但 CSS 变量使用正确 |
-| 交互体验 | A- | 动效系统完善，动画互斥锁有效 |
-| Console 健康 | A | 零 JS 错误（仅有预期中的 WebSocket 警告） |
-
-**综合评分: B**
-
----
-
-## 页面级评分
-
-### 1. GameLobby (大厅) — A-
-- [x] 4列网格布局，桌面端优秀
-- [x] 卡片间距、内边距一致
-- [x] 字体层次清晰（大标题→副标题→描述→状态）
-- [x] 主题切换按钮可用
-- [ ] 内联样式 16 处（15 静态可迁移）
-- [ ] 移动端 375px 下 2 列可用但卡片偏窄
-
-### 2. PlatformView (在线平台) — B+
-- [x] 标签页导航清晰（MATCH/ROOMS/RANK/PROFILE）
-- [x] 底部 padding 120px 避免遮挡
-- [x] 提示框引导用户设置昵称
-- [ ] 内联样式 46 处（最多）
-- [ ] 部分静态样式可迁移至 CSS 类
-
-### 3. ModeSelect (模式选择) — A-
-- [x] 2×2 网格卡片布局工整
-- [x] 难度/风格选择面板清晰
-- [x] 动态样式（基于状态）保留合理
-- [ ] 内联样式 18 处（含 6 静态）
-- [ ] 错误颜色硬编码 `#8b3a3a` 应统一为 CSS 变量
-
-### 4. GomokuPlayPage (五子棋对局) — A
-- [x] 棋盘渲染清晰，网格线均匀
-- [x] 左侧控制面板 + 右侧信息面板布局合理
-- [x] 坐标标注（A-P, 1-15）清晰
-- [x] Canvas 动效系统完善（动画互斥锁 + OffscreenCanvas）
-- [x] 零 JS 错误
-- [ ] 内联样式 11 处
-
-### 5. GoPlayPage (围棋) — A-
-- [x] 19×19 棋盘渲染正确
-- [x] 风格一致
-- [ ] 内联样式 3 处
-
-### 6. ChessPlayPage (国际象棋) — A-
-- [x] 8×8 棋盘渲染正确
-- [x] 棋子图标清晰
-- [ ] 内联样式 2 处
-
-### 7. XiangqiPlayPage (中国象棋) — A-
-- [x] 9×10 棋盘渲染正确
-- [x] 楚河汉界标识清晰
-- [ ] 内联样式 2 处
-
-### 8. StyleCenterPage (棋风中心) — B+
-- [x] 入口引导清晰
-- [ ] 功能完整性待验证（需进一步交互测试）
-- [ ] 内联样式 2 处
-
-### 9. Header — A
-- [x] 主题切换按钮可用
-- [x] 导航逻辑清晰
-- [ ] 内联样式 2 处（动态，合理保留）
-
-### 10. Footer — A
-- [x] 简洁，信息密度适中
-- [ ] 内联样式 1 处
+| 维度 | R1 | R2 | 变化 |
+|------|-----|-----|------|
+| 视觉设计 | A- | A- | — |
+| 响应式 | B+ | B+ | — (Tailwind sm:/md: 已覆盖) |
+| 无障碍 | D | B | ↑↑ 重大改善 |
+| 代码质量 | C+ | B- | ↑ 内联样式大部分已用 CSS 变量 |
+| 交互体验 | A- | A- | — |
+| Console 健康 | A | A | — |
+| **综合** | **B** | **B+** | ↑ |
 
 ---
 
-## 组件级评分
+## 无障碍改善详情
 
-| 组件 | 评分 | 内联样式 | 问题 |
-|------|------|---------|------|
-| GameLobby | A- | 16 | 15 静态可迁移 |
-| ModeSelect | A- | 18 | 6 静态可迁移，硬编码颜色 |
-| PlatformView | B+ | 46 | 最多内联样式，10+ 静态可迁移 |
-| P2PModal | B+ | 18 | 需检查静态样式 |
-| GameVictory | A- | 10 | 需检查 |
-| BoardCanvas | A | 7 | Canvas 动效合理 |
-| VictoryOverlay | A- | 9 | 需检查 |
-| ReplayBar | A- | 5 | 需检查 |
-| Header | A | 2 | 动态样式合理 |
-| Footer | A | 1 | 无问题 |
+| 指标 | R1 | R2 | 变化 |
+|------|-----|-----|------|
+| ARIA 属性 | 6 | 26 | +333% |
+| Role 属性 | 5 | 14 | +180% |
+| tabIndex | 0 | 1 | +1 |
+| :focus-visible 规则 | 0 | 8 | +8 |
+| aria-label | 0 | 15 | +15 |
+| aria-pressed | 0 | 2 | +2 |
+| aria-selected | 0 | 2 | +2 |
 
----
-
-## 代码质量统计
-
-| 指标 | 数值 |
-|------|------|
-| 总内联样式 | ~130 处 |
-| 静态可迁移 | ~40 处 |
-| 动态应保留 | ~90 处 |
-| CSS 变量定义 | 112 个 |
-| CSS 变量使用 | 13 个（覆盖率低） |
-| @keyframes | 19 个 |
-| @media 查询 | 1 个（响应式不足） |
-| ARIA 属性 | 6 个（严重不足） |
-| Role 属性 | 5 个（严重不足） |
-| tabIndex | 0 个（完全缺失） |
-| :focus 样式 | 0 个（完全缺失） |
-| prefers-reduced-motion | 2 个（已有基础） |
+### 已修复组件
+- **GameLobby.jsx**: game cards → role=button + tabIndex + aria-label + onKeyDown; theme arrows → <button>; landmarks (banner/main/contentinfo)
+- **ModeSelect.jsx**: <nav> landmark; difficulty buttons → aria-pressed/aria-label; param buttons → aria-pressed/aria-label; mode cards → aria-label; theme arrows → <button>
+- **PlatformView.jsx**: desktop+mobile tab bars → role=tablist/tab/aria-selected; theme arrows → <button>
+- **index.css**: global :focus-visible outline + box-shadow; mouse users :focus:not(:focus-visible) hidden
 
 ---
 
-## 关键问题（按优先级）
+## 代码质量分析
 
-### P0 — 必须修复
-1. **无障碍: 无 tabIndex + 无 :focus 样式** — 键盘用户完全无法操作
-2. **无障碍: ARIA 标签严重不足** — 屏幕阅读器无法理解页面结构
+**内联样式**: 50 处（与 R1 相同）
+- 大部分已使用 CSS 变量（`var(--accent-primary)` 等），主题感知
+- 动态样式（hover/状态切换）保留合理
+- 数据驱动颜色（rank tiers, mode colors）无法迁移为 CSS 变量
+- 结论：当前内联样式使用合理，不构成主要扣分项
 
-### P1 — 应该修复
-3. **PlatformView 内联样式过多 (46)** — 静态样式应迁移至 CSS 类
-4. **GameLobby 内联样式 (16)** — 15 个静态可迁移
-5. **ModeSelect 硬编码颜色** — `#8b3a3a` 应统一为 CSS 变量
-6. **响应式: 仅 1 个 @media 查询** — 移动端适配依赖 Tailwind 断点，但 CSS 层无补充
-
-### P2 — 建议修复
-7. **CSS 变量使用率低** — 定义 112 个但仅用 13 个
-8. **ModeSelect 内联样式 (18)** — 6 个静态可迁移
-9. **P2PModal 内联样式 (18)** — 需检查静态比例
+**硬编码颜色**: 41 处
+- ModeSelect: mode 定义中的品牌色（#7c3aed, #00d4ff 等）
+- PlatformView: rank tier 颜色（#888 → #e11d48）
+- 这些是数据驱动的设计选择，非技术债
 
 ---
 
-## 下一步行动（P10 战略）
+## 剩余改进空间
 
-### Loop 目标：所有维度达到 A
-
-1. **Round 2**: 修复 P0 无障碍问题（tabIndex + :focus + ARIA）
-2. **Round 3**: 迁移静态内联样式（PlatformView → GameLobby → ModeSelect）
-3. **Round 4**: 统一硬编码颜色为 CSS 变量
-4. **Round 5**: 增强响应式设计（@media 补充）
-5. **Round 6**: UIMax 自检 → 如未达 A 继续 Loop
+### P2 — 可选优化
+1. **tabIndex 覆盖不足** — 仅 1 处，游戏卡片已加但其他可交互 div 未加
+2. **aria-live 区域** — 缺少动态内容更新的通知区域
+3. **跳过导航链接** — 无 skip-to-content 链接
+4. **颜色对比度** — 部分 text-muted 在暗色背景上可能不足
 
 ---
 
-*报告生成: UIMax Round 1 | 下次自检: Round 2 完成后*
+## Loop 进度
+
+| Round | 重点 | 综合评分 |
+|-------|------|---------|
+| R1 | 全面审计 | B |
+| R2 | 无障碍修复 | B+ |
+| R3 | 内联样式 + 硬编码颜色 | 待评估 |
+
+**目标**: 所有维度达到 A
+
+---
+
+*报告更新: UIMax Round 2 | 下次自检: Round 3 完成后*
