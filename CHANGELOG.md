@@ -1,3 +1,9 @@
+## [1.6.2](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.1...v1.6.2) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **all:** P10 冲 A+ — 响应式+代码+视觉三维权度 ([6bf4063](https://github.com/Charles-beta-he/trusted-games-platform/commit/6bf4063b3ac4619333cf5f80df9dd23db57ef582))
+
 ## [1.6.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.0...v1.6.1) (2026-04-19)
 
 ### 🐛 Bug Fixes
