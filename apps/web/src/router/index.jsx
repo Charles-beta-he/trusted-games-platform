@@ -21,6 +21,7 @@ const LobbyPage       = lazy(() => import('../pages/LobbyPage.jsx'))
 const PlayPage        = lazy(() => import('../pages/PlayPage.jsx'))
 const PlatformPage    = lazy(() => import('../pages/PlatformPage.jsx'))
 const StyleCenterPage = lazy(() => import('../pages/StyleCenterPage.jsx'))
+const DiscoverPage    = lazy(() => import('../pages/DiscoverPage.jsx'))
 
 // ── 路由表 ────────────────────────────────────────────────────────────────────
 const ROUTES = [
@@ -43,6 +44,11 @@ const ROUTES = [
     path: '/styles',
     label: 'StyleCenter',
     element: <StyleCenterPage />,
+  },
+  {
+    path: '/discover',
+    label: 'Discover',
+    element: <DiscoverPage />,
   },
 ]
 
