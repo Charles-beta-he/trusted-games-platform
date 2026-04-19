@@ -205,6 +205,8 @@ export default function ChessBoard({
   return (
     <canvas
       ref={canvasRef}
+      role="img"
+      aria-label="国际象棋棋盘 8×8"
       width={w}
       height={h}
       onClick={handleClick}

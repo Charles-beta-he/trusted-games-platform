@@ -50,6 +50,7 @@ export default function Header({ moveCount, gameId, onBackToLobby }) {
             <button
               key={t.id}
               onClick={() => setTheme(t.id)}
+              aria-label={`切换到${t.label}主题`}
               title={`${t.label} — ${t.desc}`}
               className="font-mono text-[9px] tracking-widest px-2 py-1 transition-all cursor-pointer"
               style={{
@@ -72,6 +73,7 @@ export default function Header({ moveCount, gameId, onBackToLobby }) {
         {/* Animation toggle */}
         <button
           onClick={toggleAnimations}
+          aria-label={animationsEnabled ? '关闭动效' : '开启动效'}
           title={animationsEnabled ? '动效: 开启' : '动效: 关闭'}
           className="font-mono text-[9px] tracking-widest px-2 py-1 transition-all border border-theme bg-transparent cursor-pointer"
           style={{

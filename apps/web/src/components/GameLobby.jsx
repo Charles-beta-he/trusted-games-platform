@@ -93,6 +93,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
+                aria-label={`切换到${t.label}主题`}
                 title={`${t.label} — ${t.desc}`}
                 className="font-mono text-[11px] tracking-widest transition-all shrink-0 cursor-pointer"
                 style={{
@@ -379,15 +380,17 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             transition: 'opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.15s',
           }}
         >
-          <div className="text-[11px] text-theme-muted tracking-widest mb-3 font-theme">
+          <label htmlFor="quick-join-input" className="text-[11px] text-theme-muted tracking-widest mb-3 font-theme block">
             QUICK JOIN — 已有邀请码？
-          </div>
+          </label>
           <div className="flex flex-wrap gap-2">
             <input
+              id="quick-join-input"
               type="text"
               placeholder="粘贴邀请链接或房间码..."
               value={joinInput}
               onChange={e => setJoinInput(e.target.value)}
+              aria-label="输入邀请链接或房间码"
               onKeyDown={e => {
                 if (e.key === 'Enter' && joinInput.trim() && onQuickJoin) {
                   onQuickJoin(joinInput.trim())
@@ -425,6 +428,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               <button
                 type="button"
                 onClick={() => importInputRef.current?.click()}
+                aria-label="导入五子棋棋谱 JSON 文件"
                 className="w-full px-4 py-2.5 bg-transparent border border-dashed border-theme rounded text-theme-muted font-theme text-[11px] tracking-wider cursor-pointer"
               >
                 导入五子棋棋谱（JSON）· 进入回放

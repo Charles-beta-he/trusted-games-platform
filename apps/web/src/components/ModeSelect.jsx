@@ -476,10 +476,13 @@ function PanelJoin({ webrtc, sig, onConfirm, autoJoinOffer, autoJoinRoomCode }) 
               ⚠ 信令服务不可用，请使用邀请链接加入
             </div>
           )}
+          <label htmlFor="room-code-input" className="sr-only">输入 6 位房间码</label>
           <input
+            id="room-code-input"
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
             placeholder="输入 6 位房间码"
+            aria-label="输入 6 位房间码"
             maxLength={6}
             disabled={!sig?.isAvailable || isConnecting}
             className={`px-4 py-3.5 rounded font-theme text-[22px] tracking-[0.5em] uppercase outline-none transition-colors bg-theme-primary text-theme-primary ${
@@ -624,6 +627,7 @@ export default function ModeSelect({
               <button
                 key={t.id}
                 onClick={() => setTheme(t.id)}
+                aria-label={`切换到${t.label}主题`}
                 className={`shrink-0 px-3.5 py-2 rounded-sm cursor-pointer text-[10px] font-theme tracking-[0.1em] ${
                   theme === t.id
                     ? 'bg-theme-accent text-black'

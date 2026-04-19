@@ -135,7 +135,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
   // ── Connected screen ──────────────────────────────────────────────────────
   if (anyConnected) {
     return (
-      <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="连接状态">
         <div className="bg-bg-secondary border border-border-c rounded-lg p-10 max-w-sm w-full text-center text-text-primary">
           <div className="text-[48px] mb-4">🔗</div>
           <div className="font-mono tracking-widest text-lg font-bold" style={{ color: 'var(--accent-success, #2d6a4f)' }}>
@@ -169,7 +169,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[1000] bg-black/70 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="局域网对战">
       <div
         className="bg-bg-secondary border border-border-c rounded-lg p-8 w-[90%] max-w-[520px] max-h-[90vh] overflow-y-auto text-text-primary"
       >
@@ -243,6 +243,7 @@ export default function P2PModal({ webrtc, sig, onClose, autoJoinOffer }) {
                         value={roomCodeInput}
                         onChange={(e) => setRoomCodeInput(e.target.value.toUpperCase().slice(0, 6))}
                         placeholder="输入房间码"
+                        aria-label="输入 6 位房间码"
                         maxLength={6}
                         className="p-2 bg-bg-primary border border-border-c rounded text-text-primary font-mono text-base tracking-[0.3em] text-center uppercase"
                       />

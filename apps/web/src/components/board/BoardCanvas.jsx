@@ -293,6 +293,8 @@ export default function BoardCanvas({
       >
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label={`五子棋棋盘 ${BOARD_SIZE}×${BOARD_SIZE}，${moveHistory.length} 手`}
           style={{
             width: `min(calc(100vw - max(24px, env(safe-area-inset-left)) - max(24px, env(safe-area-inset-right))), ${CANVAS_PX}px)`,
             height: `min(calc(100vw - max(24px, env(safe-area-inset-left)) - max(24px, env(safe-area-inset-right))), ${CANVAS_PX}px)`,

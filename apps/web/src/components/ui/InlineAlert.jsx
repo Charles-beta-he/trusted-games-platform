@@ -21,6 +21,7 @@ export default function InlineAlert({ message, onDismiss, autoHideMs = 5000 }) {
       {onDismiss && (
         <button
           onClick={onDismiss}
+          aria-label="关闭提示"
           className="bg-transparent border-none text-red-300 cursor-pointer text-sm px-1"
         >
           ✕

@@ -281,6 +281,7 @@ function ProfileTab({ platform }) {
               placeholder="输入昵称 (2–16 字符)"
               value={nicknameInput}
               onChange={e => setNicknameInput(e.target.value)}
+              aria-label="输入昵称"
               onKeyDown={e => e.key === 'Enter' && handleRegister()}
               maxLength={16}
               className="text-[13px] px-3.5 py-2.5 bg-bg-primary border border-border-c rounded text-text-primary tracking-[0.05em] text-center outline-none"
@@ -333,6 +334,7 @@ function ProfileTab({ platform }) {
                 type="text"
                 value={editInput}
                 onChange={e => setEditInput(e.target.value)}
+                aria-label="编辑昵称"
                 onKeyDown={e => { if (e.key === 'Enter') handleEditNickname(); if (e.key === 'Escape') setEditingNickname(false) }}
                 maxLength={16}
                 autoFocus
@@ -517,7 +519,7 @@ function RoomsTab({ platform, activeTab }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={refreshRooms} style={btn({ padding: '7px 12px' })} title="刷新">
+          <button onClick={refreshRooms} aria-label="刷新房间列表" style={btn({ padding: '7px 12px' })} title="刷新">
             ↻
           </button>
           <button
@@ -559,6 +561,7 @@ function RoomsTab({ platform, activeTab }) {
                 placeholder="房间名称（可选）"
                 value={roomTitle}
                 onChange={e => setRoomTitle(e.target.value)}
+                aria-label="房间名称"
                 onKeyDown={e => e.key === 'Enter' && handleCreate()}
                 maxLength={32}
                 className="flex-1 text-xs px-3 py-2 bg-bg-primary border border-border-c rounded text-text-primary outline-none"
@@ -859,6 +862,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
+                  aria-label={`切换到${t.label}主题`}
                   className="shrink-0 px-2 py-1 rounded cursor-pointer text-[9px] tracking-[0.1em] transition-colors"
                   style={{
                     background: theme === t.id ? 'var(--accent-primary)' : 'var(--bg-surface)',
@@ -889,6 +893,7 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
           <button
             key={tab.id}
             role="tab"
+            id={`tab-${tab.id}`}
             aria-selected={activeTab === tab.id}
             aria-controls={`panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
@@ -907,16 +912,24 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
       {/* ── Content ──────────────────────────────────────────────────────────── */}
       <main className="flex-1 max-w-[760px] w-full mx-auto px-6 pb-[120px] overflow-y-auto min-h-0">
         {activeTab === 'match' && (
-          <MatchTab platform={platform} onMatchReady={onMatchReady} />
+          <div role="tabpanel" id="panel-match" aria-labelledby="tab-match">
+            <MatchTab platform={platform} onMatchReady={onMatchReady} />
+          </div>
         )}
         {activeTab === 'rooms' && (
-          <RoomsTab platform={platform} activeTab={activeTab} />
+          <div role="tabpanel" id="panel-rooms" aria-labelledby="tab-rooms">
+            <RoomsTab platform={platform} activeTab={activeTab} />
+          </div>
         )}
         {activeTab === 'rank' && (
-          <RankTab platform={platform} activeTab={activeTab} />
+          <div role="tabpanel" id="panel-rank" aria-labelledby="tab-rank">
+            <RankTab platform={platform} activeTab={activeTab} />
+          </div>
         )}
         {activeTab === 'profile' && (
-          <ProfileTab platform={platform} />
+          <div role="tabpanel" id="panel-profile" aria-labelledby="tab-profile">
+            <ProfileTab platform={platform} />
+          </div>
         )}
       </main>
 
@@ -931,7 +944,9 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
           <button
             key={tab.id}
             role="tab"
+            id={`tab-mobile-${tab.id}`}
             aria-selected={activeTab === tab.id}
+            aria-controls={`panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className="flex-1 flex flex-col items-center justify-center px-1 py-2.5 bg-none border-none cursor-pointer gap-[3px] transition-all duration-150"
             style={{

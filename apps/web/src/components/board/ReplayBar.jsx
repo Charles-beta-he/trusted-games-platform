@@ -20,9 +20,10 @@ export default function ReplayBar({
   return (
     <div className="flex items-center gap-2 px-4 py-2.5 bg-theme-surface border-t border-theme font-theme flex-wrap">
       {/* 首步 / 上一步 */}
-      <button onClick={onGoToStart} title="首步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏮</button>
+      <button onClick={onGoToStart} aria-label="跳到首步" title="首步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏮</button>
       <button
         onClick={onStepBack}
+        aria-label="上一步"
         title="上一步"
         disabled={replayIndex === 0}
         className="cursor-pointer bg-transparent border-none text-xl text-theme-primary"
@@ -32,6 +33,7 @@ export default function ReplayBar({
       {/* 自动播放 / 暂停 */}
       <button
         onClick={onToggleAutoPlay}
+        aria-label={isAutoPlaying ? '暂停回放' : '自动播放'}
         title={isAutoPlaying ? '暂停' : '自动播放'}
         className="cursor-pointer bg-transparent border-none text-lg text-theme-primary"
       >
@@ -42,6 +44,7 @@ export default function ReplayBar({
       <input
         type="range" min={0} max={totalMoves} value={replayIndex}
         onChange={(e) => onGoTo(Number(e.target.value))}
+        aria-label="回放进度"
         className="flex-1 min-w-[80px]"
         style={{ accentColor: 'var(--accent-primary)' }}
       />
@@ -49,16 +52,18 @@ export default function ReplayBar({
       {/* 下一步 / 末步 */}
       <button
         onClick={onStepForward}
+        aria-label="下一步"
         title="下一步"
         disabled={replayIndex === totalMoves}
         className="cursor-pointer bg-transparent border-none text-xl text-theme-primary"
         style={{ cursor: replayIndex === totalMoves ? 'not-allowed' : 'pointer', opacity: replayIndex === totalMoves ? 0.4 : 1 }}
       >▶</button>
-      <button onClick={onGoToEnd} title="末步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏭</button>
+      <button onClick={onGoToEnd} aria-label="跳到末步" title="末步" className="cursor-pointer bg-transparent border-none text-xl text-theme-primary">⏭</button>
 
       {/* 循环按钮 */}
       <button
         onClick={onToggleLooping}
+        aria-label={isLooping ? '关闭循环回放' : '开启循环回放'}
         title="循环回放"
         className="cursor-pointer bg-transparent border-none text-sm text-theme-primary"
         style={{ color: isLooping ? 'var(--accent-primary)' : 'var(--text-muted)' }}

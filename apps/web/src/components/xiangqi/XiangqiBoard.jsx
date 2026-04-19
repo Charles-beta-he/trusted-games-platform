@@ -220,6 +220,8 @@ export default function XiangqiBoard({
   return (
     <canvas
       ref={canvasRef}
+      role="img"
+      aria-label="中国象棋棋盘 9×10"
       width={w}
       height={h}
       onClick={handleClick}

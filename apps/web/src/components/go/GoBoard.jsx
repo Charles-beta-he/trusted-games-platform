@@ -200,6 +200,8 @@ export default function GoBoard({
   return (
     <canvas
       ref={canvasRef}
+      role="img"
+      aria-label="围棋棋盘 19×19"
       width={w}
       height={h}
       onClick={handleClick}

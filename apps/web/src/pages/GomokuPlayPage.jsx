@@ -600,8 +600,9 @@ export default function GomokuPlayPage() {
         <div
           className="md:hidden flex items-center gap-2 px-3 py-2 flex-shrink-0 border-b border-theme bg-theme-secondary"
         >
-          <span className="text-[10px] shrink-0 text-theme-muted">规则</span>
+          <label htmlFor="mobile-rule-select" className="text-[10px] shrink-0 text-theme-muted">规则</label>
           <select
+            id="mobile-rule-select"
             value={game.rulePreset}
             onChange={(e) => {
               game.setRulePreset(e.target.value)

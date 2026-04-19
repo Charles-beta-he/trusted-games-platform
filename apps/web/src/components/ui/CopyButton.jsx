@@ -17,6 +17,7 @@ export default function CopyButton({ text, label, className }) {
     return (
       <button
         onClick={copy}
+        aria-label={copied ? '已复制到剪贴板' : '复制到剪贴板'}
         className={className}
         style={{
           borderColor: copied ? 'var(--accent-success, #2d6a4f)' : undefined,
@@ -31,6 +32,7 @@ export default function CopyButton({ text, label, className }) {
   return (
     <button
       onClick={copy}
+      aria-label={copied ? '已复制到剪贴板' : '复制到剪贴板'}
       className="w-full mt-1.5 py-2 px-3 rounded font-mono text-xs tracking-wider cursor-pointer transition-all duration-200"
       style={{
         background: copied ? 'transparent' : 'var(--bg-surface)',
