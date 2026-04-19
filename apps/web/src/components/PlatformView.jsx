@@ -847,10 +847,11 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
 
           {/* Theme switcher */}
           <div className="flex items-center gap-0.5 shrink-0">
-            <span
+            <button
               onClick={prevTheme}
-              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer"
-            >‹</span>
+              aria-label="Previous theme"
+              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+            >‹</button>
             <div className="scroll-x-hidden flex gap-1 overflow-x-auto max-w-[160px]" style={{ WebkitOverflowScrolling: 'touch' }}>
               {themes.map(t => (
                 <button
@@ -867,21 +868,27 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
                 </button>
               ))}
             </div>
-            <span
+            <button
               onClick={nextTheme}
-              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer"
-            >›</span>
+              aria-label="Next theme"
+              className="text-sm text-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+            >›</button>
           </div>
         </div>
       </header>
 
       {/* ── Tab nav (desktop only) ───────────────────────────────────────────── */}
       <div
+        role="tablist"
+        aria-label="Platform sections"
         className="hidden md:flex border-b border-border-c bg-bg-secondary px-8"
       >
         {TABS.map(tab => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`panel-${tab.id}`}
             onClick={() => setActiveTab(tab.id)}
             className="px-5 py-3 bg-none border-none cursor-pointer text-[11px] tracking-[0.2em] transition-all duration-150 -mb-px"
             style={{
@@ -913,12 +920,16 @@ export default function PlatformView({ onBack, platform, onMatchReady }) {
 
       {/* ── Mobile Bottom Tab Bar ─────────────────────────────────────────────── */}
       <nav
+        role="tablist"
+        aria-label="Platform sections"
         className="fixed bottom-0 left-0 right-0 z-[200] bg-bg-secondary border-t border-border-c flex md:hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {TABS.map(tab => (
           <button
             key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
             className="flex-1 flex flex-col items-center justify-center px-1 py-2.5 bg-none border-none cursor-pointer gap-[3px] transition-all duration-150"
             style={{

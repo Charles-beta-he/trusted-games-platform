@@ -56,6 +56,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header
+        role="banner"
         className="relative z-10 flex justify-between items-center px-8 py-4 border-b border-theme bg-theme-secondary"
       >
         <div className="flex items-center gap-4">
@@ -74,10 +75,11 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
         {/* Theme switcher */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <span
+          <button
             onClick={prevTheme}
-            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
-          >‹</span>
+            aria-label="Previous theme"
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+          >‹</button>
           <div className="scroll-x-hidden flex gap-1 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
             {themes.map((t) => (
               <button
@@ -102,15 +104,16 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
               </button>
             ))}
           </div>
-          <span
+          <button
             onClick={nextTheme}
-            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
-          >›</span>
+            aria-label="Next theme"
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+          >›</button>
         </div>
       </header>
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 py-12">
+      <main role="main" className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 py-12">
 
         {/* Title block - 带入场动画 */}
         <div 
@@ -149,7 +152,12 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             return (
               <div
                 key={game.id}
+                role="button"
+                tabIndex={isInstalled ? 0 : -1}
+                aria-label={`${game.nameEn} - ${game.name} - ${game.description} - ${game.boardSize.width}×${game.boardSize.height}`}
+                aria-disabled={!isInstalled}
                 onClick={() => isInstalled && onSelectGame(game.id)}
+                onKeyDown={e => { if (isInstalled && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); onSelectGame(game.id) }}}
                 className="relative flex flex-col gap-2 sm:gap-3 p-3 sm:p-5 transition-all hover-lift gpu-accelerated bg-theme-surface border border-theme"
                 style={{
                   cursor: isInstalled ? 'pointer' : 'not-allowed',
@@ -341,6 +349,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             </div>
             <button
               onClick={copyLanUrl}
+              aria-label={ipCopied ? 'LAN address copied' : 'Copy LAN address'}
               className="transition-smooth shrink-0 px-4 py-2.5 rounded cursor-pointer font-mono text-[11px] tracking-wide"
               style={{
                 background: ipCopied ? 'var(--accent-success, #2d6a4f)' : 'var(--bg-primary)',
@@ -419,6 +428,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer
+        role="contentinfo"
         className="relative z-10 flex justify-center items-center gap-6 px-8 py-4 border-t border-theme bg-theme-secondary"
       >
         {[

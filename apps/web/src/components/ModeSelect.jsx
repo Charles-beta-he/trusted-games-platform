@@ -95,6 +95,8 @@ function ParamSelect({ param, value, onChange }) {
           return (
             <button
               key={opt.id}
+              aria-pressed={active}
+              aria-label={`${opt.label} - ${opt.desc}`}
               onClick={() => onChange(opt.id)}
               className={`p-2.5 rounded text-center cursor-pointer transition-all font-theme text-[13px] ${
                 active
@@ -137,6 +139,8 @@ function PanelAI({ onConfirm, gameId }) {
             return (
               <button
                 key={d.id}
+                aria-pressed={difficulty === d.id}
+                aria-label={`${d.label} - ${algoLabel}`}
                 onClick={() => setDifficulty(d.id)}
                 className={`px-2 py-3 rounded text-center cursor-pointer transition-all font-theme text-sm ${
                   difficulty === d.id
@@ -583,7 +587,7 @@ export default function ModeSelect({
     <div className="min-h-[100svh] bg-theme-primary font-theme flex flex-col">
 
       {/* ── Top nav bar ─────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
+      <nav role="navigation" aria-label="Game mode navigation" className="flex items-center justify-between px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
         <button
           onClick={onBack}
           className="bg-transparent border border-theme text-theme-muted px-3.5 py-2 rounded cursor-pointer font-theme text-xs tracking-[0.1em] transition-colors hover:text-theme-primary hover:border-theme-accent"
@@ -603,10 +607,11 @@ export default function ModeSelect({
 
         {/* Theme switcher */}
         <div className="flex items-center gap-0.5 shrink-0">
-          <span
+          <button
             onClick={prevTheme}
-            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
-          >‹</span>
+            aria-label="Previous theme"
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+          >‹</button>
           <div className="scroll-x-hidden flex gap-1 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', maxWidth: 180 }}>
             {themes.map((t) => (
               <button
@@ -622,12 +627,13 @@ export default function ModeSelect({
               </button>
             ))}
           </div>
-          <span
+          <button
             onClick={nextTheme}
-            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer"
-          >›</span>
+            aria-label="Next theme"
+            className="text-sm text-theme-accent select-none px-1.5 py-1 cursor-pointer bg-transparent border-none"
+          >›</button>
         </div>
-      </div>
+      </nav>
 
       {/* ── Main body ───────────────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center px-3 py-4 gap-5 overflow-y-auto">
@@ -653,6 +659,7 @@ export default function ModeSelect({
               return (
                 <button
                   key={mode.id}
+                  aria-label={`${mode.title} - ${mode.titleCn}: ${mode.desc.replace('\n', ' ')}`}
                   onClick={() => handleSelectMode(mode.id)}
                   onMouseEnter={() => setHovered(mode.id)}
                   onMouseLeave={() => setHovered(null)}

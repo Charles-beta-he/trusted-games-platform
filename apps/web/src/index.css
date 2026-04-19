@@ -481,3 +481,29 @@
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ─── Accessibility: Focus Styles ────────────────────────────────────────── */
+
+/* Global focus-visible for keyboard navigation */
+*:focus-visible {
+  outline: 2px solid var(--accent-primary, #00d4ff);
+  outline-offset: 2px;
+}
+
+/* Buttons and interactive elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-primary, #00d4ff);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.15);
+}
+
+/* Remove default focus ring for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
