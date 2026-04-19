@@ -1,3 +1,9 @@
+## [1.5.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.10...v1.5.0) (2026-04-19)
+
+### ✨ Features
+
+* **discover:** 发现页面 + 底部导航栏 ([8ac9c64](https://github.com/Charles-beta-he/trusted-games-platform/commit/8ac9c64d167c14ff7b2fbcfd05f4ede82324dba2))
+
 ## [1.4.10](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.4.9...v1.4.10) (2026-04-19)
 
 ### 🐛 Bug Fixes
