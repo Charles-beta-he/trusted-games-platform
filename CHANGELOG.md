@@ -1,3 +1,9 @@
+## [1.6.3](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.2...v1.6.3) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **a11y:** WCAG AA 对比率修复 — 100% 合规 ([44a6e4a](https://github.com/Charles-beta-he/trusted-games-platform/commit/44a6e4ab498ecec2a1601dbc9c910c457588b873)), closes [#457ea4](https://github.com/Charles-beta-he/trusted-games-platform/issues/457ea4) [#bd00ff](https://github.com/Charles-beta-he/trusted-games-platform/issues/bd00ff) [#7c7c7c](https://github.com/Charles-beta-he/trusted-games-platform/issues/7c7c7c)
+
 ## [1.6.2](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.1...v1.6.2) (2026-04-19)
 
 ### 🐛 Bug Fixes
