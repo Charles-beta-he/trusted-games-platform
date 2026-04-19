@@ -56,16 +56,17 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
             linear-gradient(var(--board-line-glow) 1px, transparent 1px),
             linear-gradient(90deg, var(--board-line-glow) 1px, transparent 1px)
           `,
-          backgroundSize: '48px 48px',
+          backgroundSize: '60px 60px',
           pointerEvents: 'none',
           zIndex: 0,
+          opacity: 0.5,
         }}
       />
 
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <header
         role="banner"
-        className="relative z-10 flex justify-between items-center px-8 py-4 border-b border-theme bg-theme-secondary"
+        className="relative z-10 flex justify-between items-center px-4 sm:px-8 py-3 sm:py-4 border-b border-theme bg-theme-secondary"
       >
         <div className="flex items-center gap-4">
           <div
@@ -122,7 +123,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
       </header>
 
       {/* ── Main ──────────────────────────────────────────────────────────── */}
-      <main id="main-content" role="main" className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 py-12">
+      <main id="main-content" role="main" className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-8 py-6 sm:py-12">
 
         {/* Title block - 带入场动画 */}
         <div 
@@ -154,7 +155,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
         <div
           ref={cardsRef}
           className="grid gap-3 sm:gap-4 w-full"
-          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}
+          style={{ maxWidth: '900px', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))' }}
         >
           {GAME_CATALOG.map((game, index) => {
             const isInstalled = game.status === 'installed'
@@ -206,7 +207,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
                 {/* Names */}
                 <div>
                   <div
-                    className="font-mono font-bold text-sm tracking-wider text-theme-primary font-theme-display"
+                    className="font-mono font-bold text-xs sm:text-sm tracking-wider text-theme-primary font-theme-display"
                   >
                     {game.nameEn.toUpperCase()}
                   </div>
@@ -441,7 +442,7 @@ export default function GameLobby({ onSelectGame, onQuickJoin, onOpenPlatform, o
       {/* ── Footer ────────────────────────────────────────────────────────── */}
       <footer
         role="contentinfo"
-        className="relative z-10 flex justify-center items-center gap-6 px-8 py-4 border-t border-theme bg-theme-secondary"
+        className="relative z-10 flex justify-center items-center gap-4 sm:gap-6 px-4 sm:px-8 py-3 sm:py-4 border-t border-theme bg-theme-secondary"
       >
         {[
           { label: '无服务端', hidden: false },

@@ -274,7 +274,7 @@ export default function DiscoverPage() {
                 <div className="text-2xl shrink-0 w-8 text-center">{pick.icon}</div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold text-theme-primary tracking-wider truncate">{pick.title}</div>
-                  <div className="text-[11px] text-theme-muted mt-0.5 truncate">{pick.subtitle}</div>
+                  <div className="text-[11px] text-theme-secondary mt-0.5 truncate">{pick.subtitle}</div>
                   <div className="text-[10px] text-theme-muted mt-0.5 opacity-70">{pick.meta}</div>
                 </div>
                 <div className="flex gap-1.5 shrink-0">

@@ -597,7 +597,7 @@ export default function ModeSelect({
       </a>
 
       {/* ── Top nav bar ─────────────────────────────────────────────────── */}
-      <nav role="navigation" aria-label="Game mode navigation" className="flex items-center justify-between px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
+      <nav role="navigation" aria-label="Game mode navigation" className="flex items-center justify-between px-3 sm:px-4 py-3 border-b border-theme bg-theme-secondary shrink-0">
         <button
           onClick={onBack}
           className="bg-transparent border border-theme text-theme-muted px-3.5 py-2 rounded cursor-pointer font-theme text-xs tracking-[0.1em] transition-colors hover:text-theme-primary hover:border-theme-accent"
