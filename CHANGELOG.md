@@ -1,3 +1,9 @@
+## [1.6.1](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.0...v1.6.1) (2026-04-19)
+
+### 🐛 Bug Fixes
+
+* **responsive:** 375px 适配 + 视觉打磨 ([58064b8](https://github.com/Charles-beta-he/trusted-games-platform/commit/58064b80bc6eca99b21a9fb24f4b293bcfcbdc11))
+
 ## [1.6.0](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.5.0...v1.6.0) (2026-04-19)
 
 ### ✨ Features
