@@ -1,3 +1,9 @@
+## [1.6.4](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.3...v1.6.4) (2026-04-20)
+
+### 🐛 Bug Fixes
+
+* **ci:** deploy UTF-8 error + unify Node 22 across all workflows ([4fca274](https://github.com/Charles-beta-he/trusted-games-platform/commit/4fca274988eac21f53695511f4b9932a4e3b1b12))
+
 ## [1.6.3](https://github.com/Charles-beta-he/trusted-games-platform/compare/v1.6.2...v1.6.3) (2026-04-19)
 
 ### 🐛 Bug Fixes
