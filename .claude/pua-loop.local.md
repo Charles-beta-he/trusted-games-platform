@@ -1,48 +1,35 @@
 # PUA Loop 状态文件
 
-active: false
+active: true
 session_id: ""
-iteration: 10
+iteration: 11
 max_iterations: 30
-created: 2026-04-18T02:30:00+08:00
+created: 2026-04-20T14:30:00+08:00
 
 ## 任务描述
 
-P10 产品功能审查 + 修复问题。
+P10 修复所有待处理项，直至无待处理。
+
+## 待处理项
+
+1. Deploy (Cloudflare Pages) 失败 — commit message 中文 UTF-8 导致 API 报错
+2. GitHub Actions Node 20 deprecated — 升级至 Node 22/24
+3. CI vs Deploy Node 版本不一致 — 统一
 
 ## 完成条件
 
-所有高优先级问题修复 ✅
+1. Deploy workflow 修复且通过 dry-run 验证
+2. Node 版本统一且无 deprecation warning
+3. CI + Release + Deploy 全部 green
+4. build/test 验证通过
 
 ## 迭代记录
 
-### 轮次 9: 五子棋棋盘修复
-- 问题: 棋盘只显示 2×4 区域
-- 修复: 设置 canvas.width/height
-- v1.4.4
+### 轮次 1-10: 历史 (见上方)
+- v1.4.4 五子棋棋盘修复
+- v1.4.5-1.4.6 ESLint 修复
+- v1.6.2 WCAG AA 合规 + UIMax A+
 
-### 轮次 10: ESLint 错误修复
-- 第一轮: 3 个文件 (95→83) v1.4.5
-- 第二轮: 13 个文件 (83→44) v1.4.6
-
-## 最终状态
-
-- 测试: 158/158 passed ✅
-- 构建: 成功 ✅
-- ESLint: 95 → 44 (-54%)
-- 版本: v1.4.6 ✅
-
-## 版本历史
-
-- v1.0.0 - 首次发布
-- v1.1.0 - 国际象棋 + 围棋
-- v1.2.0 - 内联样式迁移
-- v1.2.1 - 游戏组件抽象
-- v1.3.0 - 性能监控
-- v1.4.0-1.4.3 - 样式迁移
-- v1.4.4 - 五子棋棋盘修复
-- v1.4.5 - ESLint 修复 (首轮)
-- v1.4.6 - ESLint 修复 (二轮)
-
----
-<promise>LOOP_DONE</promise>
+### 轮次 11: 待启动
+- 修复 Deploy UTF-8 错误
+- 统一 Node 版本
